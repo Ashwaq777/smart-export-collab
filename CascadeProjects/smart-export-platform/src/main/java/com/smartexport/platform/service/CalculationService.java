@@ -8,6 +8,7 @@ import com.smartexport.platform.repository.PortRepository;
 import com.smartexport.platform.repository.SivPriceRepository;
 import com.smartexport.platform.repository.TarifDouanierRepository;
 import com.smartexport.platform.util.HsCodeUtil;
+import com.smartexport.platform.util.FallbackTariffs;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -35,13 +36,48 @@ public class CalculationService {
         
         // Apply Incoterms logic
         BigDecimal assuranceAjustee = applyIncotermsLogic(request);
-        TarifDouanier tarif = tarifRepository.findByCodeHsAndPaysDestination(
-            normalizedCodeHs, 
-            request.getPaysDestination()
-        ).orElseThrow(() -> new RuntimeException(
-            "Aucun tarif trouvé pour le code HS: " + request.getCodeHs() + 
-            " et le pays: " + request.getPaysDestination()
-        ));
+        
+        // Try to get tariff from database, fallback to WTO MFN rates if not found
+        TarifDouanier tarif = null;
+        String dataSource = "DATABASE";
+        String warningMessage = null;
+        
+        try {
+            tarif = tarifRepository.findByCodeHsAndPaysDestination(
+                normalizedCodeHs, 
+                request.getPaysDestination()
+            ).orElse(null);
+            
+            if (tarif == null) {
+                // Use WTO MFN fallback rates
+                log.warn("No tariff data found for HS {} and country {}. Using WTO MFN fallback rates.", 
+                    request.getCodeHs(), request.getPaysDestination());
+                dataSource = "WTO_MFN_ESTIMATED";
+                warningMessage = FallbackTariffs.getFallbackWarning(request.getPaysDestination());
+                
+                // Create virtual tariff object with WTO MFN rates
+                tarif = new TarifDouanier();
+                tarif.setCodeHs(normalizedCodeHs);
+                tarif.setPaysDestination(request.getPaysDestination());
+                tarif.setNomProduit("Produit HS " + request.getCodeHs());
+                tarif.setTauxDouane(FallbackTariffs.getTariffRateWithPreferences(normalizedCodeHs, request.getPaysDestination()));
+                tarif.setTauxTva(FallbackTariffs.getVATRate(request.getPaysDestination()));
+                tarif.setTaxeParafiscale(BigDecimal.ZERO);
+            }
+        } catch (Exception e) {
+            // Even if database query fails, use fallback
+            log.error("Error querying tariff database: {}. Using WTO MFN fallback rates.", e.getMessage());
+            dataSource = "FALLBACK_ESTIMATED";
+            warningMessage = FallbackTariffs.getFallbackWarning(request.getPaysDestination());
+            
+            tarif = new TarifDouanier();
+            tarif.setCodeHs(normalizedCodeHs);
+            tarif.setPaysDestination(request.getPaysDestination());
+            tarif.setNomProduit("Produit HS " + request.getCodeHs());
+            tarif.setTauxDouane(FallbackTariffs.getWTOMFNRate(normalizedCodeHs));
+            tarif.setTauxTva(FallbackTariffs.getVATRate(request.getPaysDestination()));
+            tarif.setTaxeParafiscale(BigDecimal.ZERO);
+        }
         
         BigDecimal valeurCaf = request.getValeurFob()
             .add(request.getCoutTransport())
@@ -203,6 +239,8 @@ public class CalculationService {
             .poidsBrut(request.getPoidsBrut())
             .typeUnite(request.getTypeUnite())
             .incoterm(request.getIncoterm())
+            .dataSource(dataSource)
+            .warningMessage(warningMessage)
             .disclaimer("Estimation basée sur flux réels et tarifs officiels en vigueur au 20/02/2026.")
             .exchangeRateSource("ExchangeRate-API")
             .calculationDate(LocalDateTime.now())

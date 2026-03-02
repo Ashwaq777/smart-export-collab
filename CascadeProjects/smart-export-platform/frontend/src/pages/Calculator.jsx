@@ -5,7 +5,7 @@ import { countriesService } from '../services/countriesApi'
 import { worldPortsService } from '../services/worldPortsApi'
 import { agriculturalProductsService } from '../services/agriculturalProductsApi'
 import CostDashboard from '../components/CostDashboard'
-import { CURRENCIES } from '../utils/currencyConverter'
+import { WORLD_CURRENCIES } from '../data/worldCurrencies'
 
 function Calculator() {
   const [categories, setCategories] = useState([])
@@ -72,6 +72,29 @@ function Calculator() {
     }
   }
 
+  // Helper function to normalize country names for matching
+  const normalizeCountryName = (name) => {
+    const nameMap = {
+      'United States': 'États-Unis',
+      'USA': 'États-Unis',
+      'South Africa': 'Afrique du Sud',
+      'United Kingdom': 'Royaume-Uni',
+      'UK': 'Royaume-Uni',
+      'UAE': 'Émirats arabes unis',
+      'United Arab Emirates': 'Émirats arabes unis',
+      'China': 'Chine',
+      'India': 'Inde',
+      'Japan': 'Japon',
+      'South Korea': 'Corée du Sud',
+      'Brazil': 'Brésil',
+      'Egypt': 'Égypte',
+      'Morocco': 'Maroc',
+      'Ivory Coast': 'Côte d\'Ivoire',
+      'Cote d\'Ivoire': 'Côte d\'Ivoire'
+    }
+    return nameMap[name] || name
+  }
+
   const loadCountries = async () => {
     try {
       // Charger TOUTES les devises du monde (250+ pays)
@@ -92,7 +115,10 @@ function Calculator() {
       const excludedCountries = []
       
       for (const country of backendCountries) {
-        const countryData = allCountriesData.find(c => c.name === country)
+        // Normalize country name for matching
+        const normalizedCountry = normalizeCountryName(country)
+        
+        const countryData = allCountriesData.find(c => c.name === country || c.name === normalizedCountry)
         
         if (!countryData) {
           console.log(`⚠️ ${country} - No currency data found`)
@@ -100,8 +126,8 @@ function Calculator() {
           continue
         }
         
-        // Vérifier si le pays a des ports via l'API
-        const portsResult = await worldPortsService.getPortsByCountry(country, countryData)
+        // Vérifier si le pays a des ports via l'API (use normalized name)
+        const portsResult = await worldPortsService.getPortsByCountry(normalizedCountry, countryData)
         
         // Garder uniquement les pays avec ports RÉELS (pas de génériques)
         if (portsResult.hasPorts && portsResult.ports.length > 0) {
@@ -178,11 +204,14 @@ function Calculator() {
     try {
       console.log(`🚢 Loading ports for ${country}...`)
       
-      // Récupérer les données du pays pour vérifier s'il est enclavé
-      const countryData = countriesData.find(c => c.name === country)
+      // Normalize country name for consistent matching
+      const normalizedCountry = normalizeCountryName(country)
       
-      // Charger les ports depuis le service mondial avec couverture 100%
-      const portsResult = await worldPortsService.getPortsByCountry(country, countryData)
+      // Récupérer les données du pays pour vérifier s'il est enclavé
+      const countryData = countriesData.find(c => c.name === country || c.name === normalizedCountry)
+      
+      // Charger les ports depuis le service mondial avec couverture 100% (use normalized name)
+      const portsResult = await worldPortsService.getPortsByCountry(normalizedCountry, countryData)
       
       if (portsResult.hasPorts && portsResult.ports.length > 0) {
         // Utiliser les ports réels de la base UNCTAD avec frais calculés
@@ -480,7 +509,7 @@ function Calculator() {
                 onChange={handleInputChange}
                 className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-accent-500 focus:border-accent-500 hover:border-gray-400 transition-all duration-200"
               >
-                {CURRENCIES.map(currency => (
+                {WORLD_CURRENCIES.map(currency => (
                   <option key={currency.code} value={currency.code}>
                     {currency.code} - {currency.name} ({currency.symbol})
                   </option>

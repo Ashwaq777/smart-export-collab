@@ -1,5 +1,5 @@
 import React from 'react'
-import { TrendingUp, DollarSign, Ship, FileText, Globe } from 'lucide-react'
+import { TrendingUp, DollarSign, Ship, FileText, Globe, AlertCircle, CheckCircle } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardContent } from './ui/Card'
 import { Badge } from './ui/Badge'
 
@@ -11,6 +11,10 @@ const CostDashboard = ({ result }) => {
       minimumFractionDigits: 2,
     }).format(value)
   }
+  
+  // Check if data is from fallback (estimated) or database (verified)
+  const isEstimatedData = result.dataSource === 'WTO_MFN_ESTIMATED' || result.dataSource === 'FALLBACK_ESTIMATED'
+  const isVerifiedData = result.dataSource === 'DATABASE'
 
   const kpiCards = [
     {
@@ -52,6 +56,40 @@ const CostDashboard = ({ result }) => {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* Data Source Warning Banner */}
+      {isEstimatedData && result.warningMessage && (
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg">
+          <div className="flex items-start">
+            <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-semibold text-yellow-800 mb-1">
+                Taux douaniers estimés (source: OMC/WTO moyennes MFN)
+              </p>
+              <p className="text-sm text-yellow-700">
+                {result.warningMessage}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Verified Data Badge */}
+      {isVerifiedData && (
+        <div className="bg-green-50 border-l-4 border-green-400 p-4 rounded-lg">
+          <div className="flex items-start">
+            <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 mr-3 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-semibold text-green-800">
+                ✅ Données officielles vérifiées
+              </p>
+              <p className="text-sm text-green-700">
+                Taux douaniers et TVA provenant de la base de données officielle.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="bg-gradient-to-r from-maritime-navy to-maritime-deepBlue rounded-2xl p-8 text-white shadow-xl">
         <div className="flex items-center justify-between mb-6">
           <div>

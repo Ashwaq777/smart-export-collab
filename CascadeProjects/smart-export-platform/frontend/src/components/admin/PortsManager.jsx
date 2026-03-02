@@ -3,6 +3,8 @@ import { Plus, Edit2, Trash2, Search, DollarSign } from 'lucide-react'
 import { portService } from '../../services/api'
 import { worldPortsService } from '../../services/worldPortsApi'
 import { REAL_PORTS_DATABASE } from '../../data/realPortsDatabase'
+import { WORLD_CURRENCIES } from '../../data/worldCurrencies'
+import exchangeRateService from '../../services/exchangeRateService'
 
 function PortsManager() {
   const [ports, setPorts] = useState([])
@@ -11,6 +13,8 @@ function PortsManager() {
   const [showModal, setShowModal] = useState(false)
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [selectedPort, setSelectedPort] = useState(null)
+  const [selectedCurrency, setSelectedCurrency] = useState('USD')
+  const [exchangeRates, setExchangeRates] = useState({})
   const [editingPort, setEditingPort] = useState(null)
   const [formData, setFormData] = useState({
     nomPort: '',
@@ -21,6 +25,7 @@ function PortsManager() {
 
   useEffect(() => {
     loadPorts()
+    loadExchangeRates()
   }, [])
 
   const loadPorts = async () => {
@@ -36,6 +41,27 @@ function PortsManager() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const loadExchangeRates = async () => {
+    try {
+      const rates = await exchangeRateService.getExchangeRates()
+      setExchangeRates(rates)
+    } catch (error) {
+      console.error('Error loading exchange rates:', error)
+    }
+  }
+
+  const convertCurrency = (usdAmount, targetCurrency) => {
+    if (targetCurrency === 'USD') return usdAmount
+    const rate = exchangeRates[targetCurrency]
+    if (!rate) return usdAmount
+    return (usdAmount * rate).toFixed(2)
+  }
+
+  const getCurrencySymbol = (currencyCode) => {
+    const currency = WORLD_CURRENCIES.find(c => c.code === currencyCode)
+    return currency ? currency.symbol : currencyCode
   }
 
   const handleSubmit = async (e) => {
@@ -111,16 +137,42 @@ function PortsManager() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Rechercher un port..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-          />
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center gap-4 flex-1">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Rechercher un port..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
+              Display Currency:
+            </label>
+            <select
+              value={selectedCurrency}
+              onChange={(e) => setSelectedCurrency(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
+            >
+              <option value="USD">USD ($)</option>
+              <option value="EUR">EUR (€)</option>
+              <option value="GBP">GBP (£)</option>
+              <option value="MAD">MAD (MAD)</option>
+              <option value="CNY">CNY (¥)</option>
+              <option value="JPY">JPY (¥)</option>
+              <option value="INR">INR (₹)</option>
+              <option value="AED">AED (AED)</option>
+              <option value="SAR">SAR (SR)</option>
+              <option value="BRL">BRL (R$)</option>
+              <option value="CAD">CAD (C$)</option>
+              <option value="AUD">AUD (A$)</option>
+              <option value="CHF">CHF (CHF)</option>
+            </select>
+          </div>
         </div>
         <button
           onClick={() => openModal()}
@@ -183,10 +235,10 @@ function PortsManager() {
                     {port.currency}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">
-                    ${port.fees?.THC || 0}
+                    {getCurrencySymbol(selectedCurrency)}{convertCurrency(port.fees?.THC || 0, selectedCurrency)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    ${port.fees?.portDues || 0}/GRT
+                    {getCurrencySymbol(selectedCurrency)}{convertCurrency(port.fees?.portDues || 0, selectedCurrency)}/GRT
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">

@@ -79,4 +79,8 @@ public class LandedCostResultDto {
     
     // Incoterm
     private String incoterm;
+    
+    // Data source tracking for fallback tariffs
+    private String dataSource; // DATABASE, WTO_MFN_ESTIMATED, FALLBACK_ESTIMATED
+    private String warningMessage; // Warning message for estimated data
 }

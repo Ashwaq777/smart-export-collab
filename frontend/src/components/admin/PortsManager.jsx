@@ -5,6 +5,7 @@ import { worldPortsService } from '../../services/worldPortsApi'
 import { REAL_PORTS_DATABASE } from '../../data/realPortsDatabase'
 import { WORLD_CURRENCIES } from '../../data/worldCurrencies'
 import exchangeRateService from '../../services/exchangeRateService'
+import { getCountryISO2, getFlagEmojiFromIso2 } from '../../utils/countryFlags'
 
 function PortsManager() {
   const [ports, setPorts] = useState([])
@@ -61,6 +62,39 @@ function PortsManager() {
   const getCurrencySymbol = (currencyCode) => {
     const currency = WORLD_CURRENCIES.find(c => c.code === currencyCode)
     return currency ? currency.symbol : currencyCode
+  }
+
+  const CountryFlag = ({ countryName, iso2Hint }) => {
+    const iso2 = (iso2Hint || getCountryISO2(countryName) || '').toLowerCase()
+    if (!iso2 || iso2.length !== 2) {
+      return <span className="text-lg">🌐</span>
+    }
+
+    const emoji = getFlagEmojiFromIso2(iso2)
+    return (
+      <span className="inline-flex items-center">
+        <span className="text-lg leading-none" aria-hidden="true">
+          {emoji}
+        </span>
+        <img
+          src={`https://flagcdn.com/24x18/${iso2}.png`}
+          srcSet={`https://flagcdn.com/48x36/${iso2}.png 2x`}
+          width="24"
+          height="18"
+          alt={countryName || iso2.toUpperCase()}
+          className="-ml-6 rounded-sm border border-gray-200"
+          onLoad={(e) => {
+            const wrapper = e.currentTarget.parentElement
+            const emojiEl = wrapper?.firstElementChild
+            if (emojiEl) emojiEl.style.display = 'none'
+            e.currentTarget.classList.remove('-ml-6')
+          }}
+          onError={(e) => {
+            e.currentTarget.style.display = 'none'
+          }}
+        />
+      </span>
+    )
   }
 
   const handleSubmit = async (e) => {
@@ -226,8 +260,8 @@ function PortsManager() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <span className="flex items-center gap-1">
-                      <span className="text-lg">{port.countryCode === 'FR' ? '🇫🇷' : port.countryCode === 'MA' ? '🇲🇦' : port.countryCode === 'DE' ? '🇩🇪' : port.countryCode === 'CN' ? '🇨🇳' : '🌍'}</span>
-                      {port.country}
+                      <CountryFlag countryName={port.country || port.pays} iso2Hint={port.countryCode} />
+                      <span className="ml-1">{port.country || port.pays}</span>
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

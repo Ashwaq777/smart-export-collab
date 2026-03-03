@@ -1,7 +1,9 @@
 import axios from 'axios'
 import { ttlCache } from '../utils/ttlCache'
 
-const API_BASE_URL = import.meta.env?.VITE_MARITIME_API_BASE_URL || '/api/maritime'
+import { API_URLS } from '../config/apiConfig'
+
+const API_BASE_URL = API_URLS.MARITIME_BACKEND
 const TTL_MS = 5 * 60 * 1000
 
 export const freightRatesService = {

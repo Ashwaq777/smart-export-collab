@@ -1,4 +1,6 @@
 import axios from 'axios'
+
+import { API_URLS } from '../config/apiConfig'
 import { REAL_PORTS_DATABASE, calculateTotalPortFees } from '../data/realPortsDatabase'
 
 /**
@@ -7,7 +9,7 @@ import { REAL_PORTS_DATABASE, calculateTotalPortFees } from '../data/realPortsDa
  */
 
 const worldBankApi = axios.create({
-  baseURL: 'https://api.worldbank.org/v2',
+  baseURL: API_URLS.WORLD_BANK,
   timeout: 15000,
 })
 

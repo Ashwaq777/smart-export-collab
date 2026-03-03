@@ -1,6 +1,8 @@
-import axios from 'axios';
+import axios from 'axios'
 
-const API_BASE_URL = 'http://localhost:8080/api/maritime';
+import { API_URLS } from '../config/apiConfig'
+
+const API_BASE_URL = API_URLS.MARITIME_BACKEND
 
 /**
  * Maritime Transport Service

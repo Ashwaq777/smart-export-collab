@@ -2,6 +2,7 @@ import axios from 'axios'
 
 import { ttlCache } from '../utils/ttlCache'
 import { MARITIME_COUNTRIES_ISO2 } from '../constants/maritimeCountriesIso2'
+import { API_URLS } from '../config/apiConfig'
 
 const FALLBACK_MARITIME_COUNTRIES = [
   { iso2: 'MA', name: 'Maroc' },
@@ -27,12 +28,12 @@ const FALLBACK_MARITIME_COUNTRIES = [
 ]
 
 const countriesApi = axios.create({
-  baseURL: 'https://restcountries.com/v3.1',
+  baseURL: API_URLS.REST_COUNTRIES,
   timeout: 15000,
 })
 
 const exchangeRateApi = axios.create({
-  baseURL: 'https://api.exchangerate.host',
+  baseURL: API_URLS.EXCHANGE_RATE_HOST,
   timeout: 15000,
 })
 

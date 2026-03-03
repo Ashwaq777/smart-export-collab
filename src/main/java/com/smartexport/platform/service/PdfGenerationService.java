@@ -28,6 +28,8 @@ import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
 import com.smartexport.platform.dto.LandedCostResultDto;
 import com.smartexport.platform.dto.MaritimeTransportCostDto;
+import com.smartexport.platform.pdf.common.PdfHelper;
+import com.smartexport.platform.pdf.common.PdfTheme;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
@@ -53,9 +55,12 @@ public class PdfGenerationService {
             PdfDocument pdfDoc = new PdfDocument(writer);
             Document document = new Document(pdfDoc);
 
-            pdfDoc.addEventHandler(PdfDocumentEvent.END_PAGE, new HeaderFooterAndWatermarkHandler(result));
+            PdfHelper.Fonts fonts = PdfHelper.loadFonts();
+            document.setFont(fonts.regular);
+            String ref = result.getSimulationId() != null ? "REF-LC-" + PdfHelper.safeGlyphs(result.getSimulationId()) : "REF-LC";
+            pdfDoc.addEventHandler(PdfDocumentEvent.END_PAGE, new PdfHelper.HeaderFooterHandler("Landed Cost Report", ref, fonts));
             
-            addCover(document, result);
+            addCover(document, result, pdfDoc, fonts, ref);
 
             document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
             addExecutiveSummary(document, result);
@@ -72,6 +77,7 @@ public class PdfGenerationService {
             addMaritimeTransportSection(document, result);
             addQrCode(document, result);
             
+            PdfHelper.addWatermark(pdfDoc, fonts);
             document.close();
             
             return baos.toByteArray();
@@ -80,58 +86,93 @@ public class PdfGenerationService {
             throw new RuntimeException("Erreur lors de la génération du PDF: " + e.getMessage(), e);
         }
     }
-    
-    private void addCover(Document document, LandedCostResultDto result) {
-        Paragraph title = new Paragraph("SMART EXPORT")
-            .setFontSize(30)
-            .setBold()
-            .setFontColor(HEADER_COLOR)
-            .setTextAlignment(TextAlignment.CENTER)
-            .setMarginTop(80)
-            .setMarginBottom(10);
 
-        Paragraph subtitle = new Paragraph("Rapport d'Estimation – Landed Cost")
+    private void addCover(Document document, LandedCostResultDto result, PdfDocument pdfDoc, PdfHelper.Fonts fonts, String ref) {
+        PdfHelper.drawCoverBackground(pdfDoc);
+
+        Paragraph title = new Paragraph("SMART EXPORT")
+            .setFont(fonts.bold)
+            .setFontSize(32)
+            .setFontColor(PdfTheme.WHITE)
+            .setTextAlignment(TextAlignment.CENTER)
+            .setMarginTop(110)
+            .setMarginBottom(6);
+
+        Paragraph subtitle = new Paragraph("Global Maritime Trade")
+            .setFont(fonts.regular)
             .setFontSize(14)
-            .setFontColor(MUTED_TEXT)
+            .setFontColor(PdfTheme.SEAFOAM)
+            .setTextAlignment(TextAlignment.CENTER)
+            .setMarginBottom(16);
+
+        Paragraph reportTitle = new Paragraph("RAPPORT CALCUL LANDED COST")
+            .setFont(fonts.bold)
+            .setFontSize(24)
+            .setFontColor(PdfTheme.WHITE)
             .setTextAlignment(TextAlignment.CENTER)
             .setMarginBottom(18);
 
-        Paragraph route = new Paragraph(
-            (result.getPaysDestination() != null ? result.getPaysDestination() : "Destination") +
-            (result.getNomPort() != null ? (" – " + result.getNomPort()) : "")
-        )
-            .setFontSize(12)
-            .setTextAlignment(TextAlignment.CENTER)
-            .setFontColor(ACCENT_COLOR)
-            .setMarginBottom(30);
+        document.add(title);
+        document.add(subtitle);
 
-        Paragraph simId = new Paragraph("Simulation: " + result.getSimulationId())
-            .setFontSize(10)
-            .setTextAlignment(TextAlignment.CENTER)
-            .setFontColor(MUTED_TEXT)
-            .setMarginBottom(8);
+        PdfCanvas wave = new PdfCanvas(pdfDoc.getFirstPage());
+        Rectangle size = pdfDoc.getFirstPage().getPageSize();
+        wave.saveState();
+        wave.setStrokeColor(PdfTheme.WAVE_BLUE);
+        wave.setLineWidth(2);
+        wave.moveTo(80, size.getTop() - 180);
+        wave.lineTo(size.getRight() - 80, size.getTop() - 180);
+        wave.stroke();
+        wave.restoreState();
+        wave.release();
+
+        document.add(reportTitle);
+
+        String origin = result.getNomProduit() != null ? result.getNomProduit() : "Produit";
+        String dest = result.getPaysDestination() != null ? result.getPaysDestination() : "Destination";
+        String routeText = PdfHelper.safeGlyphs(dest);
+        PdfHelper.addRouteBox(pdfDoc, routeText, fonts, 67f, 520f, 461f, 55f);
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
         String formattedDate = result.getCalculationDate() != null ? result.getCalculationDate().format(formatter) : "";
-        Paragraph date = new Paragraph("Généré le: " + formattedDate)
+
+        Paragraph meta = new Paragraph()
+            .setFont(fonts.regular)
+            .setFontSize(11)
+            .setFontColor(PdfTheme.SEAFOAM)
+            .setTextAlignment(TextAlignment.LEFT)
+            .setMarginTop(160)
+            .setMarginLeft(70)
+            .add("Produit : " + PdfHelper.safeGlyphs(origin) + "\n")
+            .add("Code HS : " + PdfHelper.safeGlyphs(result.getCodeHs()) + "\n")
+            .add("Incoterm : " + PdfHelper.safeGlyphs(result.getIncoterm()) + "\n")
+            .add("Valeur marchandise : " + PdfHelper.safeGlyphs(safeMoney(result.getValeurFob(), result.getCurrency())) + "\n");
+
+        Paragraph refLine = new Paragraph("Ref : " + PdfHelper.safeGlyphs(ref))
+            .setFont(fonts.regular)
             .setFontSize(10)
-            .setTextAlignment(TextAlignment.CENTER)
-            .setFontColor(MUTED_TEXT)
-            .setMarginBottom(30);
+            .setFontColor(PdfTheme.SEAFOAM)
+            .setMarginLeft(70)
+            .setMarginTop(10);
 
-        Table highlights = new Table(UnitValue.createPercentArray(new float[]{1, 1}))
-            .setWidth(UnitValue.createPercentValue(100))
-            .setMarginTop(20);
+        Paragraph dateLine = new Paragraph("Genere le : " + PdfHelper.safeGlyphs(formattedDate))
+            .setFont(fonts.regular)
+            .setFontSize(10)
+            .setFontColor(PdfTheme.SEAFOAM)
+            .setMarginLeft(70)
+            .setMarginTop(2);
 
-        highlights.addCell(createHighlightCell("TOTAL LANDED COST", safeMoney(result.getCoutTotal(), result.getCurrency())));
-        highlights.addCell(createHighlightCell("VALEUR CAF (CIF)", safeMoney(result.getValeurCaf(), result.getCurrency())));
+        document.add(meta);
+        document.add(dateLine);
+        document.add(refLine);
 
-        document.add(title);
-        document.add(subtitle);
-        document.add(route);
-        document.add(simId);
-        document.add(date);
-        document.add(highlights);
+        PdfCanvas gold = new PdfCanvas(pdfDoc.getFirstPage());
+        gold.saveState();
+        gold.setFillColor(PdfTheme.GOLD);
+        gold.rectangle(size.getLeft(), size.getBottom(), size.getWidth(), 6);
+        gold.fill();
+        gold.restoreState();
+        gold.release();
     }
 
     private Cell createHighlightCell(String label, String value) {
@@ -512,7 +553,7 @@ public class PdfGenerationService {
             return;
         }
         
-        Paragraph sectionTitle = new Paragraph("⚠️ Alerte Sécurité Douanière (SIV)")
+        Paragraph sectionTitle = new Paragraph("Alerte Sécurité Douanière (SIV)")
             .setFontSize(14)
             .setBold()
             .setFontColor(new DeviceRgb(255, 140, 0))
@@ -621,9 +662,9 @@ public class PdfGenerationService {
     }
     
     private void addInfoRow(Table table, String label, String value) {
-        table.addCell(new Cell().add(new Paragraph(label).setBold())
+        table.addCell(new Cell().add(new Paragraph(PdfHelper.safeGlyphs(label)).setBold())
             .setBackgroundColor(LIGHT_GRAY));
-        table.addCell(new Cell().add(new Paragraph(value != null ? value : "N/A")));
+        table.addCell(new Cell().add(new Paragraph(PdfHelper.safeGlyphs(value != null ? value : "N/A"))));
     }
     
     private void addCostRow(Table table, String description, BigDecimal amount, 
@@ -633,7 +674,7 @@ public class PdfGenerationService {
     
     private void addCostRow(Table table, String description, BigDecimal amount, 
                            String currency, boolean bold) {
-        Paragraph descPara = new Paragraph(description);
+        Paragraph descPara = new Paragraph(PdfHelper.safeGlyphs(description));
         Paragraph amountPara = new Paragraph(
             String.format("%.2f %s", amount, currency)
         ).setTextAlignment(TextAlignment.RIGHT);
@@ -649,7 +690,7 @@ public class PdfGenerationService {
     
     private Cell createHeaderCell(String text) {
         return new Cell()
-            .add(new Paragraph(text).setBold().setFontColor(ColorConstants.WHITE))
+            .add(new Paragraph(PdfHelper.safeGlyphs(text)).setBold().setFontColor(ColorConstants.WHITE))
             .setBackgroundColor(HEADER_COLOR)
             .setTextAlignment(TextAlignment.CENTER);
     }

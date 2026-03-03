@@ -1,11 +1,13 @@
 import axios from 'axios'
 
+import { API_URLS } from '../config/apiConfig'
+
 /**
  * Service pour récupérer les taux de change en temps réel
  * Utilise l'API gratuite open.er-api.com (pas de clé requise)
  */
 
-const EXCHANGE_RATE_API = 'https://open.er-api.com/v6/latest/USD'
+const EXCHANGE_RATE_API = `${API_URLS.OPEN_ER_API}/v6/latest/USD`
 const CACHE_KEY = 'exchange_rates_cache'
 const CACHE_DURATION = 3600000 // 1 heure en millisecondes
 

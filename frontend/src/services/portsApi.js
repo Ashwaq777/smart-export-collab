@@ -1,5 +1,7 @@
 import axios from 'axios'
 
+import { API_URLS } from '../config/apiConfig'
+
 /**
  * Service pour les ports maritimes mondiaux
  * Utilise des données open data de ports majeurs
@@ -7,7 +9,7 @@ import axios from 'axios'
  */
 
 const worldBankApi = axios.create({
-  baseURL: 'https://api.worldbank.org/v2',
+  baseURL: API_URLS.WORLD_BANK,
   timeout: 15000,
 })
 

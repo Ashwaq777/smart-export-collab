@@ -1,6 +1,8 @@
 import axios from 'axios'
 
-const API_BASE_URL = import.meta.env?.VITE_MARITIME_API_BASE_URL || '/api/maritime'
+import { API_URLS } from '../config/apiConfig'
+
+const API_BASE_URL = API_URLS.MARITIME_BACKEND
 
 /**
  * Service pour récupérer les navires en temps réel via API AIS

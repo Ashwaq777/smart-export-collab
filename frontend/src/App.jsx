@@ -7,6 +7,7 @@ import Home from './pages/Home'
 import About from './pages/About'
 import Admin from './pages/Admin'
 import MaritimeShipping from './pages/MaritimeShipping'
+import Calculator from './pages/Calculator'
 import Login from './pages/Login'
 
 function App() {
@@ -18,6 +19,11 @@ function App() {
           <Route path="/" element={
             <MainLayout>
               <Home />
+            </MainLayout>
+          } />
+          <Route path="/calculator" element={
+            <MainLayout>
+              <Calculator />
             </MainLayout>
           } />
           <Route path="/maritime-shipping" element={

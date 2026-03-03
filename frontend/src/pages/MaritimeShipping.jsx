@@ -4,8 +4,8 @@ import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import { Ship, FileDown, Map as MapIcon, AlertCircle } from 'lucide-react'
 
-import { countriesService } from '../services/countriesApi'
 import CountrySelect from '../components/ui/CountrySelect'
+import { useMaritimeCountries } from '../hooks/useMaritimeCountries'
 import { loadPortsForCountryIso2 } from '../utils/maritimeHelpers'
 import { calculateShippingCost } from '../utils/portFeesCalculator'
 import { generateMaritimeShippingPdf } from '../services/maritimePdfService'
@@ -49,9 +49,18 @@ const SkeletonLine = ({ className = '' }) => (
 )
 
 export default function MaritimeShipping() {
-  const [countries, setCountries] = useState([])
-  const [countriesLoading, setCountriesLoading] = useState(false)
-  const [countriesError, setCountriesError] = useState(null)
+  const { countries, loading: countriesLoading, error: countriesError } = useMaritimeCountries()
+
+  const selectCountries = useMemo(
+    () =>
+      (countries || []).map((c) => ({
+        ...c,
+        iso2: c.iso2 || c.code,
+        name: c.nameFr || c.name,
+        flagPng: c.flagPng || c.flag,
+      })),
+    [countries]
+  )
 
   const [distanceLoading, setDistanceLoading] = useState(false)
   const [distanceError, setDistanceError] = useState(null)
@@ -78,23 +87,6 @@ export default function MaritimeShipping() {
   const [incoterm, setIncoterm] = useState('CIF')
 
   const [manualDistanceNm, setManualDistanceNm] = useState('')
-
-  useEffect(() => {
-    const load = async () => {
-      setCountriesLoading(true)
-      setCountriesError(null)
-      try {
-        const maritimeCountries = await countriesService.getMaritimeCountries()
-        setCountries(maritimeCountries)
-      } catch (e) {
-        setCountriesError('Erreur lors du chargement des pays (API indisponible)')
-      } finally {
-        setCountriesLoading(false)
-      }
-    }
-
-    load()
-  }, [])
 
   useEffect(() => {
     const loadOriginPorts = async () => {
@@ -339,8 +331,9 @@ export default function MaritimeShipping() {
                   <CountrySelect
                     label="Pays de départ"
                     valueIso2={originIso2}
-                    countries={countries}
+                    countries={selectCountries}
                     onChangeIso2={setOriginIso2}
+                    disabled={countriesLoading}
                   />
                 )}
               </div>
@@ -372,8 +365,9 @@ export default function MaritimeShipping() {
                   <CountrySelect
                     label="Pays de destination"
                     valueIso2={destinationIso2}
-                    countries={countries}
+                    countries={selectCountries}
                     onChangeIso2={setDestinationIso2}
+                    disabled={countriesLoading}
                   />
                 )}
               </div>

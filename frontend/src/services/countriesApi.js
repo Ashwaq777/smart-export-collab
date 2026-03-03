@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 import { ttlCache } from '../utils/ttlCache'
-import { MARITIME_COUNTRIES_ISO2 } from '../constants/maritimeCountriesIso2'
+import { MARITIME_COUNTRIES_ISO2_SET } from '../data/maritimeCountries'
 import { API_URLS } from '../config/apiConfig'
 
 const FALLBACK_MARITIME_COUNTRIES = [
@@ -91,7 +91,7 @@ export const countriesService = {
         subregion: c?.subregion || '',
       }))
       .filter((c) => c.name && c.iso2)
-      .filter((c) => MARITIME_COUNTRIES_ISO2.has(String(c.iso2).toUpperCase()))
+      .filter((c) => MARITIME_COUNTRIES_ISO2_SET.has(String(c.iso2).toUpperCase()))
       .sort((a, b) => a.name.localeCompare(b.name, 'fr'))
 
     ttlCache.set(MARITIME_COUNTRIES_CACHE_KEY, maritimeCountries, MARITIME_COUNTRIES_CACHE_TTL)

@@ -4,11 +4,18 @@ import { tarifService, portService, calculationService, pdfService } from '../se
 import { countriesService } from '../services/countriesApi'
 import { worldPortsService } from '../services/worldPortsApi'
 import { agriculturalProductsService } from '../services/agriculturalProductsApi'
+import { useMaritimeCountries } from '../hooks/useMaritimeCountries'
 import CostDashboard from '../components/CostDashboard'
 import { WORLD_CURRENCIES } from '../data/worldCurrencies'
 import { updateExchangeRates } from '../utils/currencyConverter'
 
- function Calculator() {
+function Calculator() {
+  const {
+    countries: maritimeCountries,
+    loading: maritimeCountriesLoading,
+    error: maritimeCountriesError,
+  } = useMaritimeCountries()
+
   const [categories, setCategories] = useState([])
   const [products, setProducts] = useState([])
   const [countries, setCountries] = useState([])
@@ -384,6 +391,11 @@ import { updateExchangeRates } from '../utils/currencyConverter'
               <label className="block text-sm font-semibold text-maritime-navy mb-2">
                 Pays de destination
               </label>
+              {maritimeCountriesError && (
+                <div className="mb-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                  {maritimeCountriesError}
+                </div>
+              )}
               {countriesError && (
                 <div className="mb-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
                   {countriesError}
@@ -394,12 +406,15 @@ import { updateExchangeRates } from '../utils/currencyConverter'
                 value={formData.paysDestination}
                 onChange={handleInputChange}
                 required
+                disabled={maritimeCountriesLoading}
                 className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-accent-500 focus:border-accent-500 hover:border-gray-400 transition-all duration-200"
               >
-                <option value="">-- Sélectionner pays --</option>
-                {countries.map((name) => (
-                  <option key={name} value={name}>
-                    {name}
+                <option value="">
+                  {maritimeCountriesLoading ? '-- Chargement pays --' : '-- Sélectionner pays --'}
+                </option>
+                {(maritimeCountries || []).map((c) => (
+                  <option key={c.iso2 || c.code} value={c.nameFr || c.name}>
+                    {c.flagEmoji ? `${c.flagEmoji} ` : ''}{c.nameFr || c.name}
                   </option>
                 ))}
               </select>

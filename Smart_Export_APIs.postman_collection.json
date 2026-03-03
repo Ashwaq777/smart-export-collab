@@ -1,0 +1,298 @@
+{
+  "info": {
+    "name": "Smart Export Global Platform",
+    "description": "Collection complète des APIs pour la démonstration",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Tarifs Douaniers",
+      "item": [
+        {
+          "name": "Récupérer toutes les catégories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tarifs-douaniers/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tarifs-douaniers", "categories"]
+            },
+            "description": "Retourne la liste des catégories disponibles (Fruits, Légumes)"
+          },
+          "response": []
+        },
+        {
+          "name": "Récupérer tous les pays",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tarifs-douaniers/pays",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tarifs-douaniers", "pays"]
+            },
+            "description": "Retourne la liste des pays de destination (France, Maroc, USA)"
+          },
+          "response": []
+        },
+        {
+          "name": "Produits par catégorie - Légumes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tarifs-douaniers/categorie/Légumes",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tarifs-douaniers", "categorie", "Légumes"]
+            },
+            "description": "Retourne tous les produits de la catégorie Légumes avec leurs taux"
+          },
+          "response": []
+        },
+        {
+          "name": "Produits par catégorie - Fruits",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tarifs-douaniers/categorie/Fruits",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tarifs-douaniers", "categorie", "Fruits"]
+            },
+            "description": "Retourne tous les produits de la catégorie Fruits avec leurs taux"
+          },
+          "response": []
+        },
+        {
+          "name": "Tous les tarifs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/tarifs-douaniers",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tarifs-douaniers"]
+            },
+            "description": "Retourne tous les tarifs douaniers de la base de données"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Ports",
+      "item": [
+        {
+          "name": "Tous les ports",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/ports",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ports"]
+            },
+            "description": "Retourne tous les ports disponibles (Europe + USA)"
+          },
+          "response": []
+        },
+        {
+          "name": "Ports par pays - France",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/ports?pays=France",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ports"],
+              "query": [
+                {
+                  "key": "pays",
+                  "value": "France"
+                }
+              ]
+            },
+            "description": "Retourne les ports français (Marseille)"
+          },
+          "response": []
+        },
+        {
+          "name": "Ports par pays - USA",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/ports?pays=USA",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ports"],
+              "query": [
+                {
+                  "key": "pays",
+                  "value": "USA"
+                }
+              ]
+            },
+            "description": "Retourne les ports américains (New York, Los Angeles, Miami, Houston)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Calculs Landed Cost",
+      "item": [
+        {
+          "name": "Calcul - Tomates Maroc vers France (MAD)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codeHs\": \"070200\",\n  \"paysDestination\": \"France\",\n  \"valeurFob\": 10000,\n  \"coutTransport\": 500,\n  \"assurance\": 100,\n  \"currency\": \"MAD\",\n  \"portId\": 4\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/calculation/landed-cost",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "calculation", "landed-cost"]
+            },
+            "description": "Calcul complet du Landed Cost pour des tomates du Maroc vers la France avec port de Marseille"
+          },
+          "response": []
+        },
+        {
+          "name": "Calcul - Oranges vers USA (USD)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codeHs\": \"080510\",\n  \"paysDestination\": \"USA\",\n  \"valeurFob\": 5000,\n  \"coutTransport\": 800,\n  \"assurance\": 50,\n  \"currency\": \"USD\",\n  \"portId\": 5\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/calculation/landed-cost",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "calculation", "landed-cost"]
+            },
+            "description": "Calcul pour oranges vers USA (TVA = 0%)"
+          },
+          "response": []
+        },
+        {
+          "name": "Calcul - Sans port (optionnel)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codeHs\": \"070190\",\n  \"paysDestination\": \"France\",\n  \"valeurFob\": 8000,\n  \"coutTransport\": 400,\n  \"assurance\": 80,\n  \"currency\": \"EUR\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/calculation/landed-cost",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "calculation", "landed-cost"]
+            },
+            "description": "Calcul sans frais portuaires (portId optionnel)"
+          },
+          "response": []
+        },
+        {
+          "name": "Calcul - Maroc vers Maroc (Parafiscale)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codeHs\": \"070200\",\n  \"paysDestination\": \"Maroc\",\n  \"valeurFob\": 10000,\n  \"coutTransport\": 300,\n  \"assurance\": 100,\n  \"currency\": \"MAD\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/calculation/landed-cost",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "calculation", "landed-cost"]
+            },
+            "description": "Calcul vers Maroc avec taxe parafiscale (0.25%)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Génération PDF",
+      "item": [
+        {
+          "name": "Générer PDF - Tomates vers France",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codeHs\": \"070200\",\n  \"paysDestination\": \"France\",\n  \"valeurFob\": 10000,\n  \"coutTransport\": 500,\n  \"assurance\": 100,\n  \"currency\": \"EUR\",\n  \"portId\": 4\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/pdf/landed-cost",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "pdf", "landed-cost"]
+            },
+            "description": "Génère un PDF professionnel avec le détail complet du calcul"
+          },
+          "response": []
+        },
+        {
+          "name": "Générer PDF - Oranges vers USA",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codeHs\": \"080510\",\n  \"paysDestination\": \"USA\",\n  \"valeurFob\": 5000,\n  \"coutTransport\": 800,\n  \"assurance\": 50,\n  \"currency\": \"USD\",\n  \"portId\": 5\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/pdf/landed-cost",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "pdf", "landed-cost"]
+            },
+            "description": "PDF pour export vers USA"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

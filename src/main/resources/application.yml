@@ -1,0 +1,51 @@
+spring:
+  application:
+    name: smart-export-platform
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/smart_export_db
+    username: user
+    password: 
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  
+  flyway:
+    enabled: false
+    baseline-on-migrate: true
+    validate-on-migrate: false
+    locations: classpath:db/migration
+  
+  cache:
+    type: simple
+    cache-names: exchangeRates, seaRoutes, seaRoutesV2, seaRoutesV3, vesselsByPort
+
+exchangerate:
+  api:
+    key: ${EXCHANGERATE_API_KEY:demo}
+    url: https://v6.exchangerate-api.com/v6
+
+datalastic:
+  api:
+    key: ${DATALASTIC_API_KEY:demo}
+
+aishub:
+  api:
+    key: ${AISHUB_API_KEY:demo}
+
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+logging:
+  level:
+    com.smartexport: DEBUG
+    org.hibernate.SQL: DEBUG

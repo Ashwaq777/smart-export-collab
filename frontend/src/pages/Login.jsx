@@ -1,99 +1,114 @@
-import React, { useMemo, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
-import { AlertCircle, Lock } from 'lucide-react'
-import authService from '../services/authService'
+import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
-function Login() {
-  const navigate = useNavigate()
-  const location = useLocation()
+const Login = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
-  const from = useMemo(() => location.state?.from?.pathname || '/', [location.state])
-
-  const [role, setRole] = useState('user')
-  const [pin, setPin] = useState('')
-  const [error, setError] = useState(null)
-  const [loading, setLoading] = useState(false)
-
-  const onSubmit = async (e) => {
-    e.preventDefault()
-    setError(null)
-    setLoading(true)
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
 
     try {
-      authService.login({ role, pin })
-      navigate(from, { replace: true })
+      const data = await login(email, password);
+      if (data.role === 'ADMIN') {
+        navigate('/admin');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err) {
-      setError(err?.message || 'Erreur de connexion')
+      setError('Email ou mot de passe incorrect');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
-    <div className="min-h-screen bg-maritime-cream pt-24 pb-20">
-      <div className="max-w-md mx-auto px-6">
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-8">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-3 bg-gradient-to-br from-accent-500 to-accent-600 rounded-xl shadow-lg">
-              <Lock className="h-6 w-6 text-white" />
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Connexion Smart Export
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Accédez à votre plateforme d'exportation
+          </p>
+        </div>
+        
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+              {error}
+            </div>
+          )}
+          
+          <div className="rounded-md shadow-sm -space-y-px">
+            <div>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-maritime-navy">Connexion</h1>
-              <p className="text-sm text-gray-600">Accès utilisateur / admin par PIN</p>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="Mot de passe"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
             </div>
           </div>
 
-          {error && (
-            <div className="bg-red-50 border border-red-300 rounded-xl p-4 flex items-start mb-5">
-              <AlertCircle className="h-5 w-5 text-red-600 mr-2 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-red-700">{error}</p>
-            </div>
-          )}
-
-          <form onSubmit={onSubmit} className="space-y-5">
-            <div>
-              <label className="block text-sm font-semibold text-maritime-navy mb-2">Rôle</label>
-              <select
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-accent-500 focus:border-accent-500 hover:border-gray-400 transition-all duration-200"
+          <div className="flex items-center justify-between">
+            <div className="text-sm">
+              <Link
+                to="/forgot-password"
+                className="font-medium text-indigo-600 hover:text-indigo-500"
               >
-                <option value="user">Utilisateur</option>
-                <option value="admin">Admin</option>
-              </select>
+                Mot de passe oublié?
+              </Link>
             </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-maritime-navy mb-2">PIN</label>
-              <input
-                type="password"
-                inputMode="numeric"
-                value={pin}
-                onChange={(e) => setPin(e.target.value)}
-                className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-accent-500 focus:border-accent-500 hover:border-gray-400 transition-all duration-200"
-                placeholder="••••"
-                required
-              />
+            <div className="text-sm">
+              <Link
+                to="/register"
+                className="font-medium text-indigo-600 hover:text-indigo-500"
+              >
+                S'inscrire
+              </Link>
             </div>
+          </div>
 
+          <div>
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-white py-4 px-6 rounded-lg font-bold text-base shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-accent-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
             >
               {loading ? 'Connexion...' : 'Se connecter'}
             </button>
-          </form>
-
-          <div className="mt-6 text-xs text-gray-500">
-            <p>Astuce: configure les PIN via les variables:</p>
-            <p className="font-mono">VITE_USER_PIN</p>
-            <p className="font-mono">VITE_ADMIN_PIN</p>
           </div>
-        </div>
+        </form>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Login
+export default Login;

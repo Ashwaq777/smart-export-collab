@@ -1,50 +1,75 @@
 import React from 'react'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { ToastProvider } from './components/ui/Toast'
 import { MainLayout } from './components/layout/MainLayout'
-import ProtectedRoute from './components/auth/ProtectedRoute'
+import { AuthProvider } from './context/AuthContext'
+import { ProtectedRoute } from './components/ProtectedRoute'
 import Home from './pages/Home'
 import About from './pages/About'
 import Admin from './pages/Admin'
 import MaritimeShipping from './pages/MaritimeShipping'
 import Calculator from './pages/Calculator'
 import Login from './pages/Login'
+import Register from './pages/Register'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 
 function App() {
   return (
     <Router>
-      <ToastProvider>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/" element={
-            <MainLayout>
-              <Home />
-            </MainLayout>
-          } />
-          <Route path="/calculator" element={
-            <MainLayout>
-              <Calculator />
-            </MainLayout>
-          } />
-          <Route path="/maritime-shipping" element={
-            <MainLayout>
-              <MaritimeShipping />
-            </MainLayout>
-          } />
-          <Route path="/about" element={
-            <MainLayout>
-              <About />
-            </MainLayout>
-          } />
-          <Route path="/admin" element={
-            <ProtectedRoute requireAdmin>
-              <MainLayout showFooter={false}>
-                <Admin />
-              </MainLayout>
-            </ProtectedRoute>
-          } />
-        </Routes>
-      </ToastProvider>
+      <AuthProvider>
+        <ToastProvider>
+          <Routes>
+            {/* Routes publiques */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+
+            {/* Routes protégées */}
+            <Route path="/" element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <Home />
+                </MainLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/calculator" element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <Calculator />
+                </MainLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/maritime-shipping" element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <MaritimeShipping />
+                </MainLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/about" element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <About />
+                </MainLayout>
+              </ProtectedRoute>
+            } />
+
+            {/* Route Admin */}
+            <Route path="/admin" element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <MainLayout showFooter={false}>
+                  <Admin />
+                </MainLayout>
+              </ProtectedRoute>
+            } />
+
+            {/* Redirect par défaut */}
+            <Route path="*" element={<Navigate to="/login" replace />} />
+          </Routes>
+        </ToastProvider>
+      </AuthProvider>
     </Router>
   )
 }

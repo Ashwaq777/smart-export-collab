@@ -1,60 +1,58 @@
-const STORAGE_KEY = 'smartexport:auth'
+const API_URL = import.meta.env.VITE_API_BASE_URL || 
+                'http://localhost:8080/api';
 
-const read = () => {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return null
-    const parsed = JSON.parse(raw)
-    if (!parsed || typeof parsed !== 'object') return null
-    if (parsed.role !== 'user' && parsed.role !== 'admin') return null
-    return parsed
-  } catch {
-    return null
-  }
-}
-
-const write = (value) => {
-  if (!value) {
-    localStorage.removeItem(STORAGE_KEY)
-    return
-  }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(value))
-}
-
-export const authService = {
-  getAuth: () => read(),
-
-  isAuthenticated: () => Boolean(read()),
-
-  isAdmin: () => {
-    const a = read()
-    return Boolean(a && a.role === 'admin')
+const authService = {
+  login: async (email, password) => {
+    const response = await fetch(`${API_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    if (!response.ok) throw new Error('Login failed');
+    return response.json();
   },
 
-  login: ({ role, pin }) => {
-    const normalizedRole = role === 'admin' ? 'admin' : 'user'
+  register: async (email, password, role) => {
+    const response = await fetch(`${API_URL}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, role })
+    });
+    if (!response.ok) throw new Error('Register failed');
+    return response.json();
+  },
 
-    const userPin = String(import.meta.env?.VITE_USER_PIN || '1234')
-    const adminPin = String(import.meta.env?.VITE_ADMIN_PIN || '0000')
+  forgotPassword: async (email) => {
+    const response = await fetch(`${API_URL}/auth/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    return response.ok;
+  },
 
-    const expected = normalizedRole === 'admin' ? adminPin : userPin
-    if (String(pin || '') !== expected) {
-      const err = new Error('PIN incorrect')
-      err.code = 'INVALID_PIN'
-      throw err
-    }
-
-    const auth = {
-      role: normalizedRole,
-      loginAt: Date.now(),
-    }
-    write(auth)
-    return auth
+  resetPassword: async (token, newPassword) => {
+    const response = await fetch(`${API_URL}/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, newPassword })
+    });
+    return response.ok;
   },
 
   logout: () => {
-    write(null)
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
   },
-}
 
-export default authService
+  getToken: () => localStorage.getItem('token'),
+  
+  getUser: () => {
+    const user = localStorage.getItem('user');
+    return user ? JSON.parse(user) : null;
+  },
+
+  isAuthenticated: () => !!localStorage.getItem('token')
+};
+
+export default authService;

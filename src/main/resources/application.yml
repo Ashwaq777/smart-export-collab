@@ -49,3 +49,7 @@ logging:
   level:
     com.smartexport: DEBUG
     org.hibernate.SQL: DEBUG
+
+jwt:
+  secret: ${JWT_SECRET:smartexport-secret-key-2024-very-long-and-secure-for-hs512-algorithm-minimum-512-bits-required}
+  expiration: ${JWT_EXPIRATION:86400000}

@@ -1,27 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Ship, Anchor, Menu, X, UserCircle, LogOut } from 'lucide-react'
-import authService from '../../services/authService'
+import { useAuth } from '../../context/AuthContext'
 
 export const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const location = useLocation()
-
-  const [auth, setAuth] = useState(() => authService.getAuth())
-
-  useEffect(() => {
-    setAuth(authService.getAuth())
-  }, [location.pathname])
-
-  useEffect(() => {
-    const onStorage = (e) => {
-      if (e.key && e.key !== 'smartexport:auth') return
-      setAuth(authService.getAuth())
-    }
-    window.addEventListener('storage', onStorage)
-    return () => window.removeEventListener('storage', onStorage)
-  }, [])
+  const { user, logout } = useAuth()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -36,12 +22,11 @@ export const Header = () => {
     { path: '/', label: 'Calculator', hash: '#calculator' },
     { path: '/maritime-shipping', label: 'Maritime Shipping' },
     { path: '/about', label: 'About Us' },
-    ...(auth?.role === 'admin' ? [{ path: '/admin', label: 'Admin' }] : []),
+    ...(user?.role === 'ADMIN' ? [{ path: '/admin', label: 'Admin' }] : []),
   ]
 
   const handleLogout = () => {
-    authService.logout()
-    setAuth(null)
+    logout()
     setIsMobileMenuOpen(false)
   }
 
@@ -101,7 +86,7 @@ export const Header = () => {
               Start Simulation
             </Link>
 
-            {auth ? (
+            {user ? (
               <button
                 type="button"
                 onClick={handleLogout}
@@ -109,7 +94,7 @@ export const Header = () => {
                 title="Logout"
               >
                 <UserCircle className="w-5 h-5" />
-                <span className="text-sm font-semibold">{auth.role}</span>
+                <span className="text-sm font-semibold">{user.role}</span>
                 <LogOut className="w-4 h-4" />
               </button>
             ) : (
@@ -162,14 +147,14 @@ export const Header = () => {
                 Start Simulation
               </Link>
 
-              {auth ? (
+              {user ? (
                 <button
                   type="button"
                   onClick={handleLogout}
                   className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg border border-gray-200 text-gray-700 font-semibold"
                 >
                   <UserCircle className="w-5 h-5" />
-                  <span>Logout ({auth.role})</span>
+                  <span>Logout ({user.role})</span>
                   <LogOut className="w-4 h-4" />
                 </button>
               ) : (

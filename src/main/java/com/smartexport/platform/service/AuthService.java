@@ -1,5 +1,6 @@
 package com.smartexport.platform.service;
 
+import com.smartexport.platform.dto.auth.LoginResponse;
 import com.smartexport.platform.entity.PasswordReset;
 import com.smartexport.platform.entity.Role;
 import com.smartexport.platform.entity.User;
@@ -36,41 +37,33 @@ public class AuthService {
         this.auditService = auditService;
     }
 
-    public String login(String email, String password, 
-                        String ip, String device) {
-        User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new RuntimeException("User not found"));
-
-        if (user.getStatus() != UserStatus.ACTIVE) {
-            auditService.logAction(user.getId(), "LOGIN_FAILED", ip, device, false, "Account not active");
-            throw new RuntimeException("Account not active");
-        }
-
-        if (user.getLockTime() != null && user.getLockTime().isAfter(LocalDateTime.now())) {
-            auditService.logAction(user.getId(), "LOGIN_FAILED", ip, device, false, "Account locked");
-            throw new RuntimeException("Account locked");
-        }
-
-        if (!passwordEncoder.matches(password, user.getPasswordHash())) {
-            user.setFailedAttempts(user.getFailedAttempts() + 1);
-            if (user.getFailedAttempts() >= 5) {
-                user.setLockTime(LocalDateTime.now().plusHours(1));
-                auditService.logAction(user.getId(), "ACCOUNT_LOCKED", ip, device, false, "Too many failed attempts");
-            }
-            userRepository.save(user);
-            auditService.logAction(user.getId(), "LOGIN_FAILED", ip, device, false, "Invalid password");
-            throw new RuntimeException("Invalid credentials");
-        }
-
-        user.setFailedAttempts(0);
-        user.setLockTime(null);
-        user.setLastLogin(LocalDateTime.now());
-        userRepository.save(user);
-
-        auditService.logAction(user.getId(), "LOGIN_SUCCESS", ip, device, true, null);
-
-        return jwtTokenProvider.generateToken(user.getEmail(), user.getRole().name());
+    public String login(String email, String password, String ip, String device) {
+    var user = userRepository.findByEmail(email)
+        .orElseThrow(() -> new RuntimeException("User not found"));
+    
+    if (user.getStatus() == UserStatus.BLOCKED) {
+        throw new RuntimeException("Account blocked");
     }
+    
+    if (!passwordEncoder.matches(password, user.getPasswordHash())) {
+        int attempts = user.getFailedAttempts() == null ? 0 : user.getFailedAttempts();
+        attempts++;
+        user.setFailedAttempts(attempts);
+        if (attempts >= 5) {
+            user.setStatus(UserStatus.BLOCKED);
+            user.setLockTime(LocalDateTime.now());
+        }
+        userRepository.save(user);
+        throw new RuntimeException("Invalid credentials");
+    }
+    
+    user.setFailedAttempts(0);
+    user.setLastLogin(LocalDateTime.now());
+    userRepository.save(user);
+    
+    auditService.logAction(user.getId(), "LOGIN", ip, device, true, null);
+    return jwtTokenProvider.generateToken(user.getEmail(), user.getRole().name());
+}
 
     public void register(String email, String password, Role role) {
         if (userRepository.existsByEmail(email)) {

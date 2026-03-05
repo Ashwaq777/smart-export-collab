@@ -2,6 +2,7 @@ package com.smartexport.platform.controller;
 
 import com.smartexport.platform.dto.auth.*;
 import com.smartexport.platform.entity.Role;
+import com.smartexport.platform.repository.UserRepository;
 import com.smartexport.platform.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -9,37 +10,36 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/auth")
 @Slf4j
 public class AuthController {
 
     private final AuthService authService;
+    private final UserRepository userRepository;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, UserRepository userRepository) {
         this.authService = authService;
+        this.userRepository = userRepository;
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(
-        @RequestBody LoginRequest request,
-        HttpServletRequest httpRequest) {
-        
-        String ip = getClientIpAddress(httpRequest);
-        String device = httpRequest.getHeader("User-Agent");
-        
+    public ResponseEntity<?> login(@RequestBody LoginRequest request,
+                                   HttpServletRequest httpRequest) {
         try {
-            String token = authService.login(request.getEmail(), request.getPassword(), ip, device);
-            
-            LoginResponse response = new LoginResponse();
-            response.setToken(token);
-            response.setEmail(request.getEmail());
-            response.setRole("USER"); // TODO: Get role from user
-            
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            log.error("Login failed for {}: {}", request.getEmail(), e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            String ip = httpRequest.getRemoteAddr();
+            String device = httpRequest.getHeader("User-Agent");
+            String token = authService.login(request.getEmail(), 
+                                             request.getPassword(), ip, device);
+            var user = userRepository.findByEmail(request.getEmail()).get();
+            return ResponseEntity.ok(new LoginResponse(
+                token, user.getEmail(), user.getRole().name()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(401)
+                .body(Map.of("error", e.getMessage()));
         }
     }
 

@@ -48,7 +48,8 @@ public class AuthController {
         try {
             Role role = Role.valueOf(request.getRole());
             authService.register(request.getEmail(), request.getPassword(), role);
-            return ResponseEntity.status(HttpStatus.CREATED).build();
+            return ResponseEntity.status(HttpStatus.CREATED)
+                .body(Map.of("message", "User registered successfully"));
         } catch (RuntimeException e) {
             log.error("Registration failed: {}", e.getMessage());
             return ResponseEntity.badRequest().body(e.getMessage());

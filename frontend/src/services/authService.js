@@ -8,7 +8,12 @@ const authService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
     });
-    if (!response.ok) throw new Error('Login failed');
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || errorData.message || `Login failed (${response.status})`);
+    }
+    
     return response.json();
   },
 
@@ -18,7 +23,12 @@ const authService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password, role })
     });
-    if (!response.ok) throw new Error('Register failed');
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || errorData.error || `Register failed (${response.status})`);
+    }
+    
     return response.json();
   },
 

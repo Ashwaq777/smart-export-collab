@@ -95,15 +95,12 @@ const Register = () => {
                 Mot de passe
               </label>
               <input
-                id="password"
-                name="password"
                 type="password"
-                autoComplete="new-password"
-                required
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                placeholder="Min 6 caractères"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                placeholder="Mot de passe"
+                minLength={6}
+                required
               />
             </div>
 
@@ -112,15 +109,11 @@ const Register = () => {
                 Confirmer le mot de passe
               </label>
               <input
-                id="confirmPassword"
-                name="confirmPassword"
                 type="password"
-                autoComplete="new-password"
-                required
-                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                placeholder="Confirmez le mot de passe"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirmer le mot de passe"
+                required
               />
             </div>
           </div>

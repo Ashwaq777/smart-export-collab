@@ -20,7 +20,7 @@ const Login = () => {
       if (data.role === 'ADMIN') {
         navigate('/admin');
       } else {
-        navigate('/dashboard');
+        navigate('/');
       }
     } catch (err) {
       setError('Email ou mot de passe incorrect');

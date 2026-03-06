@@ -19,8 +19,8 @@ export const Header = () => {
 
   const navLinks = [
     { path: '/', label: 'Home' },
-    { path: '/', label: 'Calculator', hash: '#calculator' },
-    { path: '/maritime-shipping', label: 'Maritime Shipping' },
+    ...(user?.role !== 'ADMIN' ? [{ path: '/', label: 'Calculator', hash: '#calculator' }] : []),
+    ...(user?.role !== 'ADMIN' ? [{ path: '/traceability', label: 'Traçabilité' }] : []),
     { path: '/about', label: 'About Us' },
     ...(user?.role === 'ADMIN' ? [{ path: '/admin', label: 'Admin' }] : []),
   ]

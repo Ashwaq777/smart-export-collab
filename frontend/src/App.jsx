@@ -7,8 +7,9 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 import Home from './pages/Home'
 import About from './pages/About'
 import Admin from './pages/Admin'
-import MaritimeShipping from './pages/MaritimeShipping'
+import AdminDashboard from './pages/AdminDashboard'
 import Calculator from './pages/Calculator'
+import TraceabilityPage from './pages/TraceabilityPage'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import ForgotPassword from './pages/ForgotPassword'
@@ -35,16 +36,16 @@ function App() {
               </ProtectedRoute>
             } />
             <Route path="/calculator" element={
-              <ProtectedRoute>
+              <ProtectedRoute excludeRole="ADMIN">
                 <MainLayout>
                   <Calculator />
                 </MainLayout>
               </ProtectedRoute>
             } />
-            <Route path="/maritime-shipping" element={
-              <ProtectedRoute>
+            <Route path="/traceability" element={
+              <ProtectedRoute excludeRole="ADMIN">
                 <MainLayout>
-                  <MaritimeShipping />
+                  <TraceabilityPage />
                 </MainLayout>
               </ProtectedRoute>
             } />
@@ -58,10 +59,8 @@ function App() {
 
             {/* Route Admin */}
             <Route path="/admin" element={
-              <ProtectedRoute requiredRole="ADMIN">
-                <MainLayout showFooter={false}>
-                  <Admin />
-                </MainLayout>
+              <ProtectedRoute role="ADMIN">
+                <AdminDashboard />
               </ProtectedRoute>
             } />
 

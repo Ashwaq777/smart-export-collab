@@ -36,4 +36,23 @@ public class UserAdminService {
         user.setStatus(newStatus);
         return userRepository.save(user);
     }
+
+    public User toggleUserStatus(Long userId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        // Toggle between ACTIVE and BLOCKED
+        UserStatus newStatus = user.getStatus() == UserStatus.ACTIVE ? 
+            UserStatus.BLOCKED : UserStatus.ACTIVE;
+        user.setStatus(newStatus);
+        
+        return userRepository.save(user);
+    }
+
+    public void deleteUser(Long userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new RuntimeException("User not found");
+        }
+        userRepository.deleteById(userId);
+    }
 }

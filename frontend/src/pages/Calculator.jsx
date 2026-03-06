@@ -348,351 +348,393 @@ function Calculator() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-6">
-      <div className="text-center mb-12">
-        <h2 className="text-4xl md:text-5xl font-bold text-maritime-navy mb-4">
-          Export Duties Calculator
-        </h2>
-        <div className="w-24 h-1 bg-gradient-to-r from-accent-500 to-accent-600 mx-auto mb-6"></div>
-        <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-          Calculate complete import costs including customs duties, VAT, parafiscal taxes and port fees
-        </p>
+    <div className="maritime-calculator">
+      {/* Header Section */}
+      <div className="calculator-header">
+        <div className="header-content">
+          <div className="header-icon">
+            <CalcIcon className="w-8 h-8" />
+          </div>
+          <div className="header-text">
+            <h1 className="header-title">Export Duties Calculator</h1>
+            <p className="header-subtitle">
+              Calculate complete import costs including customs duties, VAT, parafiscal taxes and port fees
+            </p>
+          </div>
+        </div>
+        <div className="header-accent"></div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+      <div className="calculator-container">
         {/* Left Column - Form */}
-        <div className="lg:col-span-2">
-          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-8 sticky top-24">
-            <h3 className="text-2xl font-bold text-maritime-navy mb-6 flex items-center gap-2">
-              <CalcIcon className="w-6 h-6 text-accent-500" />
-              Product Information
-            </h3>
-          
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label className="block text-sm font-semibold text-maritime-navy mb-2">
-                Catégorie
-              </label>
-              <select
-                name="categorie"
-                value={formData.categorie}
-                onChange={handleInputChange}
-                required
-                className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-accent-500 focus:border-accent-500 hover:border-gray-400 transition-all duration-200"
-              >
-                <option value="" className="bg-dark-hover text-white">Sélectionnez une catégorie</option>
-                {categories.map(cat => (
-                  <option key={cat} value={cat} className="bg-dark-hover text-white">{cat}</option>
-                ))}
-              </select>
+        <div className="form-column">
+          <div className="form-card">
+            <div className="card-header">
+              <CalcIcon className="card-icon" />
+              <h2 className="card-title">Product Information</h2>
             </div>
+            
+            <form onSubmit={handleSubmit} className="calculator-form">
+              {/* Basic Information Card */}
+              <div className="form-section">
+                <h3 className="section-title">Basic Information</h3>
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label className="form-label">
+                      Catégorie
+                    </label>
+                    <select
+                      name="categorie"
+                      value={formData.categorie}
+                      onChange={handleInputChange}
+                      required
+                      className="form-select"
+                    >
+                      <option value="">Sélectionnez une catégorie</option>
+                      {categories.map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
+                  </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-maritime-navy mb-2">
-                Pays de destination
-              </label>
-              {maritimeCountriesError && (
-                <div className="mb-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
-                  {maritimeCountriesError}
+                  <div className="form-group">
+                    <label className="form-label">
+                      Pays de destination
+                    </label>
+                    {maritimeCountriesError && (
+                      <div className="form-error">
+                        {maritimeCountriesError}
+                      </div>
+                    )}
+                    {countriesError && (
+                      <div className="form-error">
+                        {countriesError}
+                      </div>
+                    )}
+                    <select
+                      name="paysDestination"
+                      value={formData.paysDestination}
+                      onChange={handleInputChange}
+                      required
+                      disabled={maritimeCountriesLoading}
+                      className="form-select"
+                    >
+                      <option value="">
+                        {maritimeCountriesLoading ? '-- Chargement pays --' : '-- Sélectionner pays --'}
+                      </option>
+                      {(maritimeCountries || []).map((c) => (
+                        <option key={c.iso2 || c.code} value={c.nameFr || c.name}>
+                          {c.flagEmoji ? `${c.flagEmoji} ` : ''}{c.nameFr || c.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">
+                      Port (destination)
+                    </label>
+                    {portsLoading ? (
+                      <div className="loading-text">Chargement des ports...</div>
+                    ) : (
+                      <select
+                        name="portId"
+                        value={formData.portId}
+                        onChange={handleInputChange}
+                        disabled={!formData.paysDestination || ports.length === 0}
+                        className="form-select"
+                      >
+                        <option value="">-- Sélectionner port --</option>
+                        {ports.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.nomPort || p.nom || p.name}
+                            {p.ville ? ` - ${p.ville}` : ''}
+                            {p.fraisPortuaires ? ` | ${p.fraisPortuaires} USD` : ''}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                    {portMessage && (
+                      <div className="form-warning">
+                        {portMessage}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">
+                      Produit
+                    </label>
+                    <select
+                      name="codeHs"
+                      value={formData.codeHs}
+                      onChange={handleInputChange}
+                      required
+                      disabled={!formData.categorie}
+                      className="form-select"
+                    >
+                      <option value="">Sélectionnez un produit</option>
+                      {products.map(product => (
+                        <option key={product.id} value={product.codeHs}>
+                          {product.nomProduit} ({product.codeHs})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Financial Information Card */}
+              <div className="form-section">
+                <h3 className="section-title">Financial Information</h3>
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label className="form-label">
+                      Valeur CIF (FOB)
+                    </label>
+                    <input
+                      type="number"
+                      name="valeurFob"
+                      value={formData.valeurFob}
+                      onChange={handleInputChange}
+                      required
+                      step="0.01"
+                      min="0.01"
+                      className="form-input"
+                      placeholder="0.00"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">
+                      Coût de transport
+                    </label>
+                    <input
+                      type="number"
+                      name="coutTransport"
+                      value={formData.coutTransport}
+                      onChange={handleInputChange}
+                      required
+                      step="0.01"
+                      min="0"
+                      className="form-input"
+                      placeholder="0.00"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">
+                      Assurance
+                    </label>
+                    <input
+                      type="number"
+                      name="assurance"
+                      value={formData.assurance}
+                      onChange={handleInputChange}
+                      required
+                      step="0.01"
+                      min="0"
+                      className="form-input"
+                      placeholder="0.00"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">
+                      Devise
+                    </label>
+                    <select
+                      name="currency"
+                      value={formData.currency}
+                      onChange={handleInputChange}
+                      className="form-select"
+                    >
+                      {WORLD_CURRENCIES.map(currency => (
+                        <option key={currency.code} value={currency.code}>
+                          {currency.code} - {currency.name} ({currency.symbol})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Legal Information Card */}
+              <div className="form-section">
+                <h3 className="section-title">Informations Légales (optionnel)</h3>
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label className="form-label">
+                      Nom Entreprise
+                    </label>
+                    <input
+                      type="text"
+                      name="nomEntreprise"
+                      value={formData.nomEntreprise}
+                      onChange={handleInputChange}
+                      placeholder="Nom Entreprise"
+                      className="form-input"
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label className="form-label">
+                      Registre Commerce (RC)
+                    </label>
+                    <input
+                      type="text"
+                      name="registreCommerce"
+                      value={formData.registreCommerce}
+                      onChange={handleInputChange}
+                      placeholder="Registre Commerce (RC)"
+                      className="form-input"
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label className="form-label">
+                      ICE
+                    </label>
+                    <input
+                      type="text"
+                      name="ice"
+                      value={formData.ice}
+                      onChange={handleInputChange}
+                      placeholder="ICE"
+                      className="form-input"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">
+                      Incoterm
+                    </label>
+                    <select
+                      name="incoterm"
+                      value={formData.incoterm}
+                      onChange={handleInputChange}
+                      className="form-select"
+                    >
+                      <option value="FOB">FOB (Free On Board)</option>
+                      <option value="CIF">CIF (Cost, Insurance & Freight)</option>
+                      <option value="EXW">EXW (Ex Works)</option>
+                      <option value="DDP">DDP (Delivered Duty Paid)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Information Card */}
+              <div className="form-section">
+                <h3 className="section-title">Additional Information</h3>
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label className="form-label">
+                      Prix de vente prévisionnel (optionnel)
+                    </label>
+                    <input
+                      type="number"
+                      name="prixVentePrevisionnel"
+                      value={formData.prixVentePrevisionnel}
+                      onChange={handleInputChange}
+                      step="0.01"
+                      min="0"
+                      placeholder="Pour analyse de rentabilité"
+                      className="form-input"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">
+                      Poids Net (kg)
+                    </label>
+                    <input
+                      type="number"
+                      name="poidsNet"
+                      value={formData.poidsNet}
+                      onChange={handleInputChange}
+                      step="0.01"
+                      min="0"
+                      placeholder="Poids Net (kg)"
+                      className="form-input"
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label className="form-label">
+                      Poids Brut (kg)
+                    </label>
+                    <input
+                      type="number"
+                      name="poidsBrut"
+                      value={formData.poidsBrut}
+                      onChange={handleInputChange}
+                      step="0.01"
+                      min="0"
+                      placeholder="Poids Brut (kg)"
+                      className="form-input"
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label className="form-label">
+                      Type Unité
+                    </label>
+                    <input
+                      type="text"
+                      name="typeUnite"
+                      value={formData.typeUnite}
+                      onChange={handleInputChange}
+                      placeholder="Type Unité (ex: conteneur 40')"
+                      className="form-input"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {error && (
+                <div className="form-error-card">
+                  <AlertCircle className="error-icon" />
+                  <p className="error-text">{error}</p>
                 </div>
               )}
-              {countriesError && (
-                <div className="mb-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
-                  {countriesError}
-                </div>
-              )}
-              <select
-                name="paysDestination"
-                value={formData.paysDestination}
-                onChange={handleInputChange}
-                required
-                disabled={maritimeCountriesLoading}
-                className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-accent-500 focus:border-accent-500 hover:border-gray-400 transition-all duration-200"
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="submit-button"
               >
-                <option value="">
-                  {maritimeCountriesLoading ? '-- Chargement pays --' : '-- Sélectionner pays --'}
-                </option>
-                {(maritimeCountries || []).map((c) => (
-                  <option key={c.iso2 || c.code} value={c.nameFr || c.name}>
-                    {c.flagEmoji ? `${c.flagEmoji} ` : ''}{c.nameFr || c.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-maritime-navy mb-2">
-                Port (destination)
-              </label>
-
-              {portsLoading ? (
-                <div className="text-sm text-gray-500">Chargement des ports...</div>
-              ) : (
-                <select
-                  name="portId"
-                  value={formData.portId}
-                  onChange={handleInputChange}
-                  disabled={!formData.paysDestination || ports.length === 0}
-                  className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-accent-500 focus:border-accent-500 hover:border-gray-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <option value="">-- Sélectionner port --</option>
-                  {ports.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.nomPort || p.nom || p.name}
-                      {p.ville ? ` - ${p.ville}` : ''}
-                      {p.fraisPortuaires ? ` | ${p.fraisPortuaires} USD` : ''}
-                    </option>
-                  ))}
-                </select>
-              )}
-
-              {portMessage && (
-                <div className="mt-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
-                  {portMessage}
-                </div>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-maritime-navy mb-2">
-                Produit
-              </label>
-              <select
-                name="codeHs"
-                value={formData.codeHs}
-                onChange={handleInputChange}
-                required
-                disabled={!formData.categorie}
-                className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-accent-500 focus:border-accent-500 hover:border-gray-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <option value="" className="bg-dark-hover text-white">Sélectionnez un produit</option>
-                {products.map(product => (
-                  <option key={product.id} value={product.codeHs} className="bg-dark-hover text-white">
-                    {product.nomProduit} ({product.codeHs})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-maritime-navy mb-2">
-                Valeur CIF (FOB)
-              </label>
-              <input
-                type="number"
-                name="valeurFob"
-                value={formData.valeurFob}
-                onChange={handleInputChange}
-                required
-                step="0.01"
-                min="0.01"
-                className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-accent-500 focus:border-accent-500 hover:border-gray-400 transition-all duration-200"
-                placeholder="0.00"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-maritime-navy mb-2">
-                Coût de transport
-              </label>
-              <input
-                type="number"
-                name="coutTransport"
-                value={formData.coutTransport}
-                onChange={handleInputChange}
-                required
-                step="0.01"
-                min="0"
-                className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-accent-500 focus:border-accent-500 hover:border-gray-400 transition-all duration-200"
-                placeholder="0.00"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-maritime-navy mb-2">
-                Assurance
-              </label>
-              <input
-                type="number"
-                name="assurance"
-                value={formData.assurance}
-                onChange={handleInputChange}
-                required
-                step="0.01"
-                min="0"
-                className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-accent-500 focus:border-accent-500 hover:border-gray-400 transition-all duration-200"
-                placeholder="0.00"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-maritime-navy mb-2">
-                Devise
-              </label>
-              <select
-                name="currency"
-                value={formData.currency}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-accent-500 focus:border-accent-500 hover:border-gray-400 transition-all duration-200"
-              >
-                {WORLD_CURRENCIES.map(currency => (
-                  <option key={currency.code} value={currency.code}>
-                    {currency.code} - {currency.name} ({currency.symbol})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Legal Identifiers */}
-            <div className="border-t-2 border-gray-200 pt-4 mt-4">
-              <h4 className="text-sm font-bold text-maritime-navy mb-3">Informations Légales (optionnel)</h4>
-              
-              <div className="space-y-3">
-                <input
-                  type="text"
-                  name="nomEntreprise"
-                  value={formData.nomEntreprise}
-                  onChange={handleInputChange}
-                  placeholder="Nom Entreprise"
-                  className="w-full px-4 py-2 bg-white border-2 border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-accent-500 focus:border-accent-500 hover:border-gray-400 transition-all duration-200"
-                />
-                
-                <input
-                  type="text"
-                  name="registreCommerce"
-                  value={formData.registreCommerce}
-                  onChange={handleInputChange}
-                  placeholder="Registre Commerce (RC)"
-                  className="w-full px-4 py-2 bg-white border-2 border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-accent-500 focus:border-accent-500 hover:border-gray-400 transition-all duration-200"
-                />
-                
-                <input
-                  type="text"
-                  name="ice"
-                  value={formData.ice}
-                  onChange={handleInputChange}
-                  placeholder="ICE"
-                  className="w-full px-4 py-2 bg-white border-2 border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-accent-500 focus:border-accent-500 hover:border-gray-400 transition-all duration-200"
-                />
-              </div>
-            </div>
-
-            {/* Incoterm */}
-            <div>
-              <label className="block text-sm font-semibold text-maritime-navy mb-2">
-                Incoterm
-              </label>
-              <select
-                name="incoterm"
-                value={formData.incoterm}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-accent-500 focus:border-accent-500 hover:border-gray-400 transition-all duration-200"
-              >
-                <option value="FOB">FOB (Free On Board)</option>
-                <option value="CIF">CIF (Cost, Insurance & Freight)</option>
-                <option value="EXW">EXW (Ex Works)</option>
-                <option value="DDP">DDP (Delivered Duty Paid)</option>
-              </select>
-            </div>
-
-            {/* Profitability */}
-            <div>
-              <label className="block text-sm font-semibold text-maritime-navy mb-2">
-                Prix de vente prévisionnel (optionnel)
-              </label>
-              <input
-                type="number"
-                name="prixVentePrevisionnel"
-                value={formData.prixVentePrevisionnel}
-                onChange={handleInputChange}
-                step="0.01"
-                min="0"
-                placeholder="Pour analyse de rentabilité"
-                className="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-accent-500 focus:border-accent-500 hover:border-gray-400 transition-all duration-200"
-              />
-            </div>
-
-            {/* Logistics Details */}
-            <div className="border-t-2 border-gray-200 pt-4 mt-4">
-              <h4 className="text-sm font-bold text-maritime-navy mb-3">Détails Logistiques (optionnel)</h4>
-              
-              <div className="grid grid-cols-2 gap-3">
-                <input
-                  type="number"
-                  name="poidsNet"
-                  value={formData.poidsNet}
-                  onChange={handleInputChange}
-                  step="0.01"
-                  min="0"
-                  placeholder="Poids Net (kg)"
-                  className="w-full px-4 py-2 bg-white border-2 border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-accent-500 focus:border-accent-500 hover:border-gray-400 transition-all duration-200"
-                />
-                
-                <input
-                  type="number"
-                  name="poidsBrut"
-                  value={formData.poidsBrut}
-                  onChange={handleInputChange}
-                  step="0.01"
-                  min="0"
-                  placeholder="Poids Brut (kg)"
-                  className="w-full px-4 py-2 bg-white border-2 border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-accent-500 focus:border-accent-500 hover:border-gray-400 transition-all duration-200"
-                />
-              </div>
-              
-              <input
-                type="text"
-                name="typeUnite"
-                value={formData.typeUnite}
-                onChange={handleInputChange}
-                placeholder="Type Unité (ex: conteneur 40')"
-                className="w-full px-4 py-2 bg-white border-2 border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-accent-500 focus:border-accent-500 hover:border-gray-400 transition-all duration-200 mt-3"
-              />
-            </div>
-
-            {error && (
-              <div className="bg-red-50 border border-red-300 rounded-xl p-4 flex items-start">
-                <AlertCircle className="h-5 w-5 text-red-600 mr-2 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-red-700">{error}</p>
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-white py-4 px-6 rounded-lg font-bold text-base shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-accent-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
-            >
-              {loading ? 'Calculating...' : 'Calculate Landed Cost'}
-            </button>
-          </form>
+                {loading ? 'Calculating...' : 'Calculate Landed Cost'}
+              </button>
+            </form>
           </div>
         </div>
 
         {/* Right Column - Results */}
-        <div className="lg:col-span-3">
+        <div className="results-column">
           {result && (
-            <div className="space-y-6">
-              <CostDashboard result={result} />
+            <div className="results-container">
+              <div className="results-card">
+                <CostDashboard result={result} />
+              </div>
               
               <button
                 onClick={handleDownloadPdf}
-                className="w-full bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-600 text-white py-4 px-6 rounded-lg font-bold shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-300 flex items-center justify-center gap-2"
+                className="download-button"
               >
-                <Download className="h-5 w-5" />
+                <Download className="button-icon" />
                 Download PDF Report
               </button>
             </div>
           )}
           
           {!result && (
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-12 text-center">
-              <div className="w-24 h-24 bg-gradient-to-br from-accent-100 to-accent-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <CalcIcon className="h-12 w-12 text-accent-600" />
+            <div className="placeholder-card">
+              <div className="placeholder-icon">
+                <CalcIcon className="w-12 h-12" />
               </div>
-              <h3 className="text-2xl font-bold text-maritime-navy mb-3">
-                Ready to Calculate?
-              </h3>
-              <p className="text-gray-600 text-lg">
+              <h3 className="placeholder-title">Ready to Calculate?</h3>
+              <p className="placeholder-text">
                 Fill in the form to see your complete import cost breakdown
               </p>
             </div>

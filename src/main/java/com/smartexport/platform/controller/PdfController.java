@@ -23,20 +23,19 @@ public class PdfController {
     @PostMapping("/landed-cost")
     public ResponseEntity<byte[]> generateLandedCostPdf(
             @Valid @RequestBody LandedCostCalculationDto request) {
-        
-        LandedCostResultDto result = calculationService.calculateLandedCost(request);
-        
-        byte[] pdfBytes = pdfGenerationService.generateLandedCostPdf(result);
-        
-        String filename = "landed_cost_" + result.getCodeHs().replace(".", "_") + ".pdf";
-        
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_PDF);
-        headers.setContentDispositionFormData("attachment", filename);
-        headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
-        
-        return ResponseEntity.ok()
-            .headers(headers)
-            .body(pdfBytes);
+        try {
+            LandedCostResultDto result = calculationService.calculateLandedCost(request);
+            byte[] pdfBytes = pdfGenerationService.generateLandedCostPdf(result);
+            String filename = "landed_cost_" + result.getCodeHs().replace(".", "_") + ".pdf";
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDispositionFormData("attachment", filename);
+            headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+            return ResponseEntity.ok().headers(headers).body(pdfBytes);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500)
+                .body(("PDF Error: " + e.getMessage()).getBytes());
+        }
     }
 }

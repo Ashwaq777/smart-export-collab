@@ -2,6 +2,8 @@ package com.smartexport.platform.pdf.common;
 
 import com.itextpdf.io.font.PdfEncodings;
 import com.itextpdf.io.font.constants.StandardFonts;
+import com.itextpdf.kernel.colors.ColorConstants;
+import com.itextpdf.kernel.colors.DeviceRgb;
 import com.itextpdf.kernel.events.Event;
 import com.itextpdf.kernel.events.IEventHandler;
 import com.itextpdf.kernel.events.PdfDocumentEvent;
@@ -22,8 +24,43 @@ import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
 import com.itextpdf.layout.properties.VerticalAlignment;
 
+import java.io.InputStream;
+
 public final class PdfHelper {
     private PdfHelper() {}
+
+    // Maritime theme color palette
+    public static final DeviceRgb DEEP_NAVY = new DeviceRgb(10, 22, 40);      // #0A1628
+    public static final DeviceRgb MID_NAVY = new DeviceRgb(15, 32, 64);        // #0F2040
+    public static final DeviceRgb SUBTITLE_NAVY = new DeviceRgb(30, 58, 95);   // #1E3A5F
+    public static final DeviceRgb GOLD = new DeviceRgb(201, 168, 76);          // #C9A84C
+    public static final DeviceRgb WHITE = new DeviceRgb(255, 255, 255);
+    public static final DeviceRgb LIGHT_BLUE_ROW = new DeviceRgb(245, 247, 250); // #F5F7FA
+    public static final DeviceRgb GRAY_TEXT = new DeviceRgb(107, 114, 128);    // #6B7280
+    public static final DeviceRgb BORDER_GRAY = new DeviceRgb(224, 224, 224);  // #E0E0E0
+    public static final DeviceRgb GREEN = new DeviceRgb(39, 174, 96);          // #27AE60
+    public static final DeviceRgb RED = new DeviceRgb(231, 76, 60);            // #E74C3C
+    public static final DeviceRgb LIGHT_GRAY = new DeviceRgb(240, 240, 240);  // #F0F0F0
+    public static final DeviceRgb SUBTOTAL_BLUE = new DeviceRgb(232, 240, 254); // #E8F0FE
+    public static final DeviceRgb LIGHT_GREEN = new DeviceRgb(240, 255, 244);  // #F0FFF4
+    public static final DeviceRgb LIGHT_RED = new DeviceRgb(255, 245, 245);    // #FFF5F5
+    public static final DeviceRgb WATERMARK_GRAY = new DeviceRgb(238, 238, 238); // #EEEEEE
+
+    // Typography constants
+    public static final float FONT_H1 = 38f;
+    public static final float FONT_H2 = 20f;
+    public static final float FONT_H3 = 14f;
+    public static final float FONT_H4 = 12f;
+    public static final float FONT_BODY = 10f;
+    public static final float FONT_SMALL = 9f;
+    public static final float FONT_TINY = 8f;
+
+    // Layout constants
+    public static final float MARGIN_TOP = 60f;
+    public static final float MARGIN_BOTTOM = 50f;
+    public static final float MARGIN_LEFT = 45f;
+    public static final float MARGIN_RIGHT = 45f;
+    public static final float LINE_HEIGHT = 1.5f;
 
     public static final class Fonts {
         public final PdfFont regular;
@@ -36,28 +73,34 @@ public final class PdfHelper {
     }
 
     public static Fonts loadFonts() {
-        // Best-effort Unicode: if you add NotoSans TTFs under src/main/resources/fonts/, they will be embedded.
         try {
-            PdfFont regular = PdfFontFactory.createFont(
-                "fonts/NotoSans-Regular.ttf",
-                PdfEncodings.IDENTITY_H,
-                PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED
-            );
-            PdfFont bold = PdfFontFactory.createFont(
-                "fonts/NotoSans-Bold.ttf",
-                PdfEncodings.IDENTITY_H,
-                PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED
-            );
-            return new Fonts(regular, bold);
-        } catch (Exception ignored) {
-            // Fallback: standard fonts (avoid special glyphs in text when using this fallback)
-            try {
-                PdfFont regular = PdfFontFactory.createFont(StandardFonts.HELVETICA);
-                PdfFont bold = PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
+            InputStream regularStream = PdfHelper.class.getClassLoader()
+                .getResourceAsStream("fonts/NotoSans-Regular.ttf");
+            InputStream boldStream = PdfHelper.class.getClassLoader()
+                .getResourceAsStream("fonts/NotoSans-Bold.ttf");
+
+            if (regularStream != null && boldStream != null) {
+                PdfFont regular = PdfFontFactory.createFont(
+                    regularStream.readAllBytes(),
+                    PdfEncodings.IDENTITY_H,
+                    PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED
+                );
+                PdfFont bold = PdfFontFactory.createFont(
+                    boldStream.readAllBytes(),
+                    PdfEncodings.IDENTITY_H,
+                    PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED
+                );
                 return new Fonts(regular, bold);
-            } catch (Exception e) {
-                throw new RuntimeException("Unable to load PDF fonts", e);
             }
+        } catch (Exception ignored) {}
+
+        // Fallback to standard fonts — always works, no files needed
+        try {
+            PdfFont regular = PdfFontFactory.createFont(StandardFonts.HELVETICA);
+            PdfFont bold = PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
+            return new Fonts(regular, bold);
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to load PDF fonts", e);
         }
     }
 
@@ -121,7 +164,7 @@ public final class PdfHelper {
     }
 
     public static void drawCoverBackground(PdfDocument pdfDoc) {
-        PdfPage page = pdfDoc.getFirstPage();
+        PdfPage page = pdfDoc.getPage(Math.max(1, pdfDoc.getNumberOfPages()));
         Rectangle size = page.getPageSize();
         PdfCanvas canvas = new PdfCanvas(page);
         canvas.saveState();
@@ -133,7 +176,7 @@ public final class PdfHelper {
     }
 
     public static void addRouteBox(PdfDocument pdfDoc, String text, Fonts fonts, float x, float y, float w, float h) {
-        PdfPage page = pdfDoc.getFirstPage();
+        PdfPage page = pdfDoc.getPage(Math.max(1, pdfDoc.getNumberOfPages()));
         PdfCanvas canvas = new PdfCanvas(page);
         canvas.saveState();
         canvas.setFillColor(PdfTheme.OCEAN_BLUE);
@@ -241,9 +284,9 @@ public final class PdfHelper {
             canvas.setExtGState(gs);
             canvas.beginText();
             canvas.setFontAndSize(fonts.bold, 60);
-            canvas.setFillColor(PdfTheme.NAVY_DEEP);
-            canvas.setTextMatrix((float) Math.cos(Math.toRadians(35)), (float) Math.sin(Math.toRadians(35)),
-                (float) -Math.sin(Math.toRadians(35)), (float) Math.cos(Math.toRadians(35)),
+            canvas.setFillColor(GRAY_TEXT);
+            canvas.setTextMatrix((float) Math.cos(Math.toRadians(45)), (float) Math.sin(Math.toRadians(45)),
+                (float) -Math.sin(Math.toRadians(45)), (float) Math.cos(Math.toRadians(45)),
                 size.getWidth() / 2 - 220, size.getHeight() / 2);
             canvas.showText("SMART EXPORT");
             canvas.endText();

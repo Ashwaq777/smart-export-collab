@@ -3,6 +3,22 @@ import axios from 'axios'
 import { API_URLS } from '../config/apiConfig'
 import { REAL_PORTS_DATABASE, calculateTotalPortFees } from '../data/realPortsDatabase'
 
+// ISO2 to ISO3 conversion map for maritime countries
+const ISO2_TO_ISO3 = {
+  MA:'MAR',DZ:'DZA',TN:'TUN',EG:'EGY',LY:'LBY',SN:'SEN',
+  CI:'CIV',GH:'GHA',NG:'NGA',CM:'CMR',ZA:'ZAF',KE:'KEN',
+  TZ:'TZA',MZ:'MOZ',AO:'AGO',DJ:'DJI',MR:'MRT',GA:'GAB',
+  FR:'FRA',ES:'ESP',PT:'PRT',NL:'NLD',BE:'BEL',DE:'DEU',
+  IT:'ITA',GR:'GRC',TR:'TUR',GB:'GBR',DK:'DNK',SE:'SWE',
+  NO:'NOR',PL:'POL',HR:'HRV',MT:'MLT',CY:'CYP',IE:'IRL',
+  CN:'CHN',JP:'JPN',KR:'KOR',SG:'SGP',IN:'IND',AE:'ARE',
+  SA:'SAU',MY:'MYS',TH:'THA',ID:'IDN',PH:'PHL',VN:'VNM',
+  PK:'PAK',BD:'BGD',LK:'LKA',MM:'MMR',KH:'KHM',
+  US:'USA',CA:'CAN',BR:'BRA',MX:'MEX',AR:'ARG',CL:'CHL',
+  CO:'COL',PE:'PER',EC:'ECU',UY:'URY',PA:'PAN',
+  AU:'AUS',NZ:'NZL',MU:'MUS',SC:'SYC'
+}
+
 /**
  * Service pour les ports maritimes mondiaux avec couverture 100%
  * Utilise des données UNCTAD officielles (United Nations Conference on Trade and Development)
@@ -25,6 +41,50 @@ const retryRequest = async (requestFn, maxRetries = 3, delay = 1000) => {
       await new Promise(resolve => setTimeout(resolve, delay * (i + 1)))
     }
   }
+}
+
+/**
+ * Get default fees by ISO2 country code
+ */
+function getDefaultFeesByISO2(iso2) {
+  const regionFees = {
+    AF_NORTH: { THC:300, portDues:0.14, pilotage:270, mooring:330, documentation:82 },
+    AF_SUB:   { THC:220, portDues:0.11, pilotage:250, mooring:240, documentation:68 },
+    EU_NORTH: { THC:340, portDues:0.21, pilotage:530, mooring:430, documentation:112 },
+    EU_SOUTH: { THC:380, portDues:0.20, pilotage:480, mooring:400, documentation:108 },
+    ME:       { THC:265, portDues:0.14, pilotage:380, mooring:330, documentation:88 },
+    AS_SOUTH: { THC:190, portDues:0.10, pilotage:265, mooring:235, documentation:67 },
+    AS_EAST:  { THC:220, portDues:0.13, pilotage:340, mooring:290, documentation:80 },
+    AS_SE:    { THC:260, portDues:0.15, pilotage:390, mooring:350, documentation:90 },
+    AM_NORTH: { THC:430, portDues:0.26, pilotage:640, mooring:500, documentation:138 },
+    AM_SOUTH: { THC:240, portDues:0.13, pilotage:330, mooring:280, documentation:76 },
+    OC:       { THC:360, portDues:0.22, pilotage:510, mooring:430, documentation:115 }
+  }
+  const regionMap = {
+    MA:'AF_NORTH',DZ:'AF_NORTH',TN:'AF_NORTH',EG:'AF_NORTH',LY:'AF_NORTH',
+    SN:'AF_SUB',CI:'AF_SUB',GH:'AF_SUB',NG:'AF_SUB',CM:'AF_SUB',
+    ZA:'AF_SUB',KE:'AF_SUB',TZ:'AF_SUB',MZ:'AF_SUB',AO:'AF_SUB',
+    FR:'EU_SOUTH',ES:'EU_SOUTH',PT:'EU_SOUTH',IT:'EU_SOUTH',GR:'EU_SOUTH',MT:'EU_SOUTH',
+    NL:'EU_NORTH',BE:'EU_NORTH',DE:'EU_NORTH',DK:'EU_NORTH',SE:'EU_NORTH',
+    NO:'EU_NORTH',PL:'EU_NORTH',
+    AE:'ME',SA:'ME',KW:'ME',QA:'ME',BH:'ME',OM:'ME',
+    CN:'AS_EAST',JP:'AS_EAST',KR:'AS_EAST',
+    SG:'AS_SE',MY:'AS_SE',TH:'AS_SE',ID:'AS_SE',PH:'AS_SE',VN:'AS_SE',
+    IN:'AS_SOUTH',PK:'AS_SOUTH',BD:'AS_SOUTH',LK:'AS_SOUTH',
+    US:'AM_NORTH',CA:'AM_NORTH',MX:'AM_NORTH',
+    BR:'AM_SOUTH',AR:'AM_SOUTH',CL:'AM_SOUTH',CO:'AM_SOUTH',PE:'AM_SOUTH',
+    AU:'OC',NZ:'OC'
+  }
+  return regionFees[regionMap[iso2]] || 
+    { THC:280, portDues:0.15, pilotage:380, mooring:330, documentation:88 }
+}
+
+/**
+ * Calculate default fees from fee structure
+ */
+function calculateDefaultFees(fees) {
+  return fees.THC + (fees.portDues * 10000) + 
+         fees.pilotage + fees.mooring + fees.documentation
 }
 
 // Ports maritimes majeurs par pays (données open data World Port Index)
@@ -434,6 +494,98 @@ const normalizeCountryName = (countryName) => {
   return COUNTRY_NAME_MAPPING[countryName] || countryName
 }
 
+/**
+ * Fallback function to get ports from local database
+ */
+function getPortsFromLocalDatabase(countryName, countryData = null) {
+  const normalizedCountry = normalizeCountryName(countryName)
+  
+  // Vérifier d'abord dans REAL_PORTS_DATABASE (avec frais UNCTAD)
+  let ports = REAL_PORTS_DATABASE[countryName] || REAL_PORTS_DATABASE[normalizedCountry]
+  
+  if (ports) {
+    const portsWithFees = ports.map((port, index) => ({
+      id: port.id || `${countryName.toLowerCase()}-${index}`,
+      name: port.name,
+      nomPort: port.name,
+      city: port.city,
+      ville: port.city,
+      country: countryName,
+      pays: countryName,
+      countryCode: port.countryCode,
+      currency: port.currency || 'USD',
+      capacity: port.capacity,
+      lat: port.coordinates?.lat || port.lat,
+      lon: port.coordinates?.lon || port.lon,
+      latitude: port.coordinates?.lat || port.lat,
+      longitude: port.coordinates?.lon || port.lon,
+      fees: port.fees,
+      region: port.region,
+      totalFees: calculateTotalPortFees(port, 1, 10000),
+      fraisPortuaires: calculateTotalPortFees(port, 1, 10000)
+    }))
+    
+    return {
+      hasPorts: true,
+      ports: portsWithFees,
+      message: null
+    }
+  }
+  
+  // Sinon vérifier dans MAJOR_WORLD_PORTS
+  ports = MAJOR_WORLD_PORTS[countryName] || MAJOR_WORLD_PORTS[normalizedCountry]
+  
+  if (ports) {
+    const portsWithFees = ports.map((port, index) => ({
+      id: `${countryName.toLowerCase()}-${index + 1}`,
+      name: port.name,
+      nomPort: port.name,
+      city: port.city,
+      ville: port.city,
+      country: countryName,
+      pays: countryName,
+      countryCode: 'XX',
+      currency: 'USD',
+      capacity: port.capacity,
+      lat: port.lat,
+      lon: port.lon,
+      latitude: port.lat,
+      longitude: port.lon,
+      fees: {
+        THC: 250,
+        portDues: 0.15,
+        pilotage: 450,
+        mooring: 350,
+        documentation: 85
+      },
+      region: 'Global',
+      totalFees: 500,
+      fraisPortuaires: 500
+    }))
+    
+    return {
+      hasPorts: true,
+      ports: portsWithFees,
+      message: null
+    }
+  }
+  
+  // Vérifier si le pays est enclavé
+  if (countryData && countryData.landlocked) {
+    return {
+      hasPorts: false,
+      ports: [],
+      message: `${countryName} est un pays enclavé sans accès maritime direct`
+    }
+  }
+  
+  return {
+    hasPorts: false,
+    ports: [],
+    message: `Aucun port disponible dans la base de données pour ${countryName}`
+  }
+}
+
 export const worldPortsService = {
   getPortsByCountryIso2: async (iso2) => {
     const wanted = String(iso2 || '').toUpperCase()
@@ -490,95 +642,77 @@ export const worldPortsService = {
 
   /**
    * Récupère les ports pour un pays donné
-   * Utilise MAJOR_WORLD_PORTS pour avoir tous les pays disponibles
+   * Utilise base locale primaire, OpenStreetMap secondaire, fallback par défaut
    */
   getPortsByCountry: async (countryName, countryData = null) => {
-    const normalizedCountry = normalizeCountryName(countryName)
+    const iso2 = countryData?.iso2 || countryData?.code || ''
     
-    // Vérifier d'abord dans REAL_PORTS_DATABASE (avec frais UNCTAD)
-    // Essayer avec le nom original et le nom normalisé
-    let ports = REAL_PORTS_DATABASE[countryName] || REAL_PORTS_DATABASE[normalizedCountry]
-    
-    if (ports) {
-      const portsWithFees = ports.map((port, index) => ({
-        id: port.id || `${countryName.toLowerCase()}-${index}`,
-        name: port.name,
-        nomPort: port.name,
-        city: port.city,
-        ville: port.city,
-        country: countryName,
-        pays: countryName,
-        countryCode: port.countryCode,
-        currency: port.currency || 'USD',
-        capacity: port.capacity,
-        lat: port.coordinates?.lat || port.lat,
-        lon: port.coordinates?.lon || port.lon,
-        latitude: port.coordinates?.lat || port.lat,
-        longitude: port.coordinates?.lon || port.lon,
-        fees: port.fees,
-        region: port.region,
-        totalFees: calculateTotalPortFees(port, 1, 10000),
-        fraisPortuaires: calculateTotalPortFees(port, 1, 10000)
-      }))
+    // Check landlocked
+    if (countryData?.landlocked) {
+      return { hasPorts: false, ports: [], 
+        message: `${countryName} est un pays enclavé sans accès maritime` }
+    }
+
+    // STEP 1: Try local database first (fast + reliable)
+    const localPorts = getPortsFromLocalDatabase(countryName, countryData)
+    if (localPorts.hasPorts && localPorts.ports.length > 0) {
+      return localPorts
+    }
+
+    // STEP 2: Try OpenStreetMap Nominatim (free, no key, global)
+    try {
+      const query = encodeURIComponent(`port ${countryName}`)
+      const url = `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=30&addressdetails=1` 
+      const response = await fetch(url, {
+        headers: { 'Accept-Language': 'fr', 'User-Agent': 'SmartExportApp/1.0' }
+      })
+      const data = await response.json()
       
-      return {
-        hasPorts: true,
-        ports: portsWithFees,
-        message: null
+      if (data && data.length > 0) {
+        const fees = getDefaultFeesByISO2(iso2)
+        const ports = data
+          .filter(item => 
+            item.type === 'port' || 
+            item.class === 'waterway' ||
+            item.display_name?.toLowerCase().includes('port') ||
+            item.display_name?.toLowerCase().includes('harbour')
+          )
+          .slice(0, 20)
+          .map((item, i) => ({
+            id: `osm-${iso2.toLowerCase()}-${i}`,
+            name: item.display_name?.split(',')[0] || `Port ${i+1}`,
+            city: item.address?.city || item.address?.town || countryName,
+            country: countryName,
+            countryCode: iso2,
+            lat: parseFloat(item.lat),
+            lon: parseFloat(item.lon),
+            fees: fees,
+            fraisPortuaires: calculateDefaultFees(fees),
+            source: 'OSM'
+          }))
+
+        if (ports.length > 0) {
+          return { hasPorts: true, ports }
+        }
       }
+    } catch(e) {
+      console.warn('OSM API failed:', e)
     }
-    
-    // Sinon vérifier dans MAJOR_WORLD_PORTS
-    ports = MAJOR_WORLD_PORTS[countryName] || MAJOR_WORLD_PORTS[normalizedCountry]
-    
-    if (ports) {
-      const portsWithFees = ports.map((port, index) => ({
-        id: `${countryName.toLowerCase()}-${index + 1}`,
-        name: port.name,
-        nomPort: port.name,
-        city: port.city,
-        ville: port.city,
-        country: countryName,
-        pays: countryName,
-        countryCode: 'XX',
-        currency: 'USD',
-        capacity: port.capacity,
-        lat: port.lat,
-        lon: port.lon,
-        latitude: port.lat,
-        longitude: port.lon,
-        fees: {
-          THC: 250,
-          portDues: 0.15,
-          pilotage: 450,
-          mooring: 350,
-          documentation: 85
-        },
-        region: 'Global',
-        totalFees: 500,
-        fraisPortuaires: 500
-      }))
-      
-      return {
-        hasPorts: true,
-        ports: portsWithFees,
-        message: null
-      }
-    }
-    
-    // Vérifier si le pays est enclavé
-    if (countryData && countryData.landlocked) {
-      return {
-        hasPorts: false,
-        ports: [],
-        message: `${countryName} est un pays enclavé sans accès maritime direct`
-      }
-    }
-    
+
+    // STEP 3: Generate ports from country name as last resort
+    const fees = getDefaultFeesByISO2(iso2)
     return {
-      hasPorts: false,
-      ports: [],
-      message: `Aucun port disponible dans la base de données pour ${countryName}`
+      hasPorts: true,
+      ports: [{
+        id: `${iso2.toLowerCase()}-main-port`,
+        name: `Port Principal de ${countryName}`,
+        city: countryName,
+        country: countryName,
+        countryCode: iso2,
+        fees: fees,
+        fraisPortuaires: calculateDefaultFees(fees),
+        source: 'DEFAULT'
+      }]
     }
   },
 
@@ -612,12 +746,14 @@ export const worldPortsService = {
             gdpCache[countryCode] = gdpPerCapita
           }
         } catch (apiError) {
+          // Silently handle 403 and other API errors - use default GDP
+          console.warn(`World Bank API unavailable for ${countryCode}, using default GDP`)
         }
       }
       
-      // Valeur par défaut si pas de PIB disponible
+      // Valeur par défaut si pas de PIB disponible (fallback robuste)
       if (!gdpPerCapita) {
-        gdpPerCapita = 10000
+        gdpPerCapita = 10000 // Default GDP per capita
       }
       
       // Trouver la capacité du port depuis la base UNCTAD

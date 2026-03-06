@@ -9,16 +9,18 @@
 [INFO] 
 [INFO] --- resources:3.3.1:resources (default-resources) @ smart-export-platform ---
 [INFO] Copying 1 resource from src/main/resources to target/classes
-[INFO] Copying 9 resources from src/main/resources to target/classes
+[INFO] Copying 18 resources from src/main/resources to target/classes
 [INFO] 
 [INFO] --- compiler:3.11.0:compile (default-compile) @ smart-export-platform ---
-[INFO] Nothing to compile - all classes are up to date
+[INFO] Changes detected - recompiling the module! :source
+[INFO] Compiling 66 source files with javac [debug release 17] to target/classes
 [INFO] 
 [INFO] --- resources:3.3.1:testResources (default-testResources) @ smart-export-platform ---
 [INFO] skip non existing resourceDirectory /Users/user/CascadeProjects/smart-export-platform/src/test/resources
 [INFO] 
 [INFO] --- compiler:3.11.0:testCompile (default-testCompile) @ smart-export-platform ---
-[INFO] Nothing to compile - all classes are up to date
+[INFO] Changes detected - recompiling the module! :dependency
+[INFO] Compiling 3 source files with javac [debug release 17] to target/test-classes
 [INFO] 
 [INFO] <<< spring-boot:3.2.0:run (default-cli) < test-compile @ smart-export-platform <<<
 [INFO] 
@@ -34,89 +36,91 @@
  =========|_|==============|___/=/_/_/_/
  :: Spring Boot ::                (v3.2.0)
 
-2026-02-25T21:36:52.595Z  INFO 5752 --- [smart-export-platform] [           main] c.s.p.SmartExportPlatformApplication     : Starting SmartExportPlatformApplication using Java 17.0.9 with PID 5752 (/Users/user/CascadeProjects/smart-export-platform/target/classes started by user in /Users/user/CascadeProjects/smart-export-platform)
-2026-02-25T21:36:52.598Z DEBUG 5752 --- [smart-export-platform] [           main] c.s.p.SmartExportPlatformApplication     : Running with Spring Boot v3.2.0, Spring v6.1.1
-2026-02-25T21:36:52.599Z  INFO 5752 --- [smart-export-platform] [           main] c.s.p.SmartExportPlatformApplication     : No active profile set, falling back to 1 default profile: "default"
-2026-02-25T21:36:53.296Z  INFO 5752 --- [smart-export-platform] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
-2026-02-25T21:36:53.365Z  INFO 5752 --- [smart-export-platform] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 60 ms. Found 3 JPA repository interfaces.
-2026-02-25T21:36:54.021Z  INFO 5752 --- [smart-export-platform] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
-2026-02-25T21:36:54.036Z  INFO 5752 --- [smart-export-platform] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
-2026-02-25T21:36:54.036Z  INFO 5752 --- [smart-export-platform] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.16]
-2026-02-25T21:36:54.120Z  INFO 5752 --- [smart-export-platform] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
-2026-02-25T21:36:54.122Z  INFO 5752 --- [smart-export-platform] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1475 ms
-2026-02-25T21:36:54.261Z  INFO 5752 --- [smart-export-platform] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
-2026-02-25T21:36:54.403Z  INFO 5752 --- [smart-export-platform] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@6b415f5f
-2026-02-25T21:36:54.405Z  INFO 5752 --- [smart-export-platform] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
-2026-02-25T21:36:54.479Z  INFO 5752 --- [smart-export-platform] [           main] o.f.c.internal.license.VersionPrinter    : Flyway Community Edition 9.22.3 by Redgate
-2026-02-25T21:36:54.479Z  INFO 5752 --- [smart-export-platform] [           main] o.f.c.internal.license.VersionPrinter    : See release notes here: https://rd.gt/416ObMi
-2026-02-25T21:36:54.479Z  INFO 5752 --- [smart-export-platform] [           main] o.f.c.internal.license.VersionPrinter    : 
-2026-02-25T21:36:54.494Z  INFO 5752 --- [smart-export-platform] [           main] org.flywaydb.core.FlywayExecutor         : Database: jdbc:postgresql://localhost:5432/smart_export_db (PostgreSQL 15.16)
-2026-02-25T21:36:54.533Z  WARN 5752 --- [smart-export-platform] [           main] ConfigServletWebServerApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'flywayInitializer' defined in class path resource [org/springframework/boot/autoconfigure/flyway/FlywayAutoConfiguration$FlywayConfiguration.class]: Found more than one migration with version 7
-Offenders:
--> /Users/user/CascadeProjects/smart-export-platform/target/classes/db/migration/V7__add_more_fruits_vegetables.sql (SQL)
--> /Users/user/CascadeProjects/smart-export-platform/target/classes/db/migration/V7__add_real_tariff_metadata.sql (SQL)
-2026-02-25T21:36:54.533Z  INFO 5752 --- [smart-export-platform] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
-2026-02-25T21:36:54.550Z  INFO 5752 --- [smart-export-platform] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
-2026-02-25T21:36:54.553Z  INFO 5752 --- [smart-export-platform] [           main] o.apache.catalina.core.StandardService   : Stopping service [Tomcat]
-2026-02-25T21:36:54.568Z  INFO 5752 --- [smart-export-platform] [           main] .s.b.a.l.ConditionEvaluationReportLogger : 
-
-Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
-2026-02-25T21:36:54.583Z ERROR 5752 --- [smart-export-platform] [           main] o.s.boot.SpringApplication               : Application run failed
-
-org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'flywayInitializer' defined in class path resource [org/springframework/boot/autoconfigure/flyway/FlywayAutoConfiguration$FlywayConfiguration.class]: Found more than one migration with version 7
-Offenders:
--> /Users/user/CascadeProjects/smart-export-platform/target/classes/db/migration/V7__add_more_fruits_vegetables.sql (SQL)
--> /Users/user/CascadeProjects/smart-export-platform/target/classes/db/migration/V7__add_real_tariff_metadata.sql (SQL)
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1775) ~[spring-beans-6.1.1.jar:6.1.1]
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:601) ~[spring-beans-6.1.1.jar:6.1.1]
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:523) ~[spring-beans-6.1.1.jar:6.1.1]
-	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:325) ~[spring-beans-6.1.1.jar:6.1.1]
-	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:234) ~[spring-beans-6.1.1.jar:6.1.1]
-	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:323) ~[spring-beans-6.1.1.jar:6.1.1]
-	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:199) ~[spring-beans-6.1.1.jar:6.1.1]
-	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:312) ~[spring-beans-6.1.1.jar:6.1.1]
-	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:199) ~[spring-beans-6.1.1.jar:6.1.1]
-	at org.springframework.context.support.AbstractApplicationContext.getBean(AbstractApplicationContext.java:1173) ~[spring-context-6.1.1.jar:6.1.1]
-	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:936) ~[spring-context-6.1.1.jar:6.1.1]
-	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:616) ~[spring-context-6.1.1.jar:6.1.1]
-	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:146) ~[spring-boot-3.2.0.jar:3.2.0]
-	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:753) ~[spring-boot-3.2.0.jar:3.2.0]
-	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:455) ~[spring-boot-3.2.0.jar:3.2.0]
-	at org.springframework.boot.SpringApplication.run(SpringApplication.java:323) ~[spring-boot-3.2.0.jar:3.2.0]
-	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1342) ~[spring-boot-3.2.0.jar:3.2.0]
-	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1331) ~[spring-boot-3.2.0.jar:3.2.0]
-	at com.smartexport.platform.SmartExportPlatformApplication.main(SmartExportPlatformApplication.java:11) ~[classes/:na]
-Caused by: org.flywaydb.core.api.FlywayException: Found more than one migration with version 7
-Offenders:
--> /Users/user/CascadeProjects/smart-export-platform/target/classes/db/migration/V7__add_more_fruits_vegetables.sql (SQL)
--> /Users/user/CascadeProjects/smart-export-platform/target/classes/db/migration/V7__add_real_tariff_metadata.sql (SQL)
-	at org.flywaydb.core.internal.resolver.CompositeMigrationResolver.checkForIncompatibilities(CompositeMigrationResolver.java:87) ~[flyway-core-9.22.3.jar:na]
-	at org.flywaydb.core.internal.resolver.CompositeMigrationResolver.doFindAvailableMigrations(CompositeMigrationResolver.java:120) ~[flyway-core-9.22.3.jar:na]
-	at org.flywaydb.core.internal.resolver.CompositeMigrationResolver.resolveMigrations(CompositeMigrationResolver.java:107) ~[flyway-core-9.22.3.jar:na]
-	at org.flywaydb.core.internal.resolver.CompositeMigrationResolver.resolveMigrations(CompositeMigrationResolver.java:113) ~[flyway-core-9.22.3.jar:na]
-	at org.flywaydb.core.internal.info.MigrationInfoServiceImpl.refresh(MigrationInfoServiceImpl.java:79) ~[flyway-core-9.22.3.jar:na]
-	at org.flywaydb.core.internal.command.DbValidate.lambda$validate$0(DbValidate.java:108) ~[flyway-core-9.22.3.jar:na]
-	at org.flywaydb.core.internal.jdbc.TransactionalExecutionTemplate.execute(TransactionalExecutionTemplate.java:55) ~[flyway-core-9.22.3.jar:na]
-	at org.flywaydb.core.internal.command.DbValidate.validate(DbValidate.java:101) ~[flyway-core-9.22.3.jar:na]
-	at org.flywaydb.core.Flyway.doValidate(Flyway.java:400) ~[flyway-core-9.22.3.jar:na]
-	at org.flywaydb.core.Flyway.lambda$migrate$0(Flyway.java:144) ~[flyway-core-9.22.3.jar:na]
-	at org.flywaydb.core.FlywayExecutor.execute(FlywayExecutor.java:213) ~[flyway-core-9.22.3.jar:na]
-	at org.flywaydb.core.Flyway.migrate(Flyway.java:140) ~[flyway-core-9.22.3.jar:na]
-	at org.springframework.boot.autoconfigure.flyway.FlywayMigrationInitializer.afterPropertiesSet(FlywayMigrationInitializer.java:66) ~[spring-boot-autoconfigure-3.2.0.jar:3.2.0]
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.invokeInitMethods(AbstractAutowireCapableBeanFactory.java:1822) ~[spring-beans-6.1.1.jar:6.1.1]
-	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1771) ~[spring-beans-6.1.1.jar:6.1.1]
-	... 18 common frames omitted
-
-[INFO] ------------------------------------------------------------------------
-[INFO] BUILD FAILURE
-[INFO] ------------------------------------------------------------------------
-[INFO] Total time:  4.927 s
-[INFO] Finished at: 2026-02-25T21:36:54Z
-[INFO] ------------------------------------------------------------------------
-[ERROR] Failed to execute goal org.springframework.boot:spring-boot-maven-plugin:3.2.0:run (default-cli) on project smart-export-platform: Process terminated with exit code: 1 -> [Help 1]
-[ERROR] 
-[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
-[ERROR] Re-run Maven using the -X switch to enable full debug logging.
-[ERROR] 
-[ERROR] For more information about the errors and possible solutions, please read the following articles:
-[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException
+2026-03-06T11:46:17.751Z  INFO 4929 --- [smart-export-platform] [           main] c.s.p.SmartExportPlatformApplication     : Starting SmartExportPlatformApplication using Java 17.0.9 with PID 4929 (/Users/user/CascadeProjects/smart-export-platform/target/classes started by user in /Users/user/CascadeProjects/smart-export-platform)
+2026-03-06T11:46:17.758Z DEBUG 4929 --- [smart-export-platform] [           main] c.s.p.SmartExportPlatformApplication     : Running with Spring Boot v3.2.0, Spring v6.1.1
+2026-03-06T11:46:17.760Z  INFO 4929 --- [smart-export-platform] [           main] c.s.p.SmartExportPlatformApplication     : No active profile set, falling back to 1 default profile: "default"
+2026-03-06T11:46:19.809Z  INFO 4929 --- [smart-export-platform] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Multiple Spring Data modules found, entering strict repository configuration mode
+2026-03-06T11:46:19.812Z  INFO 4929 --- [smart-export-platform] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-03-06T11:46:20.249Z  INFO 4929 --- [smart-export-platform] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 417 ms. Found 7 JPA repository interfaces.
+2026-03-06T11:46:20.294Z  INFO 4929 --- [smart-export-platform] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Multiple Spring Data modules found, entering strict repository configuration mode
+2026-03-06T11:46:20.296Z  INFO 4929 --- [smart-export-platform] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2026-03-06T11:46:20.334Z  INFO 4929 --- [smart-export-platform] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.smartexport.platform.repository.MaritimeRouteRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-03-06T11:46:20.334Z  INFO 4929 --- [smart-export-platform] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.smartexport.platform.repository.PasswordResetRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-03-06T11:46:20.335Z  INFO 4929 --- [smart-export-platform] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.smartexport.platform.repository.PortRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-03-06T11:46:20.335Z  INFO 4929 --- [smart-export-platform] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.smartexport.platform.repository.SivPriceRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-03-06T11:46:20.336Z  INFO 4929 --- [smart-export-platform] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.smartexport.platform.repository.TarifDouanierRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-03-06T11:46:20.337Z  INFO 4929 --- [smart-export-platform] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.smartexport.platform.repository.UserActivityLogRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-03-06T11:46:20.337Z  INFO 4929 --- [smart-export-platform] [           main] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.smartexport.platform.repository.UserRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-03-06T11:46:20.338Z  INFO 4929 --- [smart-export-platform] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 21 ms. Found 0 Redis repository interfaces.
+2026-03-06T11:46:21.777Z  INFO 4929 --- [smart-export-platform] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-03-06T11:46:21.803Z  INFO 4929 --- [smart-export-platform] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-03-06T11:46:21.804Z  INFO 4929 --- [smart-export-platform] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.16]
+2026-03-06T11:46:21.952Z  INFO 4929 --- [smart-export-platform] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-03-06T11:46:21.955Z  INFO 4929 --- [smart-export-platform] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 4064 ms
+2026-03-06T11:46:22.080Z DEBUG 4929 --- [smart-export-platform] [           main] c.s.p.security.JwtAuthenticationFilter   : Filter 'jwtAuthenticationFilter' configured for use
+2026-03-06T11:46:22.336Z  INFO 4929 --- [smart-export-platform] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-03-06T11:46:22.440Z  INFO 4929 --- [smart-export-platform] [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.3.1.Final
+2026-03-06T11:46:22.507Z  INFO 4929 --- [smart-export-platform] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-03-06T11:46:22.949Z  INFO 4929 --- [smart-export-platform] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-03-06T11:46:22.999Z  INFO 4929 --- [smart-export-platform] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-03-06T11:46:23.234Z  INFO 4929 --- [smart-export-platform] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@6ebbc06
+2026-03-06T11:46:23.238Z  INFO 4929 --- [smart-export-platform] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-03-06T11:46:23.296Z  WARN 4929 --- [smart-export-platform] [           main] org.hibernate.orm.deprecation            : HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-03-06T11:46:25.192Z  INFO 4929 --- [smart-export-platform] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-03-06T11:46:25.368Z  INFO 4929 --- [smart-export-platform] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-03-06T11:46:26.228Z  INFO 4929 --- [smart-export-platform] [           main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-03-06T11:46:27.134Z  WARN 4929 --- [smart-export-platform] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-03-06T11:46:27.655Z  INFO 4929 --- [smart-export-platform] [           main] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@962e03a, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@472073bb, org.springframework.security.web.context.SecurityContextHolderFilter@5a720cdf, org.springframework.security.web.header.HeaderWriterFilter@53251e03, org.springframework.web.filter.CorsFilter@63714a1, org.springframework.security.web.authentication.logout.LogoutFilter@11a88d87, com.smartexport.platform.security.JwtAuthenticationFilter@2725ca05, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@5f83b506, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@59294447, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@53bf791, org.springframework.security.web.session.SessionManagementFilter@7d727123, org.springframework.security.web.access.ExceptionTranslationFilter@4603845b, org.springframework.security.web.access.intercept.AuthorizationFilter@63916a3]
+2026-03-06T11:46:29.475Z  INFO 4929 --- [smart-export-platform] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path ''
+2026-03-06T11:46:29.629Z DEBUG 4929 --- [smart-export-platform] [           main] org.hibernate.SQL                        : 
+    select
+        u1_0.id 
+    from
+        users u1_0 
+    where
+        u1_0.email=? 
+    fetch
+        first ? rows only
+Hibernate: 
+    select
+        u1_0.id 
+    from
+        users u1_0 
+    where
+        u1_0.email=? 
+    fetch
+        first ? rows only
+2026-03-06T11:46:29.646Z  INFO 4929 --- [smart-export-platform] [           main] c.s.p.SmartExportPlatformApplication     : Started SmartExportPlatformApplication in 13.176 seconds (process running for 14.801)
+2026-03-06T11:46:29.679Z DEBUG 4929 --- [smart-export-platform] [           main] org.hibernate.SQL                        : 
+    select
+        p1_0.id,
+        p1_0.created_at,
+        p1_0.frais_portuaires,
+        p1_0.latitude,
+        p1_0.longitude,
+        p1_0.nom_port,
+        p1_0.pays,
+        p1_0.type_port,
+        p1_0.unlocode,
+        p1_0.updated_at 
+    from
+        ports p1_0
+Hibernate: 
+    select
+        p1_0.id,
+        p1_0.created_at,
+        p1_0.frais_portuaires,
+        p1_0.latitude,
+        p1_0.longitude,
+        p1_0.nom_port,
+        p1_0.pays,
+        p1_0.type_port,
+        p1_0.unlocode,
+        p1_0.updated_at 
+    from
+        ports p1_0
+2026-03-06T12:38:49.800Z  WARN 4929 --- [smart-export-platform] [l-1 housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=30m26s30ms).
+2026-03-06T12:52:42.615Z  WARN 4929 --- [smart-export-platform] [l-1 housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=2m52s505ms).
+2026-03-06T12:53:22.502Z  INFO 4929 --- [smart-export-platform] [ionShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-03-06T12:53:22.507Z  INFO 4929 --- [smart-export-platform] [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2026-03-06T12:53:22.510Z  INFO 4929 --- [smart-export-platform] [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.

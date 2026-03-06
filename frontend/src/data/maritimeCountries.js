@@ -4,48 +4,26 @@
  * 180 pays côtiers / avec ports maritimes internationaux
  */
 
-export const MARITIME_COUNTRIES_ISO2 = [
-  // AFRIQUE DU NORD & MOYEN-ORIENT
-  'MA', 'DZ', 'TN', 'LY', 'EG', 'MR', 'DJ', 'ER', 'SO', 'SD',
-  // AFRIQUE DE L'OUEST
-  'SN', 'GM', 'GW', 'SL', 'LR', 'CI', 'GH', 'TG', 'BJ', 'NG',
-  'CM', 'GQ', 'GA', 'CG', 'CD', 'AO', 'ST', 'CV',
-  // AFRIQUE DE L'EST & SUD
-  'KE', 'TZ', 'MZ', 'ZA', 'NA', 'MG', 'MU', 'SC', 'KM', 'YT',
-  'RE', 'MW',
-  // MOYEN-ORIENT
-  'SA', 'YE', 'OM', 'AE', 'QA', 'BH', 'KW', 'IQ', 'IR', 'IL',
-  'LB', 'JO', 'SY',
-  // ASIE DU SUD
-  'PK', 'IN', 'LK', 'BD', 'MM', 'MV',
-  // ASIE DU SUD-EST
-  'TH', 'MY', 'SG', 'ID', 'PH', 'VN', 'KH', 'BN', 'TL',
-  // ASIE DE L'EST
-  'CN', 'JP', 'KR', 'TW', 'HK', 'MO',
-  // OCÉANIE
-  'AU', 'NZ', 'FJ', 'PG', 'SB', 'VU', 'WS', 'TO', 'PW',
-  'MH', 'FM', 'KI', 'NR', 'TV',
-  // EUROPE OCCIDENTALE
-  'PT', 'ES', 'FR', 'GB', 'IE', 'IS', 'NO', 'DK', 'SE', 'FI',
-  'DE', 'NL', 'BE', 'IT', 'MT', 'CY', 'GR', 'AL', 'ME', 'HR',
-  'SI', 'BA', 'MK',
-  // EUROPE DE L'EST & BALTIQUE
-  'PL', 'EE', 'LV', 'LT', 'RU', 'UA', 'RO', 'BG', 'GE', 'AZ',
-  'TR',
-  // AMÉRIQUE DU NORD
-  'US', 'CA', 'MX',
-  // CARAÏBES
-  'CU', 'JM', 'HT', 'DO', 'PR', 'TT', 'BB', 'LC', 'VC', 'GD',
-  'AG', 'KN', 'BS', 'BZ', 'DM',
-  // AMÉRIQUE CENTRALE
-  'GT', 'HN', 'SV', 'NI', 'CR', 'PA',
-  // AMÉRIQUE DU SUD
-  'CO', 'VE', 'GY', 'SR', 'BR', 'UY', 'AR', 'CL', 'PE', 'EC',
-  // ATLANTIQUE / DIVERS
-  'GL', 'PM', 'GI', 'FO',
-]
+export const MARITIME_COUNTRIES_ISO2 = new Set([
+  'MA','DZ','TN','EG','LY','MR','DJ','SO','ER',
+  'SN','GM','GW','SL','LR','CI','GH','TG','BJ','NG',
+  'CM','GQ','GA','CG','AO','ST','CV','NA','ZA',
+  'MZ','TZ','KE','MG','MU','SC','KM',
+  'FR','ES','PT','GB','IE','NL','BE','DE',
+  'DK','SE','NO','FI','PL','EE','LV','LT',
+  'IT','GR','HR','ME','AL','MT','CY','RO','BG','UA',
+  'TR','IL','LB','SA','AE','KW','QA','BH','OM','YE','IR','IQ',
+  'RU','GE',
+  'IN','PK','BD','LK','MM','TH','MY','SG',
+  'ID','PH','VN','KH','BN',
+  'CN','JP','KR',
+  'US','CA','MX',
+  'CU','DO','JM','HT','TT','BB','PA','CR','HN','GT','NI',
+  'BR','AR','CL','CO','PE','EC','UY','VE','GY','SR',
+  'AU','NZ','FJ','PG'
+])
 
-export const MARITIME_COUNTRIES_ISO2_SET = new Set(MARITIME_COUNTRIES_ISO2)
+export const MARITIME_COUNTRIES_ISO2_SET = MARITIME_COUNTRIES_ISO2
 
 export const getFlagEmoji = (iso2) => {
   if (!iso2 || String(iso2).length !== 2) return '🌐'

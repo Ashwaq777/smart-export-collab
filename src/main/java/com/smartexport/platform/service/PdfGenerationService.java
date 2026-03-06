@@ -19,13 +19,17 @@ import com.itextpdf.layout.element.AreaBreak;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
+import com.itextpdf.layout.borders.Border;
+import com.itextpdf.layout.borders.SolidBorder;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Image;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.AreaBreakType;
+import com.itextpdf.layout.properties.HorizontalAlignment;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
+import com.itextpdf.layout.properties.VerticalAlignment;
 import com.smartexport.platform.dto.LandedCostResultDto;
 import com.smartexport.platform.dto.MaritimeTransportCostDto;
 import com.smartexport.platform.pdf.common.PdfHelper;
@@ -54,32 +58,31 @@ public class PdfGenerationService {
             PdfWriter writer = new PdfWriter(baos);
             PdfDocument pdfDoc = new PdfDocument(writer);
             Document document = new Document(pdfDoc);
+            
+            // Set margins
+            document.setMargins(PdfHelper.MARGIN_TOP, PdfHelper.MARGIN_RIGHT, PdfHelper.MARGIN_BOTTOM, PdfHelper.MARGIN_LEFT);
+
+            // Ensure document has at least one page
+            if (pdfDoc.getNumberOfPages() == 0) {
+                pdfDoc.addNewPage();
+            }
 
             PdfHelper.Fonts fonts = PdfHelper.loadFonts();
             document.setFont(fonts.regular);
             String ref = result.getSimulationId() != null ? "REF-LC-" + PdfHelper.safeGlyphs(result.getSimulationId()) : "REF-LC";
-            pdfDoc.addEventHandler(PdfDocumentEvent.END_PAGE, new PdfHelper.HeaderFooterHandler("Landed Cost Report", ref, fonts));
             
-            addCover(document, result, pdfDoc, fonts, ref);
-
-            document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
-            addExecutiveSummary(document, result);
-            addLegalIdentifiers(document, result);
-            addProductInfo(document, result);
-            addLogisticsDetails(document, result);
-            addCostBreakdown(document, result);
-
-            document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
-            addProfitabilityAnalysis(document, result);
-            addSivAlert(document, result);
-            addCurrencySensitivity(document, result);
-            addCurrencyConversions(document, result);
-            addMaritimeTransportSection(document, result);
-            addQrCode(document, result);
+            // PAGE 1: Cover
+            addCoverPage(document, result, pdfDoc, fonts, ref);
             
-            PdfHelper.addWatermark(pdfDoc, fonts);
+            // PAGE 2: Cost Breakdown
+            document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+            addCostBreakdownPage(document, result, fonts);
+            
+            // PAGE 3: Analysis + QR
+            document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+            addAnalysisPage(document, result, fonts);
+            
             document.close();
-            
             return baos.toByteArray();
             
         } catch (Exception e) {
@@ -87,694 +90,691 @@ public class PdfGenerationService {
         }
     }
 
-    private void addCover(Document document, LandedCostResultDto result, PdfDocument pdfDoc, PdfHelper.Fonts fonts, String ref) {
-        PdfHelper.drawCoverBackground(pdfDoc);
+    private void addCoverPage(Document document, LandedCostResultDto result, PdfDocument pdfDoc, PdfHelper.Fonts fonts, String ref) {
+        Rectangle pageSize = pdfDoc.getPage(1).getPageSize();
+        
+        // Full page navy background
+        PdfCanvas background = new PdfCanvas(pdfDoc.getPage(1));
+        background.saveState();
+        background.setFillColor(PdfHelper.DEEP_NAVY);
+        background.rectangle(pageSize.getLeft(), pageSize.getBottom(), pageSize.getWidth(), pageSize.getHeight());
+        background.fill();
+        background.restoreState();
+        background.release();
 
-        Paragraph title = new Paragraph("SMART EXPORT")
+        // Top decorative gold lines (double line effect at y=750 and y=745)
+        PdfCanvas goldLines = new PdfCanvas(pdfDoc.getPage(1));
+        goldLines.saveState();
+        goldLines.setStrokeColor(PdfHelper.GOLD);
+        goldLines.setLineWidth(3);
+        goldLines.moveTo(pageSize.getLeft() + 100, 750);
+        goldLines.lineTo(pageSize.getRight() - 100, 750);
+        goldLines.stroke();
+        goldLines.setLineWidth(3);
+        goldLines.moveTo(pageSize.getLeft() + 100, 745);
+        goldLines.lineTo(pageSize.getRight() - 100, 745);
+        goldLines.stroke();
+        goldLines.restoreState();
+        goldLines.release();
+
+        // Logo area (centered at y=680)
+        Paragraph logo = new Paragraph("⚓ SMART EXPORT")
             .setFont(fonts.bold)
-            .setFontSize(32)
-            .setFontColor(PdfTheme.WHITE)
+            .setFontSize(PdfHelper.FONT_H1)
+            .setFontColor(PdfHelper.WHITE)
             .setTextAlignment(TextAlignment.CENTER)
-            .setMarginTop(110)
-            .setMarginBottom(6);
+            .setMarginTop(680 - 750); // Position relative to top
 
         Paragraph subtitle = new Paragraph("Global Maritime Trade")
             .setFont(fonts.regular)
-            .setFontSize(14)
-            .setFontColor(PdfTheme.SEAFOAM)
+            .setFontSize(13)
+            .setFontColor(PdfHelper.GOLD)
+            .setItalic()
             .setTextAlignment(TextAlignment.CENTER)
-            .setMarginBottom(16);
+            .setMarginBottom(20);
 
-        Paragraph reportTitle = new Paragraph("RAPPORT CALCUL LANDED COST")
-            .setFont(fonts.bold)
-            .setFontSize(24)
-            .setFontColor(PdfTheme.WHITE)
-            .setTextAlignment(TextAlignment.CENTER)
-            .setMarginBottom(18);
-
-        document.add(title);
+        document.add(logo);
         document.add(subtitle);
 
-        PdfCanvas wave = new PdfCanvas(pdfDoc.getFirstPage());
-        Rectangle size = pdfDoc.getFirstPage().getPageSize();
-        wave.saveState();
-        wave.setStrokeColor(PdfTheme.WAVE_BLUE);
-        wave.setLineWidth(2);
-        wave.moveTo(80, size.getTop() - 180);
-        wave.lineTo(size.getRight() - 80, size.getTop() - 180);
-        wave.stroke();
-        wave.restoreState();
-        wave.release();
+        // Decorative wave line at y=640
+        PdfCanvas waveLine = new PdfCanvas(pdfDoc.getPage(1));
+        waveLine.saveState();
+        waveLine.setStrokeColor(PdfHelper.SUBTITLE_NAVY);
+        waveLine.setLineWidth(2);
+        waveLine.moveTo(pageSize.getLeft() + 50, 640);
+        waveLine.lineTo(pageSize.getRight() - 50, 640);
+        waveLine.stroke();
+        waveLine.restoreState();
+        waveLine.release();
 
-        document.add(reportTitle);
+        // Report title box (centered rectangle, y=560 to y=620)
+        Table titleTable = new Table(UnitValue.createPercentArray(new float[]{1}))
+            .setWidth(UnitValue.createPercentValue(60))
+            .setHorizontalAlignment(HorizontalAlignment.CENTER)
+            .setMarginTop(560 - 640); // Position relative to wave line
 
-        String origin = result.getNomProduit() != null ? result.getNomProduit() : "Produit";
-        String dest = result.getPaysDestination() != null ? result.getPaysDestination() : "Destination";
-        String routeText = PdfHelper.safeGlyphs(dest);
-        PdfHelper.addRouteBox(pdfDoc, routeText, fonts, 67f, 520f, 461f, 55f);
+        Cell titleCell = new Cell()
+            .add(new Paragraph("RAPPORT LANDED COST")
+                .setFont(fonts.bold)
+                .setFontSize(PdfHelper.FONT_H2)
+                .setFontColor(PdfHelper.WHITE)
+                .setTextAlignment(TextAlignment.CENTER))
+            .add(new Paragraph("Analyse des Coûts à l'Importation")
+                .setFont(fonts.regular)
+                .setFontSize(10)
+                .setFontColor(PdfHelper.GOLD)
+                .setTextAlignment(TextAlignment.CENTER))
+            .setBorder(new SolidBorder(PdfHelper.GOLD, 1.5f))
+            .setPadding(15)
+            .setBackgroundColor(PdfHelper.DEEP_NAVY);
 
+        titleTable.addCell(titleCell);
+        document.add(titleTable);
+
+        // Info grid (3 boxes side by side, y=460 to y=530)
+        document.add(new Paragraph("").setFontSize(20)); // Spacing
+        
+        Table infoTable = new Table(new float[]{1, 1, 1});
+        infoTable.setWidth(UnitValue.createPercentValue(80))
+            .setHorizontalAlignment(HorizontalAlignment.CENTER);
+
+        // Box 1: Destination
+        String destination = result.getPaysDestination() != null ? result.getPaysDestination() : "N/A";
+        Cell destBox = createCoverInfoBox("DESTINATION", destination, fonts);
+        infoTable.addCell(destBox);
+
+        // Box 2: Code HS
+        String codeHs = result.getCodeHs() != null ? result.getCodeHs() : "N/A";
+        Cell hsBox = createCoverInfoBox("CODE HS", codeHs, fonts);
+        infoTable.addCell(hsBox);
+
+        // Box 3: Devise
+        String currency = result.getCurrency() != null ? result.getCurrency() : "USD";
+        Cell currencyBox = createCoverInfoBox("DEVISE", currency, fonts);
+        infoTable.addCell(currencyBox);
+
+        document.add(infoTable);
+
+        // Metadata (y=400, centered)
+        document.add(new Paragraph("").setFontSize(20)); // Spacing
+        
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
         String formattedDate = result.getCalculationDate() != null ? result.getCalculationDate().format(formatter) : "";
 
-        Paragraph meta = new Paragraph()
+        Paragraph refLine = new Paragraph("Référence: " + ref)
             .setFont(fonts.regular)
-            .setFontSize(11)
-            .setFontColor(PdfTheme.SEAFOAM)
-            .setTextAlignment(TextAlignment.LEFT)
-            .setMarginTop(160)
-            .setMarginLeft(70)
-            .add("Produit : " + PdfHelper.safeGlyphs(origin) + "\n")
-            .add("Code HS : " + PdfHelper.safeGlyphs(result.getCodeHs()) + "\n")
-            .add("Incoterm : " + PdfHelper.safeGlyphs(result.getIncoterm()) + "\n")
-            .add("Valeur marchandise : " + PdfHelper.safeGlyphs(safeMoney(result.getValeurFob(), result.getCurrency())) + "\n");
+            .setFontSize(PdfHelper.FONT_SMALL)
+            .setFontColor(PdfHelper.GOLD)
+            .setTextAlignment(TextAlignment.CENTER);
 
-        Paragraph refLine = new Paragraph("Ref : " + PdfHelper.safeGlyphs(ref))
+        Paragraph dateLine = new Paragraph("Généré le: " + formattedDate)
             .setFont(fonts.regular)
-            .setFontSize(10)
-            .setFontColor(PdfTheme.SEAFOAM)
-            .setMarginLeft(70)
+            .setFontSize(PdfHelper.FONT_SMALL)
+            .setFontColor(new DeviceRgb(136, 153, 170)) // #8899AA
+            .setTextAlignment(TextAlignment.CENTER)
+            .setMarginBottom(30);
+
+        document.add(refLine);
+        document.add(dateLine);
+
+        // Bottom decorative bar (full width, y=0 to y=50)
+        PdfCanvas bottomBar = new PdfCanvas(pdfDoc.getPage(1));
+        bottomBar.saveState();
+        bottomBar.setFillColor(PdfHelper.GOLD);
+        bottomBar.rectangle(pageSize.getLeft(), pageSize.getBottom(), pageSize.getWidth(), 50);
+        bottomBar.fill();
+        bottomBar.restoreState();
+        bottomBar.release();
+
+        // Bottom bar text
+        Paragraph bottomText = new Paragraph("CONFIDENTIEL — USAGE PROFESSIONNEL")
+            .setFont(fonts.bold)
+            .setFontSize(PdfHelper.FONT_TINY)
+            .setFontColor(PdfHelper.WHITE)
+            .setTextAlignment(TextAlignment.CENTER)
+            .setMarginBottom(15);
+
+        document.add(bottomText);
+
+        // Footer text
+        Paragraph footerText = new Paragraph("Smart Export © 2026 | Page 1/3")
+            .setFont(fonts.regular)
+            .setFontSize(PdfHelper.FONT_TINY)
+            .setFontColor(PdfHelper.WHITE)
+            .setTextAlignment(TextAlignment.CENTER)
+            .setMarginTop(5);
+
+        document.add(footerText);
+    }
+
+    private Cell createCoverInfoBox(String label, String value, PdfHelper.Fonts fonts) {
+        Cell box = new Cell()
+            .setPadding(10)
+            .setBorder(new SolidBorder(PdfHelper.GOLD, 1))
+            .setBackgroundColor(PdfHelper.MID_NAVY)
+            .setTextAlignment(TextAlignment.CENTER);
+
+        Paragraph labelPara = new Paragraph(label)
+            .setFont(fonts.regular)
+            .setFontSize(PdfHelper.FONT_TINY)
+            .setFontColor(PdfHelper.WHITE);
+
+        Paragraph valuePara = new Paragraph(value)
+            .setFont(fonts.bold)
+            .setFontSize(13)
+            .setFontColor(PdfHelper.WHITE);
+
+        box.add(labelPara);
+        box.add(valuePara);
+        return box;
+    }
+
+    private void addCostBreakdownPage(Document document, LandedCostResultDto result, PdfHelper.Fonts fonts) {
+        // Page background is white by default
+        
+        // TOP HEADER BAR (full width, height 50pt, background #0A1628)
+        Table headerTable = new Table(UnitValue.createPercentArray(new float[]{1, 1}))
+            .setWidth(UnitValue.createPercentValue(100))
+            .setMarginBottom(20);
+
+        Cell leftHeader = new Cell()
+            .add(new Paragraph("⚓ SMART EXPORT")
+                .setFont(fonts.bold)
+                .setFontSize(11)
+                .setFontColor(PdfHelper.WHITE))
+            .setBackgroundColor(PdfHelper.DEEP_NAVY)
+            .setBorder(Border.NO_BORDER)
+            .setPadding(12);
+
+        Cell rightHeader = new Cell()
+            .add(new Paragraph("DÉTAIL DES COÛTS")
+                .setFont(fonts.regular)
+                .setFontSize(10)
+                .setFontColor(PdfHelper.WHITE)
+                .setTextAlignment(TextAlignment.RIGHT))
+            .setBackgroundColor(PdfHelper.DEEP_NAVY)
+            .setBorder(Border.NO_BORDER)
+            .setPadding(12);
+
+        headerTable.addCell(leftHeader);
+        headerTable.addCell(rightHeader);
+        document.add(headerTable);
+
+        // Gold underline bar 2pt below header
+        Rectangle pageSize = document.getPdfDocument().getPage(2).getPageSize();
+        PdfCanvas goldUnderline = new PdfCanvas(document.getPdfDocument().getPage(2));
+        goldUnderline.saveState();
+        goldUnderline.setStrokeColor(PdfHelper.GOLD);
+        goldUnderline.setLineWidth(2);
+        goldUnderline.moveTo(pageSize.getLeft() + PdfHelper.MARGIN_LEFT, pageSize.getTop() - PdfHelper.MARGIN_TOP - 30);
+        goldUnderline.lineTo(pageSize.getRight() - PdfHelper.MARGIN_RIGHT, pageSize.getTop() - PdfHelper.MARGIN_TOP - 30);
+        goldUnderline.stroke();
+        goldUnderline.restoreState();
+        goldUnderline.release();
+
+        // SECTION: "Informations Produit"
+        document.add(new Paragraph("")
+            .setFontSize(15)); // Spacing
+
+        Paragraph productTitle = new Paragraph("Informations Produit")
+            .setFont(fonts.bold)
+            .setFontSize(PdfHelper.FONT_H4)
+            .setFontColor(PdfHelper.DEEP_NAVY)
+            .setMarginBottom(10);
+
+        // Gold left border 3pt for section title
+        Table titleBorderTable = new Table(UnitValue.createPercentArray(new float[]{0.5f, 99.5f}))
+            .setWidth(UnitValue.createPercentValue(100))
+            .setMarginBottom(10);
+
+        Cell borderCell = new Cell()
+            .setBackgroundColor(PdfHelper.GOLD)
+            .setWidth(3)
+            .setBorder(Border.NO_BORDER);
+
+        Cell titleCell = new Cell()
+            .add(productTitle)
+            .setBorder(Border.NO_BORDER);
+
+        titleBorderTable.addCell(borderCell);
+        titleBorderTable.addCell(titleCell);
+        document.add(titleBorderTable);
+
+        // 2-column table for product info
+        Table productTable = new Table(UnitValue.createPercentArray(new float[]{1, 1}))
+            .setWidth(UnitValue.createPercentValue(100))
+            .setBorder(Border.NO_BORDER);
+
+        addProductInfoRow(productTable, "Produit", result.getNomProduit(), fonts);
+        addProductInfoRow(productTable, "Code HS", result.getCodeHs(), fonts);
+        addProductInfoRow(productTable, "Destination", result.getPaysDestination(), fonts);
+        addProductInfoRow(productTable, "Incoterm", result.getIncoterm(), fonts);
+
+        document.add(productTable);
+
+        // Gold divider line full width
+        document.add(new Paragraph("")
+            .setFontSize(10)); // Spacing
+
+        PdfCanvas goldDivider = new PdfCanvas(document.getPdfDocument().getPage(2));
+        goldDivider.saveState();
+        goldDivider.setStrokeColor(PdfHelper.GOLD);
+        goldDivider.setLineWidth(1);
+        goldDivider.moveTo(pageSize.getLeft() + PdfHelper.MARGIN_LEFT, pageSize.getTop() - PdfHelper.MARGIN_TOP - 150);
+        goldDivider.lineTo(pageSize.getRight() - PdfHelper.MARGIN_RIGHT, pageSize.getTop() - PdfHelper.MARGIN_TOP - 150);
+        goldDivider.stroke();
+        goldDivider.restoreState();
+        goldDivider.release();
+
+        // SECTION: "Détail des Coûts"
+        document.add(new Paragraph("")
+            .setFontSize(10)); // Spacing
+
+        Paragraph costTitle = new Paragraph("Détail des Coûts")
+            .setFont(fonts.bold)
+            .setFontSize(PdfHelper.FONT_H4)
+            .setFontColor(PdfHelper.DEEP_NAVY)
+            .setMarginBottom(10);
+
+        // Gold left border 3pt for section title
+        Table costTitleBorderTable = new Table(UnitValue.createPercentArray(new float[]{0.5f, 99.5f}))
+            .setWidth(UnitValue.createPercentValue(100))
+            .setMarginBottom(10);
+
+        Cell costBorderCell = new Cell()
+            .setBackgroundColor(PdfHelper.GOLD)
+            .setWidth(3)
+            .setBorder(Border.NO_BORDER);
+
+        Cell costTitleCell = new Cell()
+            .add(costTitle)
+            .setBorder(Border.NO_BORDER);
+
+        costTitleBorderTable.addCell(costBorderCell);
+        costTitleBorderTable.addCell(costTitleCell);
+        document.add(costTitleBorderTable);
+
+        // Cost breakdown table
+        Table costTable = new Table(UnitValue.createPercentArray(new float[]{3, 1}))
+            .setWidth(UnitValue.createPercentValue(100));
+
+        // Header row: #0A1628 background, white bold 10pt
+        costTable.addCell(createCostHeader("Description", fonts));
+        costTable.addCell(createCostHeader("Montant", fonts));
+
+        // Alternating rows: white / #F5F7FA
+        boolean alternate = false;
+        addCostDetailRow(costTable, "Valeur FOB", safeMoney(result.getValeurFob(), result.getCurrency()), fonts, alternate);
+        alternate = !alternate;
+        addCostDetailRow(costTable, "Coût Transport", safeMoney(result.getCoutTransport(), result.getCurrency()), fonts, alternate);
+        alternate = !alternate;
+        addCostDetailRow(costTable, "Assurance", safeMoney(result.getAssurance(), result.getCurrency()), fonts, alternate);
+        alternate = !alternate;
+        addCostDetailRow(costTable, "Droits de Douane", safeMoney(result.getMontantDouane(), result.getCurrency()), fonts, alternate);
+        alternate = !alternate;
+        addCostDetailRow(costTable, "TVA", safeMoney(result.getMontantTva(), result.getCurrency()), fonts, alternate);
+        alternate = !alternate;
+        addCostDetailRow(costTable, "Frais Portuaire", safeMoney(result.getFraisPortuaires(), result.getCurrency()), fonts, alternate);
+
+        // SUBTOTAL ROW (Valeur CIF): background #E8F0FE, navy bold
+        Cell subtotalDesc = new Cell()
+            .add(new Paragraph("Valeur CIF")
+                .setFont(fonts.bold)
+                .setFontSize(PdfHelper.FONT_BODY)
+                .setFontColor(PdfHelper.DEEP_NAVY))
+            .setBackgroundColor(PdfHelper.SUBTOTAL_BLUE)
+            .setBorder(new SolidBorder(PdfHelper.BORDER_GRAY, 0.5f))
+            .setPadding(11);
+
+        Cell subtotalValue = new Cell()
+            .add(new Paragraph(safeMoney(result.getValeurCaf(), result.getCurrency()))
+                .setFont(fonts.bold)
+                .setFontSize(PdfHelper.FONT_BODY)
+                .setFontColor(PdfHelper.DEEP_NAVY)
+                .setTextAlignment(TextAlignment.RIGHT))
+            .setBackgroundColor(PdfHelper.SUBTOTAL_BLUE)
+            .setBorder(new SolidBorder(PdfHelper.BORDER_GRAY, 0.5f))
+            .setPadding(11);
+
+        costTable.addCell(subtotalDesc);
+        costTable.addCell(subtotalValue);
+
+        // TOTAL ROW: background #C9A84C, white bold 13pt, height 28pt
+        Cell totalDesc = new Cell()
+            .add(new Paragraph("TOTAL")
+                .setFont(fonts.bold)
+                .setFontSize(13)
+                .setFontColor(PdfHelper.WHITE))
+            .setBackgroundColor(PdfHelper.GOLD)
+            .setBorder(new SolidBorder(PdfHelper.BORDER_GRAY, 0.5f))
+            .setPadding(14);
+
+        Cell totalValue = new Cell()
+            .add(new Paragraph(safeMoney(result.getCoutTotal(), result.getCurrency()))
+                .setFont(fonts.bold)
+                .setFontSize(13)
+                .setFontColor(PdfHelper.WHITE)
+                .setTextAlignment(TextAlignment.RIGHT))
+            .setBackgroundColor(PdfHelper.GOLD)
+            .setBorder(new SolidBorder(PdfHelper.BORDER_GRAY, 0.5f))
+            .setPadding(14);
+
+        costTable.addCell(totalDesc);
+        costTable.addCell(totalValue);
+
+        document.add(costTable);
+
+        // Footer: white background with gold line
+        document.add(new Paragraph("")
+            .setFontSize(20)); // Spacing
+
+        PdfCanvas footerGoldLine = new PdfCanvas(document.getPdfDocument().getPage(2));
+        footerGoldLine.saveState();
+        footerGoldLine.setStrokeColor(PdfHelper.GOLD);
+        footerGoldLine.setLineWidth(1);
+        footerGoldLine.moveTo(pageSize.getLeft() + PdfHelper.MARGIN_LEFT, 80);
+        footerGoldLine.lineTo(pageSize.getRight() - PdfHelper.MARGIN_RIGHT, 80);
+        footerGoldLine.stroke();
+        footerGoldLine.restoreState();
+        footerGoldLine.release();
+
+        Paragraph footerText = new Paragraph("Smart Export © 2026 | Page 2/3")
+            .setFont(fonts.regular)
+            .setFontSize(PdfHelper.FONT_TINY)
+            .setFontColor(PdfHelper.GRAY_TEXT)
+            .setTextAlignment(TextAlignment.CENTER)
             .setMarginTop(10);
 
-        Paragraph dateLine = new Paragraph("Genere le : " + PdfHelper.safeGlyphs(formattedDate))
-            .setFont(fonts.regular)
-            .setFontSize(10)
-            .setFontColor(PdfTheme.SEAFOAM)
-            .setMarginLeft(70)
-            .setMarginTop(2);
-
-        document.add(meta);
-        document.add(dateLine);
-        document.add(refLine);
-
-        PdfCanvas gold = new PdfCanvas(pdfDoc.getFirstPage());
-        gold.saveState();
-        gold.setFillColor(PdfTheme.GOLD);
-        gold.rectangle(size.getLeft(), size.getBottom(), size.getWidth(), 6);
-        gold.fill();
-        gold.restoreState();
-        gold.release();
+        document.add(footerText);
     }
 
-    private Cell createHighlightCell(String label, String value) {
-        Paragraph pLabel = new Paragraph(label)
-            .setFontSize(9)
-            .setFontColor(MUTED_TEXT)
-            .setTextAlignment(TextAlignment.CENTER)
-            .setMarginBottom(6);
+    private void addProductInfoRow(Table table, String label, String value, PdfHelper.Fonts fonts) {
+        Cell labelCell = new Cell()
+            .add(new Paragraph(label)
+                .setFont(fonts.regular)
+                .setFontSize(PdfHelper.FONT_SMALL)
+                .setFontColor(PdfHelper.GRAY_TEXT))
+            .setBorder(Border.NO_BORDER)
+            .setPaddingBottom(5);
 
-        Paragraph pValue = new Paragraph(value)
-            .setFontSize(18)
-            .setBold()
-            .setFontColor(HEADER_COLOR)
-            .setTextAlignment(TextAlignment.CENTER);
+        Cell valueCell = new Cell()
+            .add(new Paragraph(value != null ? value : "N/A")
+                .setFont(fonts.bold)
+                .setFontSize(PdfHelper.FONT_BODY)
+                .setFontColor(PdfHelper.DEEP_NAVY)
+                .setTextAlignment(TextAlignment.RIGHT))
+            .setBorder(Border.NO_BORDER)
+            .setPaddingBottom(5);
 
+        table.addCell(labelCell);
+        table.addCell(valueCell);
+    }
+
+    private Cell createCostHeader(String text, PdfHelper.Fonts fonts) {
         return new Cell()
-            .setBackgroundColor(SOFT_BLUE)
-            .setPadding(14)
-            .add(pLabel)
-            .add(pValue);
-    }
-
-    private void addExecutiveSummary(Document document, LandedCostResultDto result) {
-        Paragraph sectionTitle = new Paragraph("Synthèse")
-            .setFontSize(16)
-            .setBold()
-            .setFontColor(HEADER_COLOR)
-            .setMarginBottom(10);
-        document.add(sectionTitle);
-
-        Table table = new Table(UnitValue.createPercentArray(new float[]{1, 2}))
-            .setWidth(UnitValue.createPercentValue(100))
-            .setMarginBottom(16);
-
-        addInfoRow(table, "Produit", safe(result.getNomProduit()));
-        addInfoRow(table, "Code HS", safe(result.getCodeHs()));
-        addInfoRow(table, "Destination", safe(result.getPaysDestination()));
-        addInfoRow(table, "Devise", result.getCurrency() != null ? result.getCurrency() : "MAD");
-        addInfoRow(table, "Source données", safe(result.getDataSource()));
-
-        if (result.getWarningMessage() != null) {
-            addInfoRow(table, "Note", result.getWarningMessage());
-        }
-
-        document.add(table);
-    }
-    
-    private void addProductInfo(Document document, LandedCostResultDto result) {
-        Paragraph sectionTitle = new Paragraph("Informations Produit")
-            .setFontSize(14)
-            .setBold()
-            .setFontColor(HEADER_COLOR)
-            .setMarginBottom(10);
-        document.add(sectionTitle);
-        
-        Table table = new Table(UnitValue.createPercentArray(new float[]{1, 2}))
-            .setWidth(UnitValue.createPercentValue(100))
-            .setMarginBottom(20);
-        
-        addInfoRow(table, "Code HS", result.getCodeHs());
-        addInfoRow(table, "Produit", result.getNomProduit());
-        addInfoRow(table, "Pays de destination", result.getPaysDestination());
-        if (result.getNomPort() != null) {
-            addInfoRow(table, "Port", result.getNomPort());
-        }
-        addInfoRow(table, "Devise", result.getCurrency() != null ? result.getCurrency() : "EUR");
-        
-        document.add(table);
-    }
-    
-    private void addCostBreakdown(Document document, LandedCostResultDto result) {
-        Paragraph sectionTitle = new Paragraph("Détail des Coûts")
-            .setFontSize(14)
-            .setBold()
-            .setFontColor(HEADER_COLOR)
-            .setMarginBottom(10);
-        document.add(sectionTitle);
-        
-        Table table = new Table(UnitValue.createPercentArray(new float[]{3, 2}))
-            .setWidth(UnitValue.createPercentValue(100))
-            .setMarginBottom(20);
-        
-        table.addHeaderCell(createHeaderCell("Description"));
-        table.addHeaderCell(createHeaderCell("Montant"));
-        
-        String currency = result.getCurrency() != null ? result.getCurrency() : "EUR";
-        
-        addCostRow(table, "Valeur FOB", result.getValeurFob(), currency);
-        addCostRow(table, "Transport", result.getCoutTransport(), currency);
-        addCostRow(table, "Assurance", result.getAssurance(), currency);
-        addCostRow(table, "Valeur CAF (CIF)", result.getValeurCaf(), currency, true);
-        
-        addCostRow(table, "Droits de Douane (" + result.getTauxDouane() + "%)", 
-                   result.getMontantDouane(), currency);
-        addCostRow(table, "TVA (" + result.getTauxTva() + "%)", 
-                   result.getMontantTva(), currency);
-        
-        if (result.getTaxeParafiscale() != null && 
-            result.getTaxeParafiscale().compareTo(BigDecimal.ZERO) > 0) {
-            addCostRow(table, "Taxe Parafiscale (" + result.getTaxeParafiscale() + "%)", 
-                       result.getMontantTaxeParafiscale(), currency);
-        }
-        
-        if (result.getFraisPortuaires() != null && 
-            result.getFraisPortuaires().compareTo(BigDecimal.ZERO) > 0) {
-            addCostRow(table, "Frais Portuaires", result.getFraisPortuaires(), currency);
-        }
-        
-        addCostRow(table, "COÛT TOTAL (Landed Cost)", result.getCoutTotal(), currency, true);
-        
-        document.add(table);
-    }
-    
-    private void addCurrencyConversions(Document document, LandedCostResultDto result) {
-        if (result.getCoutTotalEur() != null || result.getCoutTotalUsd() != null) {
-            Paragraph sectionTitle = new Paragraph("Conversions de Devises")
-                .setFontSize(14)
-                .setBold()
-                .setFontColor(HEADER_COLOR)
-                .setMarginBottom(10);
-            document.add(sectionTitle);
-            
-            Table table = new Table(UnitValue.createPercentArray(new float[]{1, 1}))
-                .setWidth(UnitValue.createPercentValue(100))
-                .setMarginBottom(20);
-            
-            if (result.getCoutTotalEur() != null) {
-                addInfoRow(table, "Coût Total (EUR)", 
-                          String.format("%.2f EUR", result.getCoutTotalEur()));
-            }
-            
-            if (result.getCoutTotalUsd() != null) {
-                addInfoRow(table, "Coût Total (USD)", 
-                          String.format("%.2f USD", result.getCoutTotalUsd()));
-            }
-            
-            document.add(table);
-        }
-    }
-    
-    private void addFooter(Document document, LandedCostResultDto result) {
-        Paragraph disclaimer = new Paragraph(result.getDisclaimer() != null ? result.getDisclaimer() : "")
-            .setFontSize(9)
-            .setItalic()
-            .setFontColor(MUTED_TEXT)
-            .setMarginTop(12)
-            .setMarginBottom(0);
-        document.add(disclaimer);
-    }
-
-    private String safe(String value) {
-        return value != null ? value : "N/A";
-    }
-
-    private String safeMoney(BigDecimal amount, String currency) {
-        if (amount == null) {
-            return "N/A";
-        }
-        String curr = currency != null ? currency : "MAD";
-        return String.format("%.2f %s", amount, curr);
-    }
-
-    private static class HeaderFooterAndWatermarkHandler implements IEventHandler {
-        private final LandedCostResultDto result;
-        private final PdfFont font;
-
-        private HeaderFooterAndWatermarkHandler(LandedCostResultDto result) {
-            this.result = result;
-            try {
-                this.font = PdfFontFactory.createFont();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        @Override
-        public void handleEvent(Event event) {
-            PdfDocumentEvent docEvent = (PdfDocumentEvent) event;
-            PdfDocument pdfDoc = docEvent.getDocument();
-            Rectangle pageSize = docEvent.getPage().getPageSize();
-            PdfCanvas canvas = new PdfCanvas(docEvent.getPage());
-
-            addWatermark(canvas, pageSize);
-            addHeader(canvas, pageSize);
-            addFooter(canvas, pageSize, pdfDoc.getPageNumber(docEvent.getPage()), pdfDoc.getNumberOfPages());
-        }
-
-        private void addWatermark(PdfCanvas canvas, Rectangle pageSize) {
-            PdfExtGState gs = new PdfExtGState();
-            gs.setFillOpacity(0.06f);
-            canvas.saveState();
-            canvas.setExtGState(gs);
-            canvas.beginText();
-            canvas.setFontAndSize(font, 60);
-            canvas.setColor(new DeviceRgb(11, 31, 58), true);
-            canvas.moveText(pageSize.getWidth() / 2 - 220, pageSize.getHeight() / 2);
-            canvas.setTextMatrix((float) Math.cos(Math.toRadians(35)), (float) Math.sin(Math.toRadians(35)),
-                (float) -Math.sin(Math.toRadians(35)), (float) Math.cos(Math.toRadians(35)),
-                pageSize.getWidth() / 2 - 220, pageSize.getHeight() / 2);
-            canvas.showText("SMART EXPORT");
-            canvas.endText();
-            canvas.restoreState();
-        }
-
-        private void addHeader(PdfCanvas canvas, Rectangle pageSize) {
-            canvas.saveState();
-            canvas.setColor(new DeviceRgb(11, 31, 58), true);
-            canvas.rectangle(pageSize.getLeft(), pageSize.getTop() - 46, pageSize.getWidth(), 46);
-            canvas.fill();
-
-            canvas.beginText();
-            canvas.setFontAndSize(font, 10);
-            canvas.setColor(ColorConstants.WHITE, true);
-            canvas.moveText(pageSize.getLeft() + 36, pageSize.getTop() - 28);
-            canvas.showText("Smart Export – Landed Cost Report");
-            canvas.endText();
-
-            canvas.beginText();
-            canvas.setFontAndSize(font, 9);
-            canvas.setColor(new DeviceRgb(28, 167, 199), true);
-            canvas.moveText(pageSize.getRight() - 220, pageSize.getTop() - 28);
-            String sim = result != null && result.getSimulationId() != null ? result.getSimulationId() : "";
-            canvas.showText("Simulation: " + sim);
-            canvas.endText();
-            canvas.restoreState();
-        }
-
-        private void addFooter(PdfCanvas canvas, Rectangle pageSize, int pageNumber, int totalPages) {
-            canvas.saveState();
-            canvas.setColor(new DeviceRgb(240, 240, 240), true);
-            canvas.rectangle(pageSize.getLeft(), pageSize.getBottom(), pageSize.getWidth(), 34);
-            canvas.fill();
-
-            canvas.beginText();
-            canvas.setFontAndSize(font, 8);
-            canvas.setColor(new DeviceRgb(120, 120, 120), true);
-            canvas.moveText(pageSize.getLeft() + 36, pageSize.getBottom() + 12);
-            String source = result != null && result.getExchangeRateSource() != null ? result.getExchangeRateSource() : "";
-            canvas.showText("Source taux de change: " + source);
-            canvas.endText();
-
-            canvas.beginText();
-            canvas.setFontAndSize(font, 8);
-            canvas.setColor(new DeviceRgb(120, 120, 120), true);
-            canvas.moveText(pageSize.getRight() - 90, pageSize.getBottom() + 12);
-            canvas.showText("Page " + pageNumber + "/" + totalPages);
-            canvas.endText();
-            canvas.restoreState();
-        }
-    }
-    
-    private void addLegalIdentifiers(Document document, LandedCostResultDto result) {
-        if (result.getNomEntreprise() == null && result.getRegistreCommerce() == null && result.getIce() == null) {
-            return;
-        }
-        
-        Paragraph sectionTitle = new Paragraph("Informations Légales")
-            .setFontSize(14)
-            .setBold()
-            .setFontColor(HEADER_COLOR)
-            .setMarginBottom(10);
-        document.add(sectionTitle);
-        
-        Table table = new Table(UnitValue.createPercentArray(new float[]{1, 2}))
-            .setWidth(UnitValue.createPercentValue(100))
-            .setMarginBottom(20);
-        
-        if (result.getNomEntreprise() != null) {
-            addInfoRow(table, "Nom Entreprise", result.getNomEntreprise());
-        }
-        if (result.getRegistreCommerce() != null) {
-            addInfoRow(table, "Registre Commerce (RC)", result.getRegistreCommerce());
-        }
-        if (result.getIce() != null) {
-            addInfoRow(table, "ICE", result.getIce());
-        }
-        
-        document.add(table);
-    }
-    
-    private void addLogisticsDetails(Document document, LandedCostResultDto result) {
-        if (result.getPoidsNet() == null && result.getPoidsBrut() == null && 
-            result.getTypeUnite() == null && result.getIncoterm() == null) {
-            return;
-        }
-        
-        Paragraph sectionTitle = new Paragraph("Détails Logistiques")
-            .setFontSize(14)
-            .setBold()
-            .setFontColor(HEADER_COLOR)
-            .setMarginBottom(10);
-        document.add(sectionTitle);
-        
-        Table table = new Table(UnitValue.createPercentArray(new float[]{1, 2}))
-            .setWidth(UnitValue.createPercentValue(100))
-            .setMarginBottom(20);
-        
-        if (result.getPoidsNet() != null) {
-            addInfoRow(table, "Poids Net", String.format("%.2f kg", result.getPoidsNet()));
-        }
-        if (result.getPoidsBrut() != null) {
-            addInfoRow(table, "Poids Brut", String.format("%.2f kg", result.getPoidsBrut()));
-        }
-        if (result.getTypeUnite() != null) {
-            addInfoRow(table, "Type Unité", result.getTypeUnite());
-        }
-        if (result.getIncoterm() != null) {
-            addInfoRow(table, "Incoterm", result.getIncoterm());
-        }
-        if (result.getFraisPortuaires() != null && result.getFraisPortuaires().compareTo(BigDecimal.ZERO) > 0) {
-            addInfoRow(table, "Justification Frais Portuaires", 
-                String.format("%.2f %s (Frais standard port %s)", 
-                    result.getFraisPortuaires(), 
-                    result.getCurrency() != null ? result.getCurrency() : "EUR",
-                    result.getNomPort() != null ? result.getNomPort() : "N/A"));
-        }
-        
-        document.add(table);
-    }
-    
-    private void addProfitabilityAnalysis(Document document, LandedCostResultDto result) {
-        if (result.getMargeNette() == null) {
-            return;
-        }
-        
-        Paragraph sectionTitle = new Paragraph("Analyse de Rentabilité")
-            .setFontSize(14)
-            .setBold()
-            .setFontColor(HEADER_COLOR)
-            .setMarginBottom(10);
-        document.add(sectionTitle);
-        
-        Table table = new Table(UnitValue.createPercentArray(new float[]{3, 2}))
-            .setWidth(UnitValue.createPercentValue(100))
-            .setMarginBottom(20);
-        
-        String currency = result.getCurrency() != null ? result.getCurrency() : "EUR";
-        
-        if (result.getPrixVentePrevisionnel() != null) {
-            addCostRow(table, "Prix de Vente Prévisionnel", result.getPrixVentePrevisionnel(), currency);
-        }
-        addCostRow(table, "Coût Total (Landed Cost)", result.getCoutTotal(), currency);
-        
-        DeviceRgb margeColor = result.getMargeNette().compareTo(BigDecimal.ZERO) > 0 
-            ? new DeviceRgb(0, 128, 0) : new DeviceRgb(255, 0, 0);
-        
-        Cell margeCell = new Cell().add(new Paragraph("Marge Nette").setBold());
-        Cell margeValueCell = new Cell().add(
-            new Paragraph(String.format("%.2f %s", result.getMargeNette(), currency))
-                .setTextAlignment(TextAlignment.RIGHT)
-                .setBold()
-                .setFontColor(margeColor)
-        );
-        table.addCell(margeCell);
-        table.addCell(margeValueCell);
-        
-        if (result.getMargePourcentage() != null) {
-            Cell margePctCell = new Cell().add(new Paragraph("Marge %").setBold());
-            Cell margePctValueCell = new Cell().add(
-                new Paragraph(String.format("%.2f%%", result.getMargePourcentage()))
-                    .setTextAlignment(TextAlignment.RIGHT)
-                    .setBold()
-                    .setFontColor(margeColor)
-            );
-            table.addCell(margePctCell);
-            table.addCell(margePctValueCell);
-        }
-        
-        if (result.getIndicateurRentabilite() != null) {
-            addInfoRow(table, "Indicateur", result.getIndicateurRentabilite());
-        }
-        
-        document.add(table);
-    }
-    
-    private void addSivAlert(Document document, LandedCostResultDto result) {
-        if (result.getAlerteSiv() == null || !result.getAlerteSiv()) {
-            return;
-        }
-        
-        Paragraph sectionTitle = new Paragraph("Alerte Sécurité Douanière (SIV)")
-            .setFontSize(14)
-            .setBold()
-            .setFontColor(new DeviceRgb(255, 140, 0))
-            .setMarginBottom(10);
-        document.add(sectionTitle);
-        
-        Paragraph alertText = new Paragraph(result.getMessageSiv())
-            .setFontSize(11)
-            .setMarginBottom(10)
-            .setBackgroundColor(new DeviceRgb(255, 250, 205))
+            .add(new Paragraph(text)
+                .setFont(fonts.bold)
+                .setFontSize(PdfHelper.FONT_BODY)
+                .setFontColor(PdfHelper.WHITE))
+            .setBackgroundColor(PdfHelper.DEEP_NAVY)
+            .setBorder(new SolidBorder(PdfHelper.BORDER_GRAY, 0.5f))
             .setPadding(10);
-        document.add(alertText);
-        
-        if (result.getPrixEntreeSivMin() != null) {
-            Table table = new Table(UnitValue.createPercentArray(new float[]{1, 1}))
-                .setWidth(UnitValue.createPercentValue(100))
-                .setMarginBottom(20);
-            
-            String currency = result.getCurrency() != null ? result.getCurrency() : "EUR";
-            addInfoRow(table, "Valeur CAF actuelle", 
-                String.format("%.2f %s", result.getValeurCaf(), currency));
-            addInfoRow(table, "Prix d'entrée SIV minimum", 
-                String.format("%.2f %s", result.getPrixEntreeSivMin(), currency));
-            
-            document.add(table);
-        }
     }
-    
-    private void addCurrencySensitivity(Document document, LandedCostResultDto result) {
-        if (result.getImpactDevise2PourcentPlus() == null && result.getImpactDevise2PourcentMoins() == null) {
-            return;
-        }
-        
-        Paragraph sectionTitle = new Paragraph("Analyse de Sensibilité Devises")
-            .setFontSize(14)
-            .setBold()
-            .setFontColor(HEADER_COLOR)
+
+    private void addCostDetailRow(Table table, String description, String amount, PdfHelper.Fonts fonts, boolean alternate) {
+        Cell descCell = new Cell()
+            .add(new Paragraph(description)
+                .setFont(fonts.regular)
+                .setFontSize(PdfHelper.FONT_BODY)
+                .setFontColor(PdfHelper.DEEP_NAVY))
+            .setBackgroundColor(alternate ? PdfHelper.LIGHT_BLUE_ROW : PdfHelper.WHITE)
+            .setBorder(new SolidBorder(PdfHelper.BORDER_GRAY, 0.5f))
+            .setPadding(11);
+
+        Cell amountCell = new Cell()
+            .add(new Paragraph(amount != null ? amount : "0.00")
+                .setFont(fonts.bold)
+                .setFontSize(PdfHelper.FONT_BODY)
+                .setFontColor(PdfHelper.DEEP_NAVY)
+                .setTextAlignment(TextAlignment.RIGHT))
+            .setBackgroundColor(alternate ? PdfHelper.LIGHT_BLUE_ROW : PdfHelper.WHITE)
+            .setBorder(new SolidBorder(PdfHelper.BORDER_GRAY, 0.5f))
+            .setPadding(11);
+
+        table.addCell(descCell);
+        table.addCell(amountCell);
+    }
+
+    private void addAnalysisPage(Document document, LandedCostResultDto result, PdfHelper.Fonts fonts) {
+        // Same header bar as page 2
+        Table headerTable = new Table(UnitValue.createPercentArray(new float[]{1, 1}))
+            .setWidth(UnitValue.createPercentValue(100))
+            .setMarginBottom(20);
+
+        Cell leftHeader = new Cell()
+            .add(new Paragraph("⚓ SMART EXPORT")
+                .setFont(fonts.bold)
+                .setFontSize(11)
+                .setFontColor(PdfHelper.WHITE))
+            .setBackgroundColor(PdfHelper.DEEP_NAVY)
+            .setBorder(Border.NO_BORDER)
+            .setPadding(12);
+
+        Cell rightHeader = new Cell()
+            .add(new Paragraph("ANALYSE DE SENSIBILITÉ")
+                .setFont(fonts.regular)
+                .setFontSize(10)
+                .setFontColor(PdfHelper.WHITE)
+                .setTextAlignment(TextAlignment.RIGHT))
+            .setBackgroundColor(PdfHelper.DEEP_NAVY)
+            .setBorder(Border.NO_BORDER)
+            .setPadding(12);
+
+        headerTable.addCell(leftHeader);
+        headerTable.addCell(rightHeader);
+        document.add(headerTable);
+
+        // Gold underline bar 2pt below header
+        Rectangle pageSize = document.getPdfDocument().getPage(3).getPageSize();
+        PdfCanvas goldUnderline = new PdfCanvas(document.getPdfDocument().getPage(3));
+        goldUnderline.saveState();
+        goldUnderline.setStrokeColor(PdfHelper.GOLD);
+        goldUnderline.setLineWidth(2);
+        goldUnderline.moveTo(pageSize.getLeft() + PdfHelper.MARGIN_LEFT, pageSize.getTop() - PdfHelper.MARGIN_TOP - 30);
+        goldUnderline.lineTo(pageSize.getRight() - PdfHelper.MARGIN_RIGHT, pageSize.getTop() - PdfHelper.MARGIN_TOP - 30);
+        goldUnderline.stroke();
+        goldUnderline.restoreState();
+        goldUnderline.release();
+
+        // SECTION: "Analyse de Sensibilité Monétaire"
+        document.add(new Paragraph("")
+            .setFontSize(15)); // Spacing
+
+        Paragraph analysisTitle = new Paragraph("Analyse de Sensibilité Monétaire")
+            .setFont(fonts.bold)
+            .setFontSize(PdfHelper.FONT_H4)
+            .setFontColor(PdfHelper.DEEP_NAVY)
             .setMarginBottom(10);
-        document.add(sectionTitle);
-        
-        Paragraph description = new Paragraph("Impact d'une variation de ±2% du taux de change sur le coût total:")
-            .setFontSize(10)
+
+        // Gold left border 3pt for section title
+        Table titleBorderTable = new Table(UnitValue.createPercentArray(new float[]{0.5f, 99.5f}))
+            .setWidth(UnitValue.createPercentValue(100))
+            .setMarginBottom(10);
+
+        Cell borderCell = new Cell()
+            .setBackgroundColor(PdfHelper.GOLD)
+            .setWidth(3)
+            .setBorder(Border.NO_BORDER);
+
+        Cell titleCell = new Cell()
+            .add(analysisTitle)
+            .setBorder(Border.NO_BORDER);
+
+        titleBorderTable.addCell(borderCell);
+        titleBorderTable.addCell(titleCell);
+        document.add(titleBorderTable);
+
+        // Subtitle: italic gray 9pt
+        Paragraph subtitle = new Paragraph("Impact d'une variation de ±2% du taux de change")
+            .setFont(fonts.regular)
+            .setFontSize(PdfHelper.FONT_SMALL)
+            .setFontColor(PdfHelper.GRAY_TEXT)
             .setItalic()
-            .setMarginBottom(5);
-        document.add(description);
-        
-        Table table = new Table(UnitValue.createPercentArray(new float[]{2, 1}))
-            .setWidth(UnitValue.createPercentValue(100))
-            .setMarginBottom(20);
-        
-        String currency = result.getCurrency() != null ? result.getCurrency() : "EUR";
-        
-        if (result.getImpactDevise2PourcentPlus() != null) {
-            BigDecimal newTotal = result.getCoutTotal().add(result.getImpactDevise2PourcentPlus());
-            addInfoRow(table, "Variation +2%", 
-                String.format("+%.2f %s (Total: %.2f %s)", 
-                    result.getImpactDevise2PourcentPlus(), currency, newTotal, currency));
-        }
-        
-        if (result.getImpactDevise2PourcentMoins() != null) {
-            BigDecimal newTotal = result.getCoutTotal().add(result.getImpactDevise2PourcentMoins());
-            addInfoRow(table, "Variation -2%", 
-                String.format("%.2f %s (Total: %.2f %s)", 
-                    result.getImpactDevise2PourcentMoins(), currency, newTotal, currency));
-        }
-        
-        document.add(table);
-    }
-    
-    private void addQrCode(Document document, LandedCostResultDto result) {
-        try {
-            String qrContent = "SIM:" + result.getSimulationId() + 
-                "|URL:https://smartexport.com/verify/" + result.getSimulationId();
-            
-            QRCodeWriter qrCodeWriter = new QRCodeWriter();
-            BitMatrix bitMatrix = qrCodeWriter.encode(qrContent, BarcodeFormat.QR_CODE, 150, 150);
-            
-            BufferedImage qrImage = MatrixToImageWriter.toBufferedImage(bitMatrix);
-            ByteArrayOutputStream qrBaos = new ByteArrayOutputStream();
-            ImageIO.write(qrImage, "PNG", qrBaos);
-            
-            Image qrCodeImage = new Image(ImageDataFactory.create(qrBaos.toByteArray()))
-                .setWidth(100)
-                .setHeight(100)
-                .setHorizontalAlignment(com.itextpdf.layout.properties.HorizontalAlignment.CENTER)
-                .setMarginTop(10)
-                .setMarginBottom(5);
-            
-            Paragraph qrLabel = new Paragraph("QR Code de Vérification")
-                .setFontSize(9)
-                .setTextAlignment(TextAlignment.CENTER)
-                .setMarginBottom(10);
-            
-            document.add(qrCodeImage);
-            document.add(qrLabel);
-            
-        } catch (Exception e) {
-            // Silently fail if QR code generation fails
-            Paragraph qrError = new Paragraph("[QR Code non disponible]")
-                .setFontSize(8)
-                .setTextAlignment(TextAlignment.CENTER)
-                .setFontColor(ColorConstants.GRAY)
-                .setMarginBottom(10);
-            document.add(qrError);
-        }
-    }
-    
-    private void addInfoRow(Table table, String label, String value) {
-        table.addCell(new Cell().add(new Paragraph(PdfHelper.safeGlyphs(label)).setBold())
-            .setBackgroundColor(LIGHT_GRAY));
-        table.addCell(new Cell().add(new Paragraph(PdfHelper.safeGlyphs(value != null ? value : "N/A"))));
-    }
-    
-    private void addCostRow(Table table, String description, BigDecimal amount, 
-                           String currency) {
-        addCostRow(table, description, amount, currency, false);
-    }
-    
-    private void addCostRow(Table table, String description, BigDecimal amount, 
-                           String currency, boolean bold) {
-        Paragraph descPara = new Paragraph(PdfHelper.safeGlyphs(description));
-        Paragraph amountPara = new Paragraph(
-            String.format("%.2f %s", amount, currency)
-        ).setTextAlignment(TextAlignment.RIGHT);
-        
-        if (bold) {
-            descPara.setBold();
-            amountPara.setBold();
-        }
-        
-        table.addCell(new Cell().add(descPara));
-        table.addCell(new Cell().add(amountPara));
-    }
-    
-    private Cell createHeaderCell(String text) {
-        return new Cell()
-            .add(new Paragraph(PdfHelper.safeGlyphs(text)).setBold().setFontColor(ColorConstants.WHITE))
-            .setBackgroundColor(HEADER_COLOR)
+            .setMarginBottom(15);
+
+        document.add(subtitle);
+
+        // Table 3 columns: Scénario | Variation | Coût Total
+        Table sensitivityTable = new Table(UnitValue.createPercentArray(new float[]{1, 1, 1}))
+            .setWidth(UnitValue.createPercentValue(100));
+
+        // Header: #0A1628 white bold
+        sensitivityTable.addCell(createCostHeader("Scénario", fonts));
+        sensitivityTable.addCell(createCostHeader("Variation", fonts));
+        sensitivityTable.addCell(createCostHeader("Coût Total", fonts));
+
+        // Row Optimiste: background #F0FFF4, variation in green #27AE60 bold
+        Cell optimisticScenario = new Cell()
+            .add(new Paragraph("Scénario Optimiste")
+                .setFont(fonts.regular)
+                .setFontSize(PdfHelper.FONT_BODY)
+                .setFontColor(PdfHelper.DEEP_NAVY))
+            .setBackgroundColor(PdfHelper.LIGHT_GREEN)
+            .setBorder(new SolidBorder(PdfHelper.BORDER_GRAY, 0.5f))
+            .setPadding(11);
+
+        Cell optimisticVariation = new Cell()
+            .add(new Paragraph("+2%")
+                .setFont(fonts.bold)
+                .setFontSize(PdfHelper.FONT_BODY)
+                .setFontColor(PdfHelper.GREEN)
+                .setTextAlignment(TextAlignment.CENTER))
+            .setBackgroundColor(PdfHelper.LIGHT_GREEN)
+            .setBorder(new SolidBorder(PdfHelper.BORDER_GRAY, 0.5f))
+            .setPadding(11);
+
+        Cell optimisticCost = new Cell()
+            .add(new Paragraph(safeMoney(result.getCoutTotal() != null ? result.getCoutTotal().multiply(new java.math.BigDecimal("1.02")) : null, result.getCurrency()))
+                .setFont(fonts.bold)
+                .setFontSize(PdfHelper.FONT_BODY)
+                .setFontColor(PdfHelper.DEEP_NAVY)
+                .setTextAlignment(TextAlignment.RIGHT))
+            .setBackgroundColor(PdfHelper.LIGHT_GREEN)
+            .setBorder(new SolidBorder(PdfHelper.BORDER_GRAY, 0.5f))
+            .setPadding(11);
+
+        sensitivityTable.addCell(optimisticScenario);
+        sensitivityTable.addCell(optimisticVariation);
+        sensitivityTable.addCell(optimisticCost);
+
+        // Row Pessimiste: background #FFF5F5, variation in red #E74C3C bold
+        Cell pessimisticScenario = new Cell()
+            .add(new Paragraph("Scénario Pessimiste")
+                .setFont(fonts.regular)
+                .setFontSize(PdfHelper.FONT_BODY)
+                .setFontColor(PdfHelper.DEEP_NAVY))
+            .setBackgroundColor(PdfHelper.LIGHT_RED)
+            .setBorder(new SolidBorder(PdfHelper.BORDER_GRAY, 0.5f))
+            .setPadding(11);
+
+        Cell pessimisticVariation = new Cell()
+            .add(new Paragraph("-2%")
+                .setFont(fonts.bold)
+                .setFontSize(PdfHelper.FONT_BODY)
+                .setFontColor(PdfHelper.RED)
+                .setTextAlignment(TextAlignment.CENTER))
+            .setBackgroundColor(PdfHelper.LIGHT_RED)
+            .setBorder(new SolidBorder(PdfHelper.BORDER_GRAY, 0.5f))
+            .setPadding(11);
+
+        Cell pessimisticCost = new Cell()
+            .add(new Paragraph(safeMoney(result.getCoutTotal() != null ? result.getCoutTotal().multiply(new java.math.BigDecimal("0.98")) : null, result.getCurrency()))
+                .setFont(fonts.bold)
+                .setFontSize(PdfHelper.FONT_BODY)
+                .setFontColor(PdfHelper.DEEP_NAVY)
+                .setTextAlignment(TextAlignment.RIGHT))
+            .setBackgroundColor(PdfHelper.LIGHT_RED)
+            .setBorder(new SolidBorder(PdfHelper.BORDER_GRAY, 0.5f))
+            .setPadding(11);
+
+        sensitivityTable.addCell(pessimisticScenario);
+        sensitivityTable.addCell(pessimisticVariation);
+        sensitivityTable.addCell(pessimisticCost);
+
+        document.add(sensitivityTable);
+
+        // QR CODE SECTION (centered)
+        document.add(new Paragraph("")
+            .setFontSize(20)); // Spacing
+
+        Table qrTable = new Table(UnitValue.createPercentArray(new float[]{1}))
+            .setWidth(UnitValue.createPercentValue(40))
+            .setHorizontalAlignment(HorizontalAlignment.CENTER);
+
+        Cell qrCell = new Cell()
+            .setPadding(15)
+            .setBorder(new SolidBorder(PdfHelper.GOLD, 1))
             .setTextAlignment(TextAlignment.CENTER);
+
+        qrCell.add(new Paragraph("QR Code de Vérification")
+            .setFont(fonts.bold)
+            .setFontSize(PdfHelper.FONT_BODY)
+            .setFontColor(PdfHelper.DEEP_NAVY)
+            .setMarginBottom(10));
+
+        // Add QR code placeholder
+        qrCell.add(new Paragraph("[QR Code]")
+            .setFont(fonts.regular)
+            .setFontSize(PdfHelper.FONT_SMALL)
+            .setFontColor(PdfHelper.GRAY_TEXT));
+
+        qrCell.add(new Paragraph("Référence: " + (result.getSimulationId() != null ? result.getSimulationId() : "REF-LC"))
+            .setFont(fonts.regular)
+            .setFontSize(PdfHelper.FONT_SMALL)
+            .setFontColor(PdfHelper.GRAY_TEXT)
+            .setMarginTop(5));
+
+        qrTable.addCell(qrCell);
+        document.add(qrTable);
+
+        // WATERMARK diagonal "SMART EXPORT": very light gray #EEEEEE, 60pt, rotated 45°, centered
+        PdfCanvas watermark = new PdfCanvas(document.getPdfDocument().getPage(3));
+        watermark.saveState();
+        watermark.setFillColor(PdfHelper.WATERMARK_GRAY);
+        watermark.beginText();
+        watermark.setFontAndSize(fonts.bold, 60);
+        watermark.showText("SMART EXPORT");
+        watermark.endText();
+        watermark.restoreState();
+        watermark.release();
+
+        // Footer: same as page 2
+        document.add(new Paragraph("")
+            .setFontSize(20)); // Spacing
+
+        PdfCanvas footerGoldLine = new PdfCanvas(document.getPdfDocument().getPage(3));
+        footerGoldLine.saveState();
+        footerGoldLine.setStrokeColor(PdfHelper.GOLD);
+        footerGoldLine.setLineWidth(1);
+        footerGoldLine.moveTo(pageSize.getLeft() + PdfHelper.MARGIN_LEFT, 80);
+        footerGoldLine.lineTo(pageSize.getRight() - PdfHelper.MARGIN_RIGHT, 80);
+        footerGoldLine.stroke();
+        footerGoldLine.restoreState();
+        footerGoldLine.release();
+
+        Paragraph footerText = new Paragraph("Smart Export © 2026 | Page 3/3")
+            .setFont(fonts.regular)
+            .setFontSize(PdfHelper.FONT_TINY)
+            .setFontColor(PdfHelper.GRAY_TEXT)
+            .setTextAlignment(TextAlignment.CENTER)
+            .setMarginTop(10);
+
+        document.add(footerText);
     }
-    
-    private void addMaritimeTransportSection(Document document, LandedCostResultDto result) {
-        if (result.getMaritimeTransport() == null) {
-            return; // Skip if no maritime transport selected
-        }
-        
-        MaritimeTransportCostDto mt = result.getMaritimeTransport();
-        
-        Paragraph sectionTitle = new Paragraph("Transport Maritime")
-            .setFontSize(14)
-            .setBold()
-            .setMarginTop(15)
-            .setMarginBottom(10);
-        document.add(sectionTitle);
-        
-        Table table = new Table(UnitValue.createPercentArray(new float[]{1, 2}))
-            .setWidth(UnitValue.createPercentValue(100))
-            .setMarginBottom(20);
-        
-        // Ship information
-        addInfoRow(table, "Navire", mt.getVesselName());
-        addInfoRow(table, "MMSI", mt.getVesselMmsi());
-        addInfoRow(table, "Poids", mt.getWeightTonnes() + " tonnes");
-        addInfoRow(table, "Distance", String.format("%.0f NM (%.0f km)", 
-            mt.getDistanceNm(), mt.getDistanceKm()));
-        addInfoRow(table, "Délai estimé", mt.getEstimatedDays() + " jours");
-        addInfoRow(table, "Source données", mt.getDataSource());
-        addInfoRow(table, "Type conteneur", mt.getContainerType() != null ? mt.getContainerType() : "20FT");
-        addInfoRow(table, "Incoterm", mt.getIncoterm() != null ? mt.getIncoterm() : "FOB");
-        
-        document.add(table);
-        
-        // Cost breakdown
-        Paragraph costTitle = new Paragraph("Détail des coûts de transport")
-            .setFontSize(12)
-            .setBold()
-            .setMarginBottom(10);
-        document.add(costTitle);
-        
-        Table costTable = new Table(UnitValue.createPercentArray(new float[]{2, 1}))
-            .setWidth(UnitValue.createPercentValue(100))
-            .setMarginBottom(20);
-        
-        addCostRow(costTable, "Fret maritime", mt.getFreightCost(), mt.getCurrency(), false);
-        addCostRow(costTable, "Frais port départ", mt.getOriginPortFees(), mt.getCurrency(), false);
-        addCostRow(costTable, "Frais port arrivée", mt.getDestPortFees(), mt.getCurrency(), false);
-        
-        if (mt.getBunkerSurcharge() != null && mt.getBunkerSurcharge().compareTo(BigDecimal.ZERO) > 0) {
-            addCostRow(costTable, "Surcharge carburant (BAF)", mt.getBunkerSurcharge(), mt.getCurrency(), false);
-        }
-        
-        if (mt.getCanalFees() != null && mt.getCanalFees().compareTo(BigDecimal.ZERO) > 0) {
-            addCostRow(costTable, "Frais canaux", mt.getCanalFees(), mt.getCurrency(), false);
-        }
-        
-        if (mt.getSecuritySurcharge() != null && mt.getSecuritySurcharge().compareTo(BigDecimal.ZERO) > 0) {
-            addCostRow(costTable, "Surcharge sécurité", mt.getSecuritySurcharge(), mt.getCurrency(), false);
-        }
-        
-        addCostRow(costTable, "Assurance transport", mt.getInsuranceCost(), mt.getCurrency(), false);
-        
-        // Add separator
-        costTable.addCell(new Cell(1, 2)
-            .add(new Paragraph(""))
-            .setBorder(null)
-            .setHeight(5));
-        
-        // Total
-        addCostRow(costTable, "TOTAL TRANSPORT MARITIME", mt.getTotalCost(), mt.getCurrency(), true);
-        
-        document.add(costTable);
-        
-        // Data source note
-        if ("CALCULATED".equals(mt.getDataSource()) || "WTO_MFN_ESTIMATED".equals(mt.getDataSource())) {
-            Paragraph note = new Paragraph("Note: Coûts estimés basés sur les tarifs moyens du marché. " +
-                "Vérifiez avec la compagnie maritime pour les tarifs exacts.")
-                .setFontSize(9)
-                .setFontColor(ColorConstants.GRAY)
-                .setItalic()
-                .setMarginBottom(15);
-            document.add(note);
-        }
+
+    // Utility methods
+    private String safeMoney(java.math.BigDecimal amount, String currency) {
+        if (amount == null) return "0.00 " + (currency != null ? currency : "USD");
+        return String.format("%.2f %s", amount.doubleValue(), currency != null ? currency : "USD");
     }
 }

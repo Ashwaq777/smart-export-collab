@@ -317,19 +317,19 @@ function Calculator() {
       const calculationData = {
         codeHs: formData.codeHs,
         paysDestination: formData.paysDestination,
-        valeurFob: parseFloat(formData.valeurFob),
+        valeurFob: parseFloat(formData.valeurFob) || 0,
         coutTransport: parseFloat(formData.coutTransport) || 0,
-        assurance: parseFloat(formData.assurance),
-        currency: formData.currency,
+        assurance: parseFloat(formData.assurance) || 0,
+        currency: formData.currency || 'USD',
         portId: formData.portId ? parseInt(formData.portId) : null,
         nomEntreprise: formData.nomEntreprise || null,
         registreCommerce: formData.registreCommerce || null,
         ice: formData.ice || null,
-        incoterm: formData.incoterm || 'CIF',
-        prixVentePrevisionnel: formData.prixVentePrevisionnel ? parseFloat(formData.prixVentePrevisionnel) : null,
-        poidsNet: formData.poidsNet ? parseFloat(formData.poidsNet) : null,
-        poidsBrut: formData.poidsBrut ? parseFloat(formData.poidsBrut) : null,
-        typeUnite: formData.typeUnite || null
+        incoterm: formData.incoterm || null,
+        prixVentePrevisionnel: parseFloat(formData.prixVentePrevisionnel) || null,
+        poidsNet: parseFloat(formData.poidsNet) || null,
+        poidsBrut: parseFloat(formData.poidsBrut) || null,
+        typeUnite: formData.typeUnite || null,
       }
       
       const pdfBlob = await pdfService.generateLandedCostPdf(calculationData)

@@ -1,149 +1,124 @@
 package com.smartexport.platform.controller;
 
-import java.io.ByteArrayOutputStream;
-import java.util.List;
+import java.util.Map;
 
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.*;
 
-import com.smartexport.platform.DTO.TraceabilityDTO;
-import com.smartexport.platform.entity.ProductIdentification;
-import com.smartexport.platform.entity.ProductionInfo;
-import com.smartexport.platform.entity.ShippingEvent;
+import com.smartexport.platform.dto.TraceabilityDTO;
 import com.smartexport.platform.entity.TraceabilityRecord;
-import com.smartexport.platform.repository.ProductIdentificationRepository;
-import com.smartexport.platform.repository.ProductionInfoRepository;
-import com.smartexport.platform.repository.ShippingEventRepository;
 import com.smartexport.platform.repository.TraceabilityRecordRepository;
 import com.smartexport.platform.service.TraceabilityService;
 
-import lombok.RequiredArgsConstructor;
-
 @RestController
 @RequestMapping("/api/traceability")
-@RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "*")
 public class TraceabilityController {
 
     private final TraceabilityService service;
-    
-private final TraceabilityRecordRepository recordRepo;
-private final ProductIdentificationRepository productRepo;
-private final ProductionInfoRepository productionRepo;
-private final ShippingEventRepository shippingRepo;
+    private final TraceabilityRecordRepository recordRepository;
+
+    public TraceabilityController(TraceabilityService service, 
+                                 TraceabilityRecordRepository recordRepository) {
+        this.service = service;
+        this.recordRepository = recordRepository;
+    }
 
     @PostMapping
-    public ResponseEntity<?> create(@RequestBody TraceabilityDTO dto) {
-        return ResponseEntity.ok(service.createRecord(dto));
+    public ResponseEntity<?> create(@RequestBody TraceabilityDTO dto,
+        @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            String username = userDetails != null ? userDetails.getUsername() : "anonymous";
+            return ResponseEntity.ok(service.createRecord(dto, username));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
     }
 
     @GetMapping
-    public ResponseEntity<List<?>> getAllRecords() {
+    public ResponseEntity<?> getAll(
+        @RequestParam(required=false) String producteur,
+        @RequestParam(required=false) String lot,
+        @RequestParam(required=false) String dateDebut,
+        @RequestParam(required=false) String dateFin,
+        @RequestParam(defaultValue="0") int page,
+        @RequestParam(defaultValue="20") int size) {
         try {
-            return ResponseEntity.ok(service.getAllRecords());
+            return ResponseEntity.ok(service.getAll(producteur, lot, dateDebut, dateFin, page, size));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(null);
+            return ResponseEntity.status(500).body(e.getMessage());
         }
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getRecord(@PathVariable Long id) {
+    public ResponseEntity<?> getOne(@PathVariable Long id) {
         try {
-            return ResponseEntity.ok(service.getRecord(id));
+            return ResponseEntity.ok(recordRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Not found")));
+        } catch (Exception e) {
+            return ResponseEntity.status(404).body(e.getMessage());
+        }
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> update(@PathVariable Long id,
+        @RequestBody TraceabilityDTO dto,
+        @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            String username = userDetails != null ? userDetails.getUsername() : "anonymous";
+            return ResponseEntity.ok(service.updateRecord(id, dto, username));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> delete(@PathVariable Long id) {
+        try {
+            service.softDelete(id);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/{id}/history")
+    public ResponseEntity<?> history(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(service.getHistory(id));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/export")
+    public ResponseEntity<byte[]> export(
+        @RequestParam(required=false) String producteur,
+        @RequestParam(required=false) String lot,
+        @RequestParam(required=false) String dateDebut,
+        @RequestParam(required=false) String dateFin) {
+        try {
+            byte[] excel = service.exportToExcel(producteur, lot, dateDebut, dateFin);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.parseMediaType(
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+            headers.setContentDispositionFormData("attachment", "traceabilite.xlsx");
+            return ResponseEntity.ok().headers(headers).body(excel);
         } catch (Exception e) {
             return ResponseEntity.status(500).body(null);
         }
     }
 
-    @GetMapping("/export/excel")
-public ResponseEntity<byte[]> exportExcel() throws Exception {
-
-    List<TraceabilityRecord> records = recordRepo.findAll();
-
-    Workbook workbook = new XSSFWorkbook();
-    Sheet sheet = workbook.createSheet("Traceability Records");
-
-    String[] headers = {
-            "TLC",
-            "Status",
-            "Created At",
-            "GTIN",
-            "Description",
-            "Quantity",
-            "Unit",
-            "Country",
-            "Production Site",
-            "Harvest Date",
-            "Shipper",
-            "Shipping Date"
-    };
-
-    // Header
-    Row headerRow = sheet.createRow(0);
-    for (int i = 0; i < headers.length; i++) {
-        headerRow.createCell(i).setCellValue(headers[i]);
+    @GetMapping("/stats")
+    public ResponseEntity<?> stats() {
+        try {
+            return ResponseEntity.ok(service.getStats());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
     }
-
-    int rowNum = 1;
-
-    for (TraceabilityRecord record : records) {
-
-        ProductIdentification product = productRepo.findByRecord(record);
-        ProductionInfo production = productionRepo.findByRecord(record);
-        ShippingEvent shipping = shippingRepo.findFirstByRecord(record);
-
-        Row row = sheet.createRow(rowNum++);
-
-        row.createCell(0).setCellValue(record.getTraceabilityLotCode());
-        row.createCell(1).setCellValue(record.getStatus());
-        row.createCell(2).setCellValue(record.getCreatedAt() != null ?
-                record.getCreatedAt().toString() : "");
-
-        row.createCell(3).setCellValue(product != null ? product.getGtin() : "");
-        row.createCell(4).setCellValue(product != null ? product.getDescription() : "");
-        row.createCell(5).setCellValue(product != null && product.getQuantity()!=null ?
-                product.getQuantity() : 0);
-        row.createCell(6).setCellValue(product != null ? product.getUnit() : "");
-
-        row.createCell(7).setCellValue(production != null ?
-                production.getCountryOfOrigin() : "");
-        row.createCell(8).setCellValue(production != null ?
-                production.getProductionSiteName() : "");
-        row.createCell(9).setCellValue(production != null && production.getHarvestDate()!=null ?
-                production.getHarvestDate().toString() : "");
-
-        row.createCell(10).setCellValue(shipping != null ?
-                shipping.getShipperName() : "");
-        row.createCell(11).setCellValue(shipping != null && shipping.getShippingDateTime()!=null ?
-                shipping.getShippingDateTime().toString() : "");
-    }
-
-    // Auto size columns
-    for (int i = 0; i < headers.length; i++) {
-        sheet.autoSizeColumn(i);
-    }
-
-    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    workbook.write(outputStream);
-    workbook.close();
-
-    return ResponseEntity.ok()
-            .header(HttpHeaders.CONTENT_DISPOSITION,
-                    "attachment; filename=traceability.xlsx")
-            .contentType(MediaType.parseMediaType(
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
-            .body(outputStream.toByteArray());
-}
 }

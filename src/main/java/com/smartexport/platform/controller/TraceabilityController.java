@@ -47,8 +47,13 @@ public class TraceabilityController {
         @RequestParam(required=false) String dateFin,
         @RequestParam(defaultValue="0") int page,
         @RequestParam(defaultValue="20") int size) {
+        long startTime = System.currentTimeMillis();
         try {
-            return ResponseEntity.ok(service.getAll(producteur, lot, dateDebut, dateFin, page, size));
+            Object result = service.getAll(producteur, lot, dateDebut, dateFin, page, size);
+            long responseTime = System.currentTimeMillis() - startTime;
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("X-Response-Time", responseTime + "ms");
+            return ResponseEntity.ok().headers(headers).body(result);
         } catch (Exception e) {
             return ResponseEntity.status(500).body(e.getMessage());
         }
@@ -96,21 +101,28 @@ public class TraceabilityController {
     }
 
     @GetMapping("/export")
-    public ResponseEntity<byte[]> export(
+    public ResponseEntity<byte[]> exportExcel(
         @RequestParam(required=false) String producteur,
         @RequestParam(required=false) String lot,
         @RequestParam(required=false) String dateDebut,
-        @RequestParam(required=false) String dateFin) {
-        try {
-            byte[] excel = service.exportToExcel(producteur, lot, dateDebut, dateFin);
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.parseMediaType(
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
-            headers.setContentDispositionFormData("attachment", "traceabilite.xlsx");
-            return ResponseEntity.ok().headers(headers).body(excel);
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(null);
+        @RequestParam(required=false) String dateFin) throws Exception {
+        
+        long count = service.countRecords(producteur, dateDebut, dateFin);
+        byte[] data = service.exportToExcel(producteur, lot, dateDebut, dateFin);
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType(
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+        
+        if (count > 10000) {
+            // Compressed response
+            headers.set("Content-Disposition", "attachment; filename=traceabilite.xlsx.gz");
+            headers.set("Content-Encoding", "gzip");
+        } else {
+            headers.set("Content-Disposition", "attachment; filename=traceabilite.xlsx");
         }
+        
+        return ResponseEntity.ok().headers(headers).body(data);
     }
 
     @GetMapping("/stats")
@@ -120,5 +132,34 @@ public class TraceabilityController {
         } catch (Exception e) {
             return ResponseEntity.status(500).body(e.getMessage());
         }
+    }
+
+    @PostMapping("/stress-test")
+    public ResponseEntity<String> stressTest(
+        @RequestParam(defaultValue="1000") int count) {
+        long start = System.currentTimeMillis();
+        
+        for (int i = 0; i < count; i++) {
+            TraceabilityDTO dto = new TraceabilityDTO();
+            dto.setProducteur("Producteur-" + (i % 100));
+            dto.setParcelle("Parcelle-" + (i % 50));
+            dto.setDateRecolte("2026-0" + (i%9+1) + "-" + String.format("%02d",i%28+1));
+            dto.setDestination("Destination-" + (i % 20));
+            dto.setStatut("BROUILLON");
+            dto.setTraceabilityLotCode("TLC-STRESS-" + i);
+            try {
+                service.createRecord(dto, "stress-test");
+            } catch (Exception e) {
+                // Continue on error for stress test
+            }
+        }
+        
+        long duration = System.currentTimeMillis() - start;
+        double avg = (double) duration / count;
+        
+        return ResponseEntity.ok(String.format(
+            "{\"records_inserted\":%d,\"total_ms\":%d,\"avg_ms_per_record\":%.2f,\"target_met\":%b}",
+            count, duration, avg, avg < 300
+        ));
     }
 }

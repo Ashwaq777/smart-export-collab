@@ -19,7 +19,7 @@ export const Header = () => {
 
   const navLinks = [
     { path: '/', label: 'Home' },
-    ...(user?.role !== 'ADMIN' ? [{ path: '/', label: 'Calculator', hash: '#calculator' }] : []),
+    ...(user?.role !== 'ADMIN' ? [{ path: '/calculator', label: 'Calculator' }] : []),
     ...(user?.role !== 'ADMIN' ? [{ path: '/traceability', label: 'Traçabilité' }] : []),
     { path: '/about', label: 'About Us' },
     ...(user?.role === 'ADMIN' ? [{ path: '/admin', label: 'Admin' }] : []),
@@ -80,7 +80,7 @@ export const Header = () => {
           {/* CTA Button */}
           <div className="hidden md:flex items-center gap-3">
             <Link
-              to="/#calculator"
+              to="/calculator"
               className="bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-white px-6 py-2.5 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
             >
               Start Simulation
@@ -140,7 +140,7 @@ export const Header = () => {
                 </Link>
               ))}
               <Link
-                to="/#calculator"
+                to="/calculator"
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="bg-gradient-to-r from-accent-500 to-accent-600 text-white px-6 py-2.5 rounded-lg font-semibold text-center shadow-lg"
               >

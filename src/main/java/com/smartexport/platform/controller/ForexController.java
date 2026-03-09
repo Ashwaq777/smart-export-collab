@@ -7,6 +7,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/forex")
@@ -32,5 +34,11 @@ public class ForexController {
         
         BigDecimal rate = exchangeRateService.getRate(from.toUpperCase(), to.toUpperCase());
         return ResponseEntity.ok(rate);
+    }
+    
+    @GetMapping("/rates")
+    public ResponseEntity<List<Map<String, Object>>> getAllExchangeRates() {
+        List<Map<String, Object>> rates = exchangeRateService.getAllRates();
+        return ResponseEntity.ok(rates);
     }
 }

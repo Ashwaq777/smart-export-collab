@@ -48,6 +48,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/traceability/**").permitAll()
                 .requestMatchers("/api/calculation/**").permitAll()
                 .requestMatchers("/api/pdf/**").permitAll()
+                .requestMatchers("/api/forex/**").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )

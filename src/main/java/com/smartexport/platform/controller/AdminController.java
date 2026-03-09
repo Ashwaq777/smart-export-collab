@@ -1,8 +1,14 @@
 package com.smartexport.platform.controller;
 
+import com.smartexport.platform.entity.Country;
+import com.smartexport.platform.entity.Port;
 import com.smartexport.platform.entity.Role;
 import com.smartexport.platform.entity.User;
 import com.smartexport.platform.entity.UserStatus;
+import com.smartexport.platform.repository.PortRepository;
+import com.smartexport.platform.service.CountryService;
+import com.smartexport.platform.service.ExchangeRateService;
+import com.smartexport.platform.service.OverpassPortService;
 import com.smartexport.platform.service.UserAdminService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -18,9 +25,17 @@ import java.util.Map;
 public class AdminController {
 
     private final UserAdminService userAdminService;
+    private final CountryService countryService;
+    private final ExchangeRateService exchangeRateService;
+    private final OverpassPortService overpassPortService;
+    private final PortRepository portRepository;
 
-    public AdminController(UserAdminService userAdminService) {
+    public AdminController(UserAdminService userAdminService, CountryService countryService, ExchangeRateService exchangeRateService, OverpassPortService overpassPortService, PortRepository portRepository) {
         this.userAdminService = userAdminService;
+        this.countryService = countryService;
+        this.exchangeRateService = exchangeRateService;
+        this.overpassPortService = overpassPortService;
+        this.portRepository = portRepository;
     }
 
     @GetMapping("/stats")
@@ -146,5 +161,87 @@ public class AdminController {
             log.error("Error fetching simulations", e);
             return ResponseEntity.internalServerError().build();
         }
+    }
+
+    @GetMapping("/countries")
+    public ResponseEntity<?> getCountries() {
+        try {
+            return ResponseEntity.ok(countryService.getAll());
+        } catch (Exception e) {
+            log.error("Error fetching countries", e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/countries/sync")
+    public ResponseEntity<?> syncCountries() {
+        try {
+            List<Country> result = countryService.syncFromApi();
+            return ResponseEntity.ok(Map.of(
+                "synced", result.size(),
+                "source", "restcountries.com"
+            ));
+        } catch (Exception e) {
+            log.error("Error syncing countries", e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @PutMapping("/countries/{id}")
+    public ResponseEntity<?> updateCountry(
+        @PathVariable Long id,
+        @RequestBody Country updates) {
+        try {
+            return ResponseEntity.ok(countryService.update(id, updates));
+        } catch (Exception e) {
+            log.error("Error updating country", e);
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/exchange-rates")
+    public ResponseEntity<?> getExchangeRates() {
+        try {
+            return ResponseEntity.ok(exchangeRateService.getAllRates());
+        } catch (Exception e) {
+            log.error("Error fetching exchange rates", e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/ports/sync-osm")
+    public ResponseEntity<?> syncPortsFromOSM() {
+        new Thread(() -> overpassPortService.syncFromOSM()).start();
+        return ResponseEntity.ok(Map.of(
+            "message", "OSM sync started in background",
+            "source", "OpenStreetMap Overpass API",
+            "note", "This takes 2-5 minutes, check /api/admin/ports for progress"
+        ));
+    }
+
+    @GetMapping("/ports/count")
+    public ResponseEntity<?> getPortCount() {
+        return ResponseEntity.ok(Map.of(
+            "total", portRepository.count()
+        ));
+    }
+
+    @GetMapping("/ports")
+    public ResponseEntity<?> getAllPorts(
+        @RequestParam(defaultValue = "") String search) {
+        List<Port> all;
+        if (!search.isEmpty()) {
+            String q = search.toLowerCase();
+            all = portRepository.findAll().stream()
+                .filter(p -> {
+                    String n = (p.getNomPort() != null ? p.getNomPort() : "").toLowerCase();
+                    String c = (p.getPays() != null ? p.getPays() : "").toLowerCase();
+                    return n.contains(q) || c.contains(q);
+                })
+                .collect(Collectors.toList());
+        } else {
+            all = portRepository.findAll();
+        }
+        return ResponseEntity.ok(all);
     }
 }

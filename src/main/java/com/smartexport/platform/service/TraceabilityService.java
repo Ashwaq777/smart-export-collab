@@ -1,24 +1,28 @@
 package com.smartexport.platform.service;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
-import java.util.zip.GZIPOutputStream;
-import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-
+import java.util.zip.GZIPOutputStream;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smartexport.platform.dto.TraceabilityDTO;
@@ -28,6 +32,9 @@ import com.smartexport.platform.repository.TraceabilityHistoryRepository;
 import com.smartexport.platform.repository.TraceabilityRecordRepository;
 
 import jakarta.persistence.criteria.Predicate;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Service
 public class TraceabilityService {
@@ -315,5 +322,115 @@ public class TraceabilityService {
         stats.put("thisMonth", thisMonthCount);
         
         return stats;
+    }
+
+    private static final List<String> ALLOWED_DOCUMENT_TYPES = Arrays.asList(
+        "application/pdf", 
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/msword",
+        "image/jpeg",
+        "image/png"
+    );
+
+    private static final List<String> ALLOWED_SIGNATURE_TYPES = Arrays.asList(
+        "image/jpeg",
+        "image/png"
+    );
+
+    private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+    public TraceabilityRecord uploadDocument(Long recordId, MultipartFile documentFile, 
+                                           MultipartFile signatureFile, String userEmail) throws IOException {
+        
+        TraceabilityRecord record = recordRepository.findById(recordId)
+            .orElseThrow(() -> new RuntimeException("Enregistrement non trouvé"));
+
+        // Créer le répertoire de stockage
+        String uploadDir = "uploads/traceability/" + recordId;
+        Path uploadPath = Paths.get(uploadDir);
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+
+        // Valider et sauvegarder le document principal
+        if (documentFile != null && !documentFile.isEmpty()) {
+            validateFile(documentFile, ALLOWED_DOCUMENT_TYPES, "document");
+            
+            String documentFileName = documentFile.getOriginalFilename();
+            String documentFileType = documentFile.getContentType();
+            Path documentFilePath = uploadPath.resolve("document_" + documentFileName);
+            
+            Files.copy(documentFile.getInputStream(), documentFilePath, StandardCopyOption.REPLACE_EXISTING);
+            
+            record.setDocumentFileName(documentFileName);
+            record.setDocumentFileType(documentFileType);
+            record.setDocumentFilePath(documentFilePath.toString());
+        }
+
+        // Valider et sauvegarder la signature
+        if (signatureFile != null && !signatureFile.isEmpty()) {
+            validateFile(signatureFile, ALLOWED_SIGNATURE_TYPES, "signature");
+            
+            String signatureFileName = signatureFile.getOriginalFilename();
+            // Encoder la signature en base64 pour stockage
+            byte[] signatureBytes = signatureFile.getBytes();
+            String signatureBase64 = Base64.getEncoder().encodeToString(signatureBytes);
+            
+            record.setSignatureFileName(signatureFileName);
+            record.setSignatureFileData(signatureBase64);
+        }
+
+        // Mettre à jour les métadonnées
+        record.setDocumentUploadedAt(LocalDateTime.now());
+        record.setDocumentUploadedBy(userEmail);
+
+        // Sauvegarder et historiser
+        TraceabilityRecord saved = recordRepository.save(record);
+        saveHistory(saved, userEmail, "Import de document et signature");
+
+        return saved;
+    }
+
+    private void validateFile(MultipartFile file, List<String> allowedTypes, String fileType) {
+        if (file.isEmpty()) {
+            throw new RuntimeException("Le fichier " + fileType + " est vide");
+        }
+
+        if (file.getSize() > MAX_FILE_SIZE) {
+            throw new RuntimeException("Le fichier " + fileType + " dépasse la taille maximale de 10MB");
+        }
+
+        String contentType = file.getContentType();
+        if (contentType == null || !allowedTypes.contains(contentType)) {
+            throw new RuntimeException("Type de fichier non autorisé pour " + fileType + 
+                ". Types acceptés : " + String.join(", ", allowedTypes));
+        }
+    }
+
+    public byte[] getDocument(Long recordId) throws IOException {
+        TraceabilityRecord record = recordRepository.findById(recordId)
+            .orElseThrow(() -> new RuntimeException("Enregistrement non trouvé"));
+
+        if (record.getDocumentFilePath() == null) {
+            throw new RuntimeException("Aucun document associé à cet enregistrement");
+        }
+
+        Path documentPath = Paths.get(record.getDocumentFilePath());
+        if (!Files.exists(documentPath)) {
+            throw new RuntimeException("Fichier document non trouvé sur le serveur");
+        }
+
+        return Files.readAllBytes(documentPath);
+    }
+
+    public byte[] getSignature(Long recordId) {
+        TraceabilityRecord record = recordRepository.findById(recordId)
+            .orElseThrow(() -> new RuntimeException("Enregistrement non trouvé"));
+
+        if (record.getSignatureFileData() == null) {
+            throw new RuntimeException("Aucune signature associée à cet enregistrement");
+        }
+
+        return Base64.getDecoder().decode(record.getSignatureFileData());
     }
 }

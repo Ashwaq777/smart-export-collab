@@ -1,13 +1,17 @@
 package com.smartexport.platform.controller;
 
+import java.io.IOException;
 import java.util.Map;
 
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.smartexport.platform.dto.TraceabilityDTO;
 import com.smartexport.platform.entity.TraceabilityRecord;
@@ -161,5 +165,70 @@ public class TraceabilityController {
             "{\"records_inserted\":%d,\"total_ms\":%d,\"avg_ms_per_record\":%.2f,\"target_met\":%b}",
             count, duration, avg, avg < 300
         ));
+    }
+
+    @PostMapping("/{id}/upload-document")
+    public ResponseEntity<?> uploadDocument(
+            @PathVariable Long id,
+            @RequestParam(value = "document", required = false) MultipartFile documentFile,
+            @RequestParam(value = "signature", required = false) MultipartFile signatureFile,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            String username = userDetails != null ? userDetails.getUsername() : "anonymous";
+            TraceabilityRecord updated = service.uploadDocument(id, documentFile, signatureFile, username);
+            return ResponseEntity.ok(updated);
+        } catch (IOException e) {
+            return ResponseEntity.status(500).body("Erreur lors de l'upload: " + e.getMessage());
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(400).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Erreur serveur: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/{id}/document")
+    public ResponseEntity<Resource> getDocument(@PathVariable Long id) throws IOException {
+        try {
+            byte[] documentBytes = service.getDocument(id);
+            TraceabilityRecord record = recordRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Enregistrement non trouvé"));
+
+            ByteArrayResource resource = new ByteArrayResource(documentBytes);
+            
+            return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, 
+                    "attachment; filename=\"" + record.getDocumentFileName() + "\"")
+                .contentType(MediaType.parseMediaType(record.getDocumentFileType()))
+                .body(resource);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(404).body(null);
+        }
+    }
+
+    @GetMapping("/{id}/signature")
+    public ResponseEntity<Resource> getSignature(@PathVariable Long id) {
+        try {
+            byte[] signatureBytes = service.getSignature(id);
+            TraceabilityRecord record = recordRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Enregistrement non trouvé"));
+
+            ByteArrayResource resource = new ByteArrayResource(signatureBytes);
+            
+            // Déterminer le type MIME correct pour l'image de signature
+            String contentType = "image/jpeg"; // défaut
+            if (record.getSignatureFileName() != null) {
+                if (record.getSignatureFileName().toLowerCase().endsWith(".png")) {
+                    contentType = "image/png";
+                }
+            }
+            
+            return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, 
+                    "inline; filename=\"" + record.getSignatureFileName() + "\"")
+                .contentType(MediaType.parseMediaType(contentType))
+                .body(resource);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(404).body(null);
+        }
     }
 }

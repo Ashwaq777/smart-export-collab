@@ -159,6 +159,28 @@ public class TraceabilityRecord {
     @Column(name = "date_validation")
     private LocalDateTime dateValidation;
 
+    // Section H - Documents & Signature scannée
+    @Column(name = "document_file_name", length = 255)
+    private String documentFileName;
+
+    @Column(name = "document_file_type", length = 100)
+    private String documentFileType;
+
+    @Column(name = "document_file_path", length = 500)
+    private String documentFilePath;
+
+    @Column(name = "signature_file_name", length = 255)
+    private String signatureFileName;
+
+    @Column(name = "signature_file_data", columnDefinition = "TEXT")
+    private String signatureFileData; // Base64 encoded
+
+    @Column(name = "document_uploaded_at")
+    private LocalDateTime documentUploadedAt;
+
+    @Column(name = "document_uploaded_by", length = 255)
+    private String documentUploadedBy;
+
     @PrePersist
     protected void onCreate() {
         LocalDateTime now = LocalDateTime.now();
@@ -317,4 +339,26 @@ public class TraceabilityRecord {
 
     public LocalDateTime getDateValidation() { return dateValidation; }
     public void setDateValidation(LocalDateTime dateValidation) { this.dateValidation = dateValidation; }
+
+    // Getters et Setters - Section H Documents & Signature
+    public String getDocumentFileName() { return documentFileName; }
+    public void setDocumentFileName(String documentFileName) { this.documentFileName = documentFileName; }
+
+    public String getDocumentFileType() { return documentFileType; }
+    public void setDocumentFileType(String documentFileType) { this.documentFileType = documentFileType; }
+
+    public String getDocumentFilePath() { return documentFilePath; }
+    public void setDocumentFilePath(String documentFilePath) { this.documentFilePath = documentFilePath; }
+
+    public String getSignatureFileName() { return signatureFileName; }
+    public void setSignatureFileName(String signatureFileName) { this.signatureFileName = signatureFileName; }
+
+    public String getSignatureFileData() { return signatureFileData; }
+    public void setSignatureFileData(String signatureFileData) { this.signatureFileData = signatureFileData; }
+
+    public LocalDateTime getDocumentUploadedAt() { return documentUploadedAt; }
+    public void setDocumentUploadedAt(LocalDateTime documentUploadedAt) { this.documentUploadedAt = documentUploadedAt; }
+
+    public String getDocumentUploadedBy() { return documentUploadedBy; }
+    public void setDocumentUploadedBy(String documentUploadedBy) { this.documentUploadedBy = documentUploadedBy; }
 }

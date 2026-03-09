@@ -1,4 +1,6 @@
 import { useState, useCallback } from 'react'
+import * as XLSX from 'xlsx'
+import { Check, X, Pencil, Trash2, Download } from 'lucide-react'
 
 const TOKEN = () => localStorage.getItem('token') || ''
 const BASE = 'http://localhost:8080/api/traceability'
@@ -56,6 +58,23 @@ export default function TraceabilityPage() {
   const [loading, setLoading] = useState(false)
   const [msg, setMsg] = useState(null)
   const [filters, setFilters] = useState({producteur:'',dateDebut:'',dateFin:'',lot:''})
+
+  // États pour la sélection et les modales
+  const [selectedRecords, setSelectedRecords] = useState(new Set())
+  const [selectAll, setSelectAll] = useState(false)
+  const [editModal, setEditModal] = useState(null)
+  const [deleteModal, setDeleteModal] = useState(null)
+  const [editHistoryModal, setEditHistoryModal] = useState(null)
+  const [deleteHistoryModal, setDeleteHistoryModal] = useState(null)
+
+  // États pour la gestion des documents et signatures
+  const [documentFile, setDocumentFile] = useState(null)
+  const [signatureFile, setSignatureFile] = useState(null)
+  const [documentPreview, setDocumentPreview] = useState('')
+  const [signaturePreview, setSignaturePreview] = useState('')
+  const [uploading, setUploading] = useState(false)
+  const [dragActive, setDragActive] = useState(false)
+  const [dragActiveSignature, setDragActiveSignature] = useState(false)
 
   const showMsg = (text, ok=true) => {
     setMsg({text, ok})
@@ -123,6 +142,271 @@ export default function TraceabilityPage() {
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
     } catch(e) { showMsg('❌ Export: '+e.message, false) }
+  }
+
+  // Fonctions pour la gestion de la sélection
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedRecords(new Set())
+      setSelectAll(false)
+    } else {
+      const allIds = new Set(records.map(r => r.id))
+      setSelectedRecords(allIds)
+      setSelectAll(true)
+    }
+  }
+
+  const handleSelectRecord = (id) => {
+    const newSelected = new Set(selectedRecords)
+    if (newSelected.has(id)) {
+      newSelected.delete(id)
+    } else {
+      newSelected.add(id)
+    }
+    setSelectedRecords(newSelected)
+    setSelectAll(newSelected.size === records.length && records.length > 0)
+  }
+
+  // Export Excel sélectif
+  const handleSelectiveExport = () => {
+    if (selectedRecords.size === 0) {
+      showMsg('❌ Veuillez sélectionner au moins un enregistrement', false)
+      return
+    }
+
+    try {
+      const selectedData = records.filter(r => selectedRecords.has(r.id))
+      
+      // Préparer les données pour Excel
+      const wsData = [
+        ['Identifiant', 'Producteur', 'Parcelle', 'Date Récolte', 'Destination', 'Statut', 'TLC', 'Description Produit', 'GTIN', 'Lot Commercial', 'Pays Origine', 'Site Production', 'Date Production', 'Nom Expéditeur', 'Nom Destinataire', 'Date Expédition', 'Date Réception']
+      ]
+      
+      selectedData.forEach(r => {
+        wsData.push([
+          r.identifiant || ('REC-' + r.id),
+          r.producteur || '-',
+          r.parcelle || '-',
+          r.dateRecolte || '-',
+          r.destination || '-',
+          r.statut || 'BROUILLON',
+          r.traceabilityLotCode || '-',
+          r.descriptionProduit || '-',
+          r.gtin || '-',
+          r.lotCommercial || '-',
+          r.paysOrigine || '-',
+          r.siteProductionNom || '-',
+          r.dateProduction || '-',
+          r.nomExpediteur || '-',
+          r.nomDestinataire || '-',
+          r.dateExpedition || '-',
+          r.dateReception || '-'
+        ])
+      })
+
+      // Ajouter une ligne de résumé
+      wsData.push([])
+      wsData.push(['RÉSUMÉ', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
+      wsData.push(['Total exporté', selectedData.length, 'enregistrements', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
+      wsData.push(['Date export', new Date().toLocaleString('fr-FR'), '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
+
+      // Créer le workbook
+      const wb = XLSX.utils.book_new()
+      const ws = XLSX.utils.aoa_to_sheet(wsData)
+      
+      // Style des en-têtes
+      ws['!ref'] = 'A1:R' + (wsData.length)
+      for (let col = 0; col < 18; col++) {
+        const cellAddress = XLSX.utils.encode_cell({r: 0, c: col})
+        ws[cellAddress] = {
+          v: wsData[0][col],
+          t: 's',
+          s: {
+            font: { bold: true, color: { rgb: "FFFFFF" } },
+            fill: { fgColor: { rgb: "1B2A4A" } },
+            alignment: { horizontal: "center" }
+          }
+        }
+      }
+
+      XLSX.utils.book_append_sheet(wb, ws, 'Traceabilité Export')
+      
+      // Générer le nom du fichier avec date et heure
+      const now = new Date()
+      const dateStr = now.toLocaleDateString('fr-FR').replace(/\//g, '-')
+      const timeStr = now.toLocaleTimeString('fr-FR').replace(/:/g, '-')
+      const fileName = `trace_export_${dateStr}_${timeStr}.xlsx`
+      
+      XLSX.writeFile(wb, fileName)
+      showMsg(`✅ Export réussi — ${selectedRecords.size} enregistrements exportés`)
+    } catch (e) {
+      showMsg('❌ Erreur lors de l\'export: ' + e.message, false)
+    }
+  }
+
+  // Fonctions pour la gestion de l'historique
+  const handleEditHistory = (historyItem) => {
+    setEditHistoryModal({...historyItem})
+  }
+
+  const handleDeleteHistory = (historyItem) => {
+    setDeleteHistoryModal(historyItem)
+  }
+
+  const saveHistoryEdit = async () => {
+    try {
+      // Simulation de sauvegarde (adapter avec API réelle)
+      const updatedHistory = history.map(h => 
+        h.id === editHistoryModal.id ? editHistoryModal : h
+      )
+      setHistory(updatedHistory)
+      setEditHistoryModal(null)
+      showMsg('✅ Trace modifiée avec succès')
+    } catch (e) {
+      showMsg('❌ Erreur lors de la modification: ' + e.message, false)
+    }
+  }
+
+  const confirmDeleteHistory = async () => {
+    try {
+      // Simulation de suppression (adapter avec API réelle)
+      const updatedHistory = history.filter(h => h.id !== deleteHistoryModal.id)
+      setHistory(updatedHistory)
+      setDeleteHistoryModal(null)
+      showMsg('✅ Trace supprimée avec succès')
+    } catch (e) {
+      showMsg('❌ Erreur lors de la suppression: ' + e.message, false)
+    }
+  }
+
+  // Fonctions de gestion des fichiers
+  const handleDocumentFileChange = (file) => {
+    if (file) {
+      // Validation du type de fichier
+      const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword', 'image/jpeg', 'image/png']
+      if (!allowedTypes.includes(file.type)) {
+        showMsg('❌ Type de fichier non autorisé. Formats acceptés : PDF, Word, JPG, PNG', false)
+        return
+      }
+      
+      // Validation de la taille (10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        showMsg('❌ Le fichier dépasse la taille maximale de 10MB', false)
+        return
+      }
+      
+      setDocumentFile(file)
+      setDocumentPreview(file.name)
+    }
+  }
+
+  const handleSignatureFileChange = (file) => {
+    if (file) {
+      // Validation du type de fichier (uniquement images)
+      const allowedTypes = ['image/jpeg', 'image/png']
+      if (!allowedTypes.includes(file.type)) {
+        showMsg('❌ Type de fichier non autorisé. Formats acceptés : JPG, PNG uniquement', false)
+        return
+      }
+      
+      // Validation de la taille (10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        showMsg('❌ Le fichier dépasse la taille maximale de 10MB', false)
+        return
+      }
+      
+      setSignatureFile(file)
+      
+      // Prévisualisation de l'image
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setSignaturePreview(reader.result)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleUploadDocuments = async (recordId) => {
+    if (!documentFile && !signatureFile) {
+      showMsg('❌ Veuillez sélectionner au moins un fichier', false)
+      return
+    }
+
+    setUploading(true)
+    try {
+      const formData = new FormData()
+      if (documentFile) formData.append('document', documentFile)
+      if (signatureFile) formData.append('signature', signatureFile)
+
+      const response = await fetch(`${BASE}/${recordId}/upload-document`, {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + TOKEN()
+        },
+        body: formData
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(errorText)
+      }
+
+      const updatedRecord = await response.json()
+      
+      // Mettre à jour l'enregistrement dans la liste
+      setRecords(records.map(r => r.id === recordId ? updatedRecord : r))
+      
+      // Réinitialiser les états
+      setDocumentFile(null)
+      setSignatureFile(null)
+      setDocumentPreview('')
+      setSignaturePreview('')
+      
+      showMsg('✅ Documents uploadés avec succès!')
+      
+      // Recharger les enregistrements pour voir les mises à jour
+      setTimeout(loadRecords, 500)
+      
+    } catch (e) {
+      showMsg('❌ Erreur lors de l\'upload: ' + e.message, false)
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleDrag = (e, isSignature = false) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.type === "dragenter" || e.type === "dragover") {
+      if (isSignature) {
+        setDragActiveSignature(true)
+      } else {
+        setDragActive(true)
+      }
+    } else if (e.type === "dragleave") {
+      if (isSignature) {
+        setDragActiveSignature(false)
+      } else {
+        setDragActive(false)
+      }
+    }
+  }
+
+  const handleDrop = (e, isSignature = false) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    if (isSignature) {
+      setDragActiveSignature(false)
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        handleSignatureFileChange(e.dataTransfer.files[0])
+      }
+    } else {
+      setDragActive(false)
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        handleDocumentFileChange(e.dataTransfer.files[0])
+      }
+    }
   }
 
   const tabStyle = (t) => ({
@@ -444,6 +728,130 @@ export default function TraceabilityPage() {
               </div>
             </div>
 
+            {/* J - Documents & Signature officielle */}
+            <div style={{background:'white',borderRadius:'12px',padding:'24px',
+              marginBottom:'20px',boxShadow:'0 2px 8px rgba(0,0,0,0.08)',
+              border:'2px solid #28a745'}}>
+              <h3 style={{color:'#1B2A4A',fontSize:'16px',fontWeight:'700',
+                margin:'0 0 20px 0',paddingBottom:'10px',
+                borderBottom:'2px solid #28a745'}}>
+                📄 J. Documents & Signature officielle
+              </h3>
+
+              <div style={grid2}>
+                {/* Zone d'import du document principal */}
+                <div>
+                  <label style={lbl}>Document principal</label>
+                  <div style={{marginBottom:'8px',fontSize:'12px',color:'#666'}}>
+                    Formats acceptés : PDF, Word, JPG, PNG (max 10MB)
+                  </div>
+                  <div 
+                    style={{
+                      border: dragActive ? '2px dashed #28a745' : '2px dashed #ddd',
+                      borderRadius:'8px',padding:'20px',textAlign:'center',
+                      background: dragActive ? '#f8fff9' : '#fafafa',
+                      cursor:'pointer',transition:'all 0.3s'
+                    }}
+                    onDragEnter={(e) => handleDrag(e, false)}
+                    onDragLeave={(e) => handleDrag(e, false)}
+                    onDragOver={(e) => handleDrag(e, false)}
+                    onDrop={(e) => handleDrop(e, false)}
+                    onClick={() => document.getElementById('documentFileInput').click()}
+                  >
+                    <input
+                      id="documentFileInput"
+                      type="file"
+                      style={{display:'none'}}
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                      onChange={(e) => e.target.files[0] && handleDocumentFileChange(e.target.files[0])}
+                    />
+                    {documentPreview ? (
+                      <div>
+                        <div style={{fontSize:'14px',color:'#28a745',fontWeight:'600',marginBottom:'8px'}}>
+                          ✅ {documentPreview}
+                        </div>
+                        <div style={{fontSize:'12px',color:'#666'}}>
+                          {(documentFile?.size / 1024 / 1024).toFixed(2)} MB
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <div style={{fontSize:'24px',marginBottom:'8px'}}>📁</div>
+                        <div style={{fontSize:'14px',color:'#666'}}>
+                          Glissez-déposez un fichier ici
+                        </div>
+                        <div style={{fontSize:'12px',color:'#999',marginTop:'4px'}}>
+                          ou cliquez pour choisir
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Zone d'import de la signature scannée */}
+                <div>
+                  <label style={lbl}>Signature scannée</label>
+                  <div style={{marginBottom:'8px',fontSize:'12px',color:'#666'}}>
+                    Formats acceptés : JPG, PNG uniquement (max 10MB)
+                  </div>
+                  <div 
+                    style={{
+                      border: dragActiveSignature ? '2px dashed #28a745' : '2px dashed #ddd',
+                      borderRadius:'8px',padding:'20px',textAlign:'center',
+                      background: dragActiveSignature ? '#f8fff9' : '#fafafa',
+                      cursor:'pointer',transition:'all 0.3s'
+                    }}
+                    onDragEnter={(e) => handleDrag(e, true)}
+                    onDragLeave={(e) => handleDrag(e, true)}
+                    onDragOver={(e) => handleDrag(e, true)}
+                    onDrop={(e) => handleDrop(e, true)}
+                    onClick={() => document.getElementById('signatureFileInput').click()}
+                  >
+                    <input
+                      id="signatureFileInput"
+                      type="file"
+                      style={{display:'none'}}
+                      accept=".jpg,.jpeg,.png"
+                      onChange={(e) => e.target.files[0] && handleSignatureFileChange(e.target.files[0])}
+                    />
+                    {signaturePreview ? (
+                      <div>
+                        <img 
+                          src={signaturePreview} 
+                          alt="Signature" 
+                          style={{maxWidth:'100px',maxHeight:'60px',border:'1px solid #ddd',borderRadius:'4px'}}
+                        />
+                        <div style={{fontSize:'12px',color:'#28a745',fontWeight:'600',marginTop:'8px'}}>
+                          ✅ Signature officielle du responsable
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <div style={{fontSize:'24px',marginBottom:'8px'}}>✍️</div>
+                        <div style={{fontSize:'14px',color:'#666'}}>
+                          Glissez-déposez votre signature
+                        </div>
+                        <div style={{fontSize:'12px',color:'#999',marginTop:'4px'}}>
+                          ou cliquez pour choisir
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Instructions */}
+              <div style={{background:'#e8f5e8',borderRadius:'8px',padding:'16px',marginTop:'16px'}}>
+                <div style={{fontSize:'13px',color:'#155724',lineHeight:'1.5'}}>
+                  <strong>📋 Instructions :</strong><br/>
+                  • Le document principal peut être un contrat, certificat, ou tout document officiel<br/>
+                  • La signature doit être une image claire et lisible de la signature du responsable<br/>
+                  • Les fichiers seront automatiquement associés à cet enregistrement de traçabilité<br/>
+                  • Vous pourrez télécharger ou remplacer ces fichiers ultérieurement
+                </div>
+              </div>
+            </div>
+
             <div style={{textAlign:'right',marginBottom:'32px'}}>
               <button onClick={()=>setForm(INITIAL)}
                 style={{...btnPrimary,background:'#6c757d',marginRight:'12px'}}>
@@ -480,12 +888,26 @@ export default function TraceabilityPage() {
                     onChange={e=>setFilters(p=>({...p,dateFin:e.target.value}))}/>
                 </div>
               </div>
-              <div style={{marginTop:'16px',display:'flex',gap:'12px'}}>
+              <div style={{marginTop:'16px',display:'flex',gap:'12px',alignItems:'center'}}>
                 <button onClick={loadRecords} style={btnPrimary}>
                   {loading?'⏳ Chargement...':'🔄 Charger / Filtrer'}
                 </button>
                 <button onClick={handleExport} style={btnGold}>
-                  📥 Export Excel
+                  📥 Export Excel (tout)
+                </button>
+                <button 
+                  onClick={handleSelectiveExport} 
+                  disabled={selectedRecords.size === 0}
+                  style={{
+                    ...btnGold, 
+                    background: selectedRecords.size > 0 ? '#C9A84C' : '#ccc',
+                    cursor: selectedRecords.size > 0 ? 'pointer' : 'not-allowed',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}>
+                  <Download size={16} />
+                  Exporter la sélection ({selectedRecords.size})
                 </button>
               </div>
             </div>
@@ -505,6 +927,15 @@ export default function TraceabilityPage() {
                   <table style={{width:'100%',borderCollapse:'collapse'}}>
                     <thead>
                       <tr style={{background:'#1B2A4A'}}>
+                        <th style={{padding:'14px 16px',color:'white',
+                          textAlign:'center',fontSize:'13px',fontWeight:'600',width:'50px'}}>
+                          <input 
+                            type="checkbox"
+                            checked={selectAll}
+                            onChange={handleSelectAll}
+                            style={{width:'18px',height:'18px',cursor:'pointer',accentColor:'#C9A84C'}}
+                          />
+                        </th>
                         {['Identifiant','Producteur','Parcelle','Date Récolte',
                           'Destination','Statut','Actions'].map(h=>(
                           <th key={h} style={{padding:'14px 16px',color:'white',
@@ -517,8 +948,18 @@ export default function TraceabilityPage() {
                     <tbody>
                       {records.map((r,i)=>(
                         <tr key={r.id} style={{
-                          background:i%2===0?'white':'#F8F9FA',
-                          borderBottom:'1px solid #E8ECF0'}}>
+                          background: selectedRecords.has(r.id) ? '#E6F7FF' : (i%2===0?'white':'#F8F9FA'),
+                          borderBottom:'1px solid #E8ECF0',
+                          borderLeft: selectedRecords.has(r.id) ? '3px solid #0e7fa3' : 'none'
+                        }}>
+                          <td style={{padding:'14px 16px',textAlign:'center'}}>
+                            <input 
+                              type="checkbox"
+                              checked={selectedRecords.has(r.id)}
+                              onChange={() => handleSelectRecord(r.id)}
+                              style={{width:'18px',height:'18px',cursor:'pointer',accentColor:'#0e7fa3'}}
+                            />
+                          </td>
                           <td style={{padding:'14px 16px',fontSize:'12px',
                             color:'#666',fontFamily:'monospace'}}>
                             {r.identifiant||('REC-'+r.id)}
@@ -540,18 +981,227 @@ export default function TraceabilityPage() {
                             </span>
                           </td>
                           <td style={{padding:'14px 16px'}}>
-                            <button onClick={()=>loadHistory(r.id,r)}
-                              style={{background:'#C9A84C',color:'white',
-                                border:'none',padding:'6px 14px',
-                                borderRadius:'6px',cursor:'pointer',
-                                fontSize:'12px',fontWeight:'600'}}>
-                              📜 Historique
-                            </button>
+                            <div style={{display:'flex',gap:'8px',alignItems:'center',flexWrap:'wrap'}}>
+                              {/* Icônes de statut de documents */}
+                              {r.documentFileName && (
+                                <span title="Document attaché" style={{fontSize:'16px',cursor:'pointer'}}>
+                                  📎
+                                </span>
+                              )}
+                              {r.signatureFileName && (
+                                <span title="Signature attachée" style={{fontSize:'16px',cursor:'pointer'}}>
+                                  ✍️
+                                </span>
+                              )}
+                              
+                              {/* Bouton Historique */}
+                              <button onClick={()=>loadHistory(r.id,r)}
+                                style={{background:'#C9A84C',color:'white',
+                                  border:'none',padding:'6px 14px',
+                                  borderRadius:'6px',cursor:'pointer',
+                                  fontSize:'12px',fontWeight:'600'}}>
+                                📜 Historique
+                              </button>
+                              
+                              {/* Bouton Upload Documents */}
+                              <button 
+                                onClick={() => {
+                                  setSelRecord(r)
+                                  // Réinitialiser les états de fichiers
+                                  setDocumentFile(null)
+                                  setSignatureFile(null)
+                                  setDocumentPreview('')
+                                  setSignaturePreview('')
+                                  // Ouvrir une modal ou scroller vers la section d'upload
+                                  const uploadSection = document.getElementById('upload-section-' + r.id)
+                                  if (uploadSection) {
+                                    uploadSection.scrollIntoView({behavior: 'smooth'})
+                                  }
+                                }}
+                                style={{background:'#28a745',color:'white',
+                                  border:'none',padding:'6px 14px',
+                                  borderRadius:'6px',cursor:'pointer',
+                                  fontSize:'12px',fontWeight:'600'}}>
+                                📄 Docs
+                              </button>
+                              
+                              {/* Actions de téléchargement */}
+                              {r.documentFileName && (
+                                <button 
+                                  onClick={() => window.open(`${BASE}/${r.id}/document`, '_blank')}
+                                  style={{background:'#007bff',color:'white',
+                                    border:'none',padding:'6px 14px',
+                                    borderRadius:'6px',cursor:'pointer',
+                                    fontSize:'12px',fontWeight:'600'}}>
+                                  📥 Doc
+                                </button>
+                              )}
+                              
+                              {r.signatureFileName && (
+                                <button 
+                                  onClick={() => window.open(`${BASE}/${r.id}/signature`, '_blank')}
+                                  style={{background:'#6f42c1',color:'white',
+                                    border:'none',padding:'6px 14px',
+                                    borderRadius:'6px',cursor:'pointer',
+                                    fontSize:'12px',fontWeight:'600'}}>
+                                  🖊️ Sig
+                                </button>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
+                </div>
+              )}
+
+              {/* Section d'upload rapide pour documents */}
+              {selRecord && (
+                <div id={`upload-section-${selRecord.id}`} style={sec}>
+                  <h3 style={secT}>
+                    📄 Upload Documents - {selRecord.identifiant||'Record '+selRecord.id}
+                  </h3>
+                  
+                  <div style={grid2}>
+                    {/* Upload document principal */}
+                    <div>
+                      <label style={lbl}>Document principal</label>
+                      <div style={{marginBottom:'8px',fontSize:'12px',color:'#666'}}>
+                        Formats: PDF, Word, JPG, PNG (max 10MB)
+                      </div>
+                      <div 
+                        style={{
+                          border: dragActive ? '2px dashed #28a745' : '2px dashed #ddd',
+                          borderRadius:'8px',padding:'16px',textAlign:'center',
+                          background: dragActive ? '#f8fff9' : '#fafafa',
+                          cursor:'pointer'
+                        }}
+                        onDragEnter={(e) => handleDrag(e, false)}
+                        onDragLeave={(e) => handleDrag(e, false)}
+                        onDragOver={(e) => handleDrag(e, false)}
+                        onDrop={(e) => handleDrop(e, false)}
+                        onClick={() => document.getElementById('quickDocumentInput').click()}
+                      >
+                        <input
+                          id="quickDocumentInput"
+                          type="file"
+                          style={{display:'none'}}
+                          accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                          onChange={(e) => e.target.files[0] && handleDocumentFileChange(e.target.files[0])}
+                        />
+                        {documentPreview ? (
+                          <div style={{fontSize:'13px',color:'#28a745',fontWeight:'600'}}>
+                            ✅ {documentPreview}
+                          </div>
+                        ) : (
+                          <div style={{fontSize:'13px',color:'#666'}}>
+                            📁 Glissez ou cliquez pour choisir
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Upload signature */}
+                    <div>
+                      <label style={lbl}>Signature scannée</label>
+                      <div style={{marginBottom:'8px',fontSize:'12px',color:'#666'}}>
+                        Formats: JPG, PNG uniquement (max 10MB)
+                      </div>
+                      <div 
+                        style={{
+                          border: dragActiveSignature ? '2px dashed #28a745' : '2px dashed #ddd',
+                          borderRadius:'8px',padding:'16px',textAlign:'center',
+                          background: dragActiveSignature ? '#f8fff9' : '#fafafa',
+                          cursor:'pointer'
+                        }}
+                        onDragEnter={(e) => handleDrag(e, true)}
+                        onDragLeave={(e) => handleDrag(e, true)}
+                        onDragOver={(e) => handleDrag(e, true)}
+                        onDrop={(e) => handleDrop(e, true)}
+                        onClick={() => document.getElementById('quickSignatureInput').click()}
+                      >
+                        <input
+                          id="quickSignatureInput"
+                          type="file"
+                          style={{display:'none'}}
+                          accept=".jpg,.jpeg,.png"
+                          onChange={(e) => e.target.files[0] && handleSignatureFileChange(e.target.files[0])}
+                        />
+                        {signaturePreview ? (
+                          <div>
+                            <img 
+                              src={signaturePreview} 
+                              alt="Signature" 
+                              style={{maxWidth:'80px',maxHeight:'50px',border:'1px solid #ddd',borderRadius:'4px'}}
+                            />
+                            <div style={{fontSize:'12px',color:'#28a745',fontWeight:'600',marginTop:'4px'}}>
+                              ✅ Signature chargée
+                            </div>
+                          </div>
+                        ) : (
+                          <div style={{fontSize:'13px',color:'#666'}}>
+                            ✍️ Glissez ou cliquez pour choisir
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Boutons d'action */}
+                  <div style={{marginTop:'16px',display:'flex',gap:'12px',alignItems:'center'}}>
+                    <button 
+                      onClick={() => handleUploadDocuments(selRecord.id)}
+                      disabled={uploading || (!documentFile && !signatureFile)}
+                      style={{
+                        ...btnPrimary,
+                        background: (!documentFile && !signatureFile) ? '#ccc' : '#28a745',
+                        cursor: (!documentFile && !signatureFile) ? 'not-allowed' : 'pointer'
+                      }}
+                    >
+                      {uploading ? '⏳ Upload...' : '📤 Uploader les fichiers'}
+                    </button>
+                    
+                    <button 
+                      onClick={() => {
+                        setSelRecord(null)
+                        setDocumentFile(null)
+                        setSignatureFile(null)
+                        setDocumentPreview('')
+                        setSignaturePreview('')
+                      }}
+                      style={{...btnPrimary,background:'#6c757d'}}
+                    >
+                      ❌ Annuler
+                    </button>
+                  </div>
+
+                  {/* Statut actuel des documents */}
+                  <div style={{marginTop:'16px',padding:'12px',background:'#f8f9fa',borderRadius:'6px'}}>
+                    <div style={{fontSize:'13px',fontWeight:'600',color:'#1B2A4A',marginBottom:'8px'}}>
+                      📋 Statut actuel :
+                    </div>
+                    <div style={{display:'flex',gap:'16px',fontSize:'12px'}}>
+                      <div>
+                        Document : {selRecord.documentFileName ? 
+                          <span style={{color:'#28a745',fontWeight:'600'}}>✅ {selRecord.documentFileName}</span> : 
+                          <span style={{color:'#dc3545'}}>❌ Non uploadé</span>
+                        }
+                      </div>
+                      <div>
+                        Signature : {selRecord.signatureFileName ? 
+                          <span style={{color:'#28a745',fontWeight:'600'}}>✅ {selRecord.signatureFileName}</span> : 
+                          <span style={{color:'#dc3545'}}>❌ Non uploadée</span>
+                        }
+                      </div>
+                    </div>
+                    {selRecord.documentUploadedAt && (
+                      <div style={{marginTop:'8px',fontSize:'11px',color:'#666'}}>
+                        Dernier upload : {new Date(selRecord.documentUploadedAt).toLocaleString('fr-FR')} 
+                        par {selRecord.documentUploadedBy || 'Utilisateur'}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
@@ -598,9 +1248,47 @@ export default function TraceabilityPage() {
                     </div>
                     <div style={{flex:1,background:'#F8F9FA',borderRadius:'10px',
                       padding:'16px',border:'1px solid #E8ECF0'}}>
-                      <div style={{fontWeight:'700',color:'#1B2A4A',
-                        fontSize:'15px',marginBottom:'6px'}}>
-                        {h.changeDescription||'Modification effectuée'}
+                      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:'8px'}}>
+                        <div style={{fontWeight:'700',color:'#1B2A4A',
+                          fontSize:'15px'}}>
+                          {h.changeDescription||'Modification effectuée'}
+                        </div>
+                        <div style={{display:'flex',gap:'8px'}}>
+                          <button
+                            onClick={() => handleEditHistory(h)}
+                            style={{
+                              background:'#0e7fa3',
+                              color:'white',
+                              border:'none',
+                              padding:'6px 8px',
+                              borderRadius:'4px',
+                              cursor:'pointer',
+                              display:'flex',
+                              alignItems:'center',
+                              justifyContent:'center',
+                              transition:'all 0.2s'
+                            }}
+                            title="Modifier">
+                            <Pencil size={14} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteHistory(h)}
+                            style={{
+                              background:'#dc2626',
+                              color:'white',
+                              border:'none',
+                              padding:'6px 8px',
+                              borderRadius:'4px',
+                              cursor:'pointer',
+                              display:'flex',
+                              alignItems:'center',
+                              justifyContent:'center',
+                              transition:'all 0.2s'
+                            }}
+                            title="Supprimer">
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
                       </div>
                       <div style={{color:'#666',fontSize:'13px',
                         display:'flex',gap:'16px',flexWrap:'wrap'}}>
@@ -614,6 +1302,141 @@ export default function TraceabilityPage() {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {/* MODALE D'ÉDITION HISTORIQUE */}
+        {editHistoryModal && (
+          <div style={{
+            position:'fixed',top:0,left:0,right:0,bottom:0,
+            background:'rgba(0,0,0,0.5)',display:'flex',
+            alignItems:'center',justifyContent:'center',zIndex:1000
+          }}>
+            <div style={{
+              background:'white',borderRadius:'12px',
+              padding:'32px',width:'500px',maxWidth:'90vw',
+              boxShadow:'0 20px 25px -5px rgba(0,0,0,0.1)'
+            }}>
+              <h3 style={{color:'#1B2A4A',margin:'0 0 24px',fontSize:'18px',fontWeight:'700'}}>
+                Modifier la trace
+              </h3>
+              
+              <div style={{display:'flex',flexDirection:'column',gap:'16px'}}>
+                <div>
+                  <label style={lbl}>Description</label>
+                  <input 
+                    style={inp}
+                    value={editHistoryModal.changeDescription || ''}
+                    onChange={e=>setEditHistoryModal(p=>({...p,changeDescription:e.target.value}))}
+                    placeholder="Description de la modification"
+                  />
+                </div>
+                
+                <div>
+                  <label style={lbl}>Modifié par</label>
+                  <input 
+                    style={inp}
+                    value={editHistoryModal.modifiedBy || ''}
+                    onChange={e=>setEditHistoryModal(p=>({...p,modifiedBy:e.target.value}))}
+                    placeholder="Nom du modificateur"
+                  />
+                </div>
+                
+                <div>
+                  <label style={lbl}>Statut</label>
+                  <select 
+                    style={sel}
+                    value={editHistoryModal.statut || 'BROUILLON'}
+                    onChange={e=>setEditHistoryModal(p=>({...p,statut:e.target.value}))}
+                  >
+                    <option value="BROUILLON">BROUILLON</option>
+                    <option value="VALIDÉ">VALIDÉ</option>
+                    <option value="VERROUILLÉ">VERROUILLÉ</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label style={lbl}>Date de modification</label>
+                  <input 
+                    style={inp}
+                    type="datetime-local"
+                    value={editHistoryModal.modifiedAt || ''}
+                    onChange={e=>setEditHistoryModal(p=>({...p,modifiedAt:e.target.value}))}
+                  />
+                </div>
+              </div>
+              
+              <div style={{display:'flex',gap:'12px',marginTop:'24px',justifyContent:'flex-end'}}>
+                <button 
+                  onClick={()=>setEditHistoryModal(null)}
+                  style={{
+                    ...btnPrimary,
+                    background:'#6c757d',
+                    padding:'10px 20px'
+                  }}>
+                  Annuler
+                </button>
+                <button 
+                  onClick={saveHistoryEdit}
+                  style={btnPrimary}>
+                  Sauvegarder
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* MODALE DE SUPPRESSION HISTORIQUE */}
+        {deleteHistoryModal && (
+          <div style={{
+            position:'fixed',top:0,left:0,right:0,bottom:0,
+            background:'rgba(0,0,0,0.5)',display:'flex',
+            alignItems:'center',justifyContent:'center',zIndex:1000
+          }}>
+            <div style={{
+              background:'white',borderRadius:'12px',
+              padding:'32px',width:'400px',maxWidth:'90vw',
+              textAlign:'center',
+              boxShadow:'0 20px 25px -5px rgba(0,0,0,0.1)'
+            }}>
+              <div style={{
+                width:'48px',height:'48px',background:'#fee2e2',
+                borderRadius:'50%',display:'flex',alignItems:'center',
+                justifyContent:'center',margin:'0 auto 16px'
+              }}>
+                <Trash2 size={24} color="#dc2626" />
+              </div>
+              
+              <h3 style={{color:'#1B2A4A',margin:'0 0 12px',fontSize:'18px',fontWeight:'700'}}>
+                Supprimer cette trace ?
+              </h3>
+              
+              <p style={{color:'#6b7280',margin:'0 0 24px',fontSize:'14px',lineHeight:'1.5'}}>
+                Êtes-vous sûr de vouloir supprimer cette trace ?<br/>
+                Cette action est irréversible.
+              </p>
+              
+              <div style={{display:'flex',gap:'12px',justifyContent:'center'}}>
+                <button 
+                  onClick={()=>setDeleteHistoryModal(null)}
+                  style={{
+                    ...btnPrimary,
+                    background:'#6c757d',
+                    padding:'10px 24px'
+                  }}>
+                  Annuler
+                </button>
+                <button 
+                  onClick={confirmDeleteHistory}
+                  style={{
+                    background:'#dc2626',color:'white',border:'none',
+                    padding:'10px 24px',borderRadius:'8px',cursor:'pointer',
+                    fontSize:'15px',fontWeight:'600'
+                  }}>
+                  Supprimer
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

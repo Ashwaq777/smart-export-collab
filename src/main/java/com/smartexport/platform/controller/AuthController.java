@@ -47,7 +47,20 @@ public class AuthController {
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
         try {
             Role role = Role.valueOf(request.getRole());
-            authService.register(request.getEmail(), request.getPassword(), role);
+            
+            // Appeler le nouveau service d'inscription avec tous les champs
+            authService.registerComplete(
+                request.getFirstName(),
+                request.getLastName(),
+                request.getEmail(),
+                request.getPassword(),
+                request.getPhone(),
+                request.getBirthDate(),
+                request.getCompanyName(),
+                request.getCountry(),
+                role
+            );
+            
             return ResponseEntity.status(HttpStatus.CREATED)
                 .body(Map.of("message", "User registered successfully"));
         } catch (RuntimeException e) {

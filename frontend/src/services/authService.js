@@ -17,11 +17,36 @@ const authService = {
     return response.json();
   },
 
-  register: async (email, password, role) => {
+  register: async (userData) => {
+    // userData peut être soit l'ancien format (email, password, role) soit le nouveau format complet
+    let requestBody;
+    
+    if (typeof userData === 'object' && userData.firstName) {
+      // Nouveau format complet
+      requestBody = {
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
+        password: userData.password,
+        phone: userData.phone,
+        birthDate: userData.birthDate || null,
+        companyName: userData.companyName,
+        country: userData.country,
+        role: userData.role
+      };
+    } else {
+      // Ancien format pour compatibilité (email, password, role)
+      requestBody = {
+        email: userData.email || userData,
+        password: userData.password,
+        role: userData.role
+      };
+    }
+    
     const response = await fetch(`${API_URL}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, role })
+      body: JSON.stringify(requestBody)
     });
     
     if (!response.ok) {

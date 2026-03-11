@@ -2,6 +2,7 @@ package com.smartexport.platform.entity;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -38,6 +39,25 @@ public class User {
     @Column(name = "last_login")
     private LocalDateTime lastLogin;
     
+    // Nouveaux champs pour l'inscription complète
+    @Column(name = "first_name")
+    private String firstName;
+    
+    @Column(name = "last_name")
+    private String lastName;
+    
+    @Column(name = "phone")
+    private String phone;
+    
+    @Column(name = "birth_date")
+    private LocalDate birthDate;
+    
+    @Column(name = "company_name")
+    private String companyName;
+    
+    @Column(name = "country")
+    private String country;
+    
     // Constructeurs
     public User() {}
     
@@ -55,7 +75,7 @@ public class User {
         this.lastLogin = lastLogin;
     }
     
-    // Getters
+    // Getters existants
     public Long getId() { return id; }
     public String getEmail() { return email; }
     public String getPasswordHash() { return passwordHash; }
@@ -66,7 +86,7 @@ public class User {
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getLastLogin() { return lastLogin; }
     
-    // Setters
+    // Setters existants
     public void setId(Long id) { this.id = id; }
     public void setEmail(String email) { this.email = email; }
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
@@ -76,4 +96,20 @@ public class User {
     public void setLockTime(LocalDateTime lockTime) { this.lockTime = lockTime; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public void setLastLogin(LocalDateTime lastLogin) { this.lastLogin = lastLogin; }
+    
+    // Getters pour les nouveaux champs (manuels)
+    public String getFirstName() { return firstName; }
+    public String getLastName() { return lastName; }
+    public String getPhone() { return phone; }
+    public LocalDate getBirthDate() { return birthDate; }
+    public String getCompanyName() { return companyName; }
+    public String getCountry() { return country; }
+    
+    // Setters pour les nouveaux champs (manuels)
+    public void setFirstName(String firstName) { this.firstName = firstName; }
+    public void setLastName(String lastName) { this.lastName = lastName; }
+    public void setPhone(String phone) { this.phone = phone; }
+    public void setBirthDate(LocalDate birthDate) { this.birthDate = birthDate; }
+    public void setCompanyName(String companyName) { this.companyName = companyName; }
+    public void setCountry(String country) { this.country = country; }
 }

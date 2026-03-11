@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -128,5 +129,44 @@ public class AuthService {
         passwordResetRepository.save(passwordReset);
 
         auditService.logAction(user.getId(), "PASSWORD_RESET", null, null, true, null);
+    }
+
+    public void registerComplete(String firstName, String lastName, String email, String password, 
+                                String phone, String birthDate, String companyName, String country, Role role) {
+        if (userRepository.existsByEmail(email)) {
+            throw new RuntimeException("Email already exists");
+        }
+
+        if (role == Role.ADMIN) {
+            throw new RuntimeException("Cannot register as ADMIN");
+        }
+
+        User user = new User();
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
+        user.setEmail(email);
+        user.setPasswordHash(passwordEncoder.encode(password));
+        user.setPhone(phone);
+        user.setCompanyName(companyName);
+        user.setCountry(country);
+        
+        // Convertir birthDate si fourni
+        if (birthDate != null && !birthDate.trim().isEmpty()) {
+            try {
+                user.setBirthDate(LocalDate.parse(birthDate));
+            } catch (Exception e) {
+                log.warn("Invalid birth date format for user {}: {}", email, birthDate);
+                // Ne pas échouer l'inscription si la date est invalide
+            }
+        }
+        
+        user.setRole(role);
+        user.setStatus(UserStatus.ACTIVE);
+        user.setFailedAttempts(0);
+        user.setCreatedAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        auditService.logAction(user.getId(), "REGISTER_COMPLETE", null, null, true, 
+            String.format("Registered as %s with company: %s", role, companyName));
     }
 }

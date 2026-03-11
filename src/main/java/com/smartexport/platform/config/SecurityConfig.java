@@ -49,7 +49,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/calculation/**").permitAll()
                 .requestMatchers("/api/pdf/**").permitAll()
                 .requestMatchers("/api/forex/**").permitAll()
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/countries/**").permitAll()
+                .requestMatchers("/api/admin/**").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, 

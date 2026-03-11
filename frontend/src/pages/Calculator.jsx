@@ -5,11 +5,15 @@ import { countriesService } from '../services/countriesApi'
 import { worldPortsService } from '../services/worldPortsApi'
 import { agriculturalProductsService } from '../services/agriculturalProductsApi'
 import { useMaritimeCountries } from '../hooks/useMaritimeCountries'
+import { useAuth } from '../context/AuthContext'
 import CostDashboard from '../components/CostDashboard'
 import { WORLD_CURRENCIES } from '../data/worldCurrencies'
 import { updateExchangeRates } from '../utils/currencyConverter'
 
 function Calculator() {
+  const { user } = useAuth();
+  const isImportateur = user?.role === 'IMPORTATEUR';
+  
   const {
     countries: maritimeCountries,
     loading: maritimeCountriesLoading,
@@ -20,32 +24,49 @@ function Calculator() {
   const [products, setProducts] = useState([])
   const [countries, setCountries] = useState([])
   const [countriesError, setCountriesError] = useState(null)
+  const [productsError, setProductsError] = useState(null)
   const [countriesData, setCountriesData] = useState([]) // Pour drapeaux et devises - affichage uniquement
   const [ports, setPorts] = useState([])
   const [portMessage, setPortMessage] = useState(null)
   const [portsLoading, setPortsLoading] = useState(false)
   
+  // States séparés pour les ports importateur
+  const [portsOrigine, setPortsOrigine] = useState([]);
+  const [portsDestination, setPortsDestination] = useState([]);
+  const [portsOrigineLoading, setPortsOrigineLoading] = useState(false);
+  const [portsDestinationLoading, setPortsDestinationLoading] = useState(false);
+  const [portsOrigineMessage, setPortsOrigineMessage] = useState(null);
+  const [portsDestinationMessage, setPortsDestinationMessage] = useState(null);
+  
   const [formData, setFormData] = useState({
+    // Champs communs
     categorie: '',
     codeHs: '',
+    valeurFob: '',
+    poidsNet: '',
+    poidsBrut: '',
+    typeUnite: '',
+    currency: 'MAD',
+    incoterm: 'CIF',
+    
+    // Champs exportateur (existant)
     paysDestination: '',
     portId: '',
-    valeurFob: '',
     coutTransport: '',
     assurance: '',
-    currency: 'MAD',
+    
+    // Champs importateur (nouveau)
+    paysOrigine: '',
+    portEmbarquement: '',
+    portDechargement: '',
+    
     // Legal identifiers
     nomEntreprise: '',
     registreCommerce: '',
     ice: '',
-    // Incoterm
-    incoterm: 'CIF',
+    
     // Profitability
     prixVentePrevisionnel: '',
-    // Logistics
-    poidsNet: '',
-    poidsBrut: '',
-    typeUnite: '',
   })
   
   const [result, setResult] = useState(null)
@@ -241,6 +262,125 @@ function Calculator() {
     }
   }
 
+  // Fonctions séparées pour les ports importateur
+  const loadPortsByOrigine = async (country) => {
+    if (!country) {
+      setPortsOrigine([])
+      setPortsOrigineMessage(null)
+      return
+    }
+    
+    setPortsOrigineLoading(true)
+    setPortsOrigineMessage(null)
+    
+    try {
+      // Normalize country name for consistent matching
+      const normalizedCountry = normalizeCountryName(country)
+      
+      // Récupérer les données du pays pour vérifier s'il est enclavé
+      const countryData = countriesData.find(c => c.name === country || c.name === normalizedCountry)
+      
+      // Charger les ports depuis le service mondial avec couverture 100% (use normalized name)
+      const portsResult = await worldPortsService.getPortsByCountry(normalizedCountry, countryData)
+      
+      if (portsResult.hasPorts && portsResult.ports.length > 0) {
+        // Utiliser les ports réels de la base UNCTAD avec frais calculés
+        const portsWithFees = portsResult.ports.map((port, index) => {
+          // Extraire les frais depuis la structure UNCTAD
+          const totalFees = port.totalFees || port.fees?.THC || 500
+          
+          return {
+            id: port.id || `${country.toLowerCase()}-${index + 1}`,
+            nom: port.name,
+            nomPort: port.name,
+            ville: port.city,
+            pays: country,
+            countryCode: port.countryCode,
+            typePort: 'Maritime',
+            capacity: port.capacity,
+            fraisPortuaires: totalFees, // Frais UNCTAD réels
+            currency: port.currency || 'USD',
+            region: port.region,
+            fees: port.fees, // Structure complète des frais (THC, pilotage, etc.)
+            coordinates: port.coordinates,
+            isGeneric: false // Tous les ports UNCTAD sont réels
+          }
+        })
+
+        setPortsOrigine(portsWithFees)
+        setPortsOrigineMessage(null)
+      } else {
+        setPortsOrigine([])
+        setPortsOrigineMessage(portsResult.message || `Aucun port disponible pour ${country}`)
+      }
+    } catch (err) {
+      console.error('❌ [Calculator] Error loading ports from API:', err)
+      setPortsOrigine([])
+      setPortsOrigineMessage('Erreur lors du chargement des ports origine')
+    } finally {
+      setPortsOrigineLoading(false)
+    }
+  }
+
+  const loadPortsByDestination = async (country) => {
+    if (!country) {
+      setPortsDestination([])
+      setPortsDestinationMessage(null)
+      return
+    }
+    
+    setPortsDestinationLoading(true)
+    setPortsDestinationMessage(null)
+    
+    try {
+      // Normalize country name for consistent matching
+      const normalizedCountry = normalizeCountryName(country)
+      
+      // Récupérer les données du pays pour vérifier s'il est enclavé
+      const countryData = countriesData.find(c => c.name === country || c.name === normalizedCountry)
+      
+      // Charger les ports depuis le service mondial avec couverture 100% (use normalized name)
+      const portsResult = await worldPortsService.getPortsByCountry(normalizedCountry, countryData)
+      
+      if (portsResult.hasPorts && portsResult.ports.length > 0) {
+        // Utiliser les ports réels de la base UNCTAD avec frais calculés
+        const portsWithFees = portsResult.ports.map((port, index) => {
+          // Extraire les frais depuis la structure UNCTAD
+          const totalFees = port.totalFees || port.fees?.THC || 500
+          
+          return {
+            id: port.id || `${country.toLowerCase()}-${index + 1}`,
+            nom: port.name,
+            nomPort: port.name,
+            ville: port.city,
+            pays: country,
+            countryCode: port.countryCode,
+            typePort: 'Maritime',
+            capacity: port.capacity,
+            fraisPortuaires: totalFees, // Frais UNCTAD réels
+            currency: port.currency || 'USD',
+            region: port.region,
+            fees: port.fees, // Structure complète des frais (THC, pilotage, etc.)
+            coordinates: port.coordinates,
+            isGeneric: false // Tous les ports UNCTAD sont réels
+          }
+        })
+
+        setPortsDestination(portsWithFees)
+        setPortsDestinationMessage(null)
+      } else {
+        setPortsDestination([])
+        setPortsDestinationMessage(portsResult.message || `Aucun port disponible pour ${country}`)
+      }
+    } catch (err) {
+      console.error('❌ [Calculator] Error loading ports from API:', err)
+      setPortsDestination([])
+      setPortsDestinationMessage('Erreur lors du chargement des ports destination')
+    } finally {
+      setPortsDestinationLoading(false)
+    }
+  }
+
   const handleInputChange = async (e) => {
     const { name, value } = e.target
     setFormData(prev => ({
@@ -253,26 +393,49 @@ function Calculator() {
       setProducts([])
     }
     
-    if (name === 'paysDestination') {
-      setFormData(prev => ({ ...prev, portId: '' }))
-      setPorts([])
-      setPortMessage(null)
-      
-      // Charger automatiquement la devise du pays sélectionné
-      if (value) {
-        try {
-          const countryData = countriesData.find(c => c.name === value)
-          if (countryData && countryData.currency) {
-            setFormData(prev => ({
-              ...prev,
-              currency: countryData.currency.code
-            }))
-          }
-        } catch (err) {
+    // Logique spécifique pour l'importateur
+    if (isImportateur) {
+      if (name === 'paysOrigine') {
+        setFormData(prev => ({ ...prev, portEmbarquement: '' }))
+        // Charger les ports pour le pays d'origine avec état séparé
+        setPortsOrigine([])
+        setPortsOrigineMessage(null)
+        if (value) {
+          loadPortsByOrigine(value)
         }
+      }
+      if (name === 'paysDestination') {
+        setFormData(prev => ({ ...prev, portDechargement: '' }))
+        // Charger les ports pour le pays de destination avec état séparé
+        setPortsDestination([])
+        setPortsDestinationMessage(null)
+        if (value) {
+          loadPortsByDestination(value)
+        }
+      }
+    } else {
+      // Logique existante pour l'exportateur
+      if (name === 'paysDestination') {
+        setFormData(prev => ({ ...prev, portId: '' }))
+        setPorts([])
+        setPortMessage(null)
         
-        // Charger les ports pour ce pays
-        loadPortsByCountry(value)
+        // Charger automatiquement la devise du pays sélectionné
+        if (value) {
+          try {
+            const countryData = countriesData.find(c => c.name === value)
+            if (countryData && countryData.currency) {
+              setFormData(prev => ({
+                ...prev,
+                currency: countryData.currency.code
+              }))
+            }
+          } catch (err) {
+          }
+          
+          // Charger les ports pour ce pays
+          loadPortsByCountry(value)
+        }
       }
     }
   }
@@ -283,27 +446,36 @@ function Calculator() {
     setError(null)
     
     try {
-      const calculationData = {
-        codeHs: formData.codeHs,
-        paysDestination: formData.paysDestination,
-        valeurFob: parseFloat(formData.valeurFob),
-        coutTransport: parseFloat(formData.coutTransport) || 0,
-        assurance: parseFloat(formData.assurance),
-        currency: formData.currency,
-        portId: formData.portId ? parseInt(formData.portId) : null,
-        nomEntreprise: formData.nomEntreprise || null,
-        registreCommerce: formData.registreCommerce || null,
-        ice: formData.ice || null,
-        incoterm: formData.incoterm || 'CIF',
-        prixVentePrevisionnel: formData.prixVentePrevisionnel ? parseFloat(formData.prixVentePrevisionnel) : null,
-        poidsNet: formData.poidsNet ? parseFloat(formData.poidsNet) : null,
-        poidsBrut: formData.poidsBrut ? parseFloat(formData.poidsBrut) : null,
-        typeUnite: formData.typeUnite || null
+      if (isImportateur) {
+        // Mode importateur utilise le même endpoint que l'exportateur
+        console.log('IMPORT DATA ENVOYÉ:', JSON.stringify(formData, null, 2));
+        
+        const response = await calculationService.calculateLandedCost(formData)
+        setResult(response.data)
+        
+      } else {
+        // Logique existante pour l'exportateur
+        const calculationData = {
+          codeHs: formData.codeHs,
+          paysDestination: formData.paysDestination,
+          valeurFob: parseFloat(formData.valeurFob),
+          coutTransport: parseFloat(formData.coutTransport) || 0,
+          assurance: parseFloat(formData.assurance),
+          currency: formData.currency,
+          portId: formData.portId ? parseInt(formData.portId) : null,
+          nomEntreprise: formData.nomEntreprise || null,
+          registreCommerce: formData.registreCommerce || null,
+          ice: formData.ice || null,
+          incoterm: formData.incoterm || 'CIF',
+          prixVentePrevisionnel: formData.prixVentePrevisionnel ? parseFloat(formData.prixVentePrevisionnel) : null,
+          poidsNet: formData.poidsNet ? parseFloat(formData.poidsNet) : null,
+          poidsBrut: formData.poidsBrut ? parseFloat(formData.poidsBrut) : null,
+          typeUnite: formData.typeUnite || null
+        }
+        
+        const response = await calculationService.calculateLandedCost(calculationData)
+        setResult(response.data)
       }
-      
-      const response = await calculationService.calculateLandedCost(calculationData)
-
-      setResult(response.data)
     } catch (err) {
       setError(err.response?.data?.message || 'Erreur lors du calcul')
       console.error('Calculation error:', err)
@@ -348,7 +520,7 @@ function Calculator() {
   }
 
   return (
-    <div className="maritime-calculator">
+    <div className="maritime-calculator" style={{ marginTop: '70px' }}>
       {/* Header Section */}
       <div className="calculator-header">
         <div className="header-content">
@@ -356,9 +528,14 @@ function Calculator() {
             <CalcIcon className="w-8 h-8" />
           </div>
           <div className="header-text">
-            <h1 className="header-title">Export Duties Calculator</h1>
+            <h1 className="header-title">
+              {isImportateur ? 'IMPORT DUTIES CALCULATOR' : 'EXPORT DUTIES CALCULATOR'}
+            </h1>
             <p className="header-subtitle">
-              Calculate complete import costs including customs duties, VAT, parafiscal taxes and port fees
+              {isImportateur 
+                ? 'Calculate complete landed costs including freight, customs duties, VAT and port fees'
+                : 'Calculate complete import costs including customs duties, VAT, parafiscal taxes and port fees'
+              }
             </p>
           </div>
         </div>
@@ -371,118 +548,317 @@ function Calculator() {
           <div className="form-card">
             <div className="card-header">
               <CalcIcon className="card-icon" />
-              <h2 className="card-title">Product Information</h2>
+              <h2 className="card-title">
+                {isImportateur ? 'Product Information' : 'Product Information'}
+              </h2>
             </div>
             
             <form onSubmit={handleSubmit} className="calculator-form">
-              {/* Basic Information Card */}
-              <div className="form-section">
-                <h3 className="section-title">Basic Information</h3>
-                <div className="form-grid">
-                  <div className="form-group">
-                    <label className="form-label">
-                      Catégorie
-                    </label>
-                    <select
-                      name="categorie"
-                      value={formData.categorie}
-                      onChange={handleInputChange}
-                      required
-                      className="form-select"
-                    >
-                      <option value="">Sélectionnez une catégorie</option>
-                      {categories.map(cat => (
-                        <option key={cat} value={cat}>{cat}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">
-                      Pays de destination
-                    </label>
-                    {maritimeCountriesError && (
-                      <div className="form-error">
-                        {maritimeCountriesError}
-                      </div>
-                    )}
-                    {countriesError && (
-                      <div className="form-error">
-                        {countriesError}
-                      </div>
-                    )}
-                    <select
-                      name="paysDestination"
-                      value={formData.paysDestination}
-                      onChange={handleInputChange}
-                      required
-                      disabled={maritimeCountriesLoading}
-                      className="form-select"
-                    >
-                      <option value="">
-                        {maritimeCountriesLoading ? '-- Chargement pays --' : '-- Sélectionner pays --'}
-                      </option>
-                      {(maritimeCountries || []).map((c) => (
-                        <option key={c.iso2 || c.code} value={c.nameFr || c.name}>
-                          {c.flagEmoji ? `${c.flagEmoji} ` : ''}{c.nameFr || c.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">
-                      Port (destination)
-                    </label>
-                    {portsLoading ? (
-                      <div className="loading-text">Chargement des ports...</div>
-                    ) : (
+              {/* Formulaire Importateur - Copie exacte de l'exportateur */}
+              {isImportateur && (
+                <div className="form-section">
+                  <h3 className="section-title">Basic Information</h3>
+                  <div className="form-grid">
+                    <div className="form-group">
+                      <label className="form-label">
+                        Catégorie
+                      </label>
                       <select
-                        name="portId"
-                        value={formData.portId}
+                        name="categorie"
+                        value={formData.categorie}
                         onChange={handleInputChange}
-                        disabled={!formData.paysDestination || ports.length === 0}
-                        className="form-select"
+                        required
+                        style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '2px solid #CBD5E0',
+                        borderRadius: '8px',
+                        backgroundColor: '#FFFFFF',
+                        color: '#2D3748',
+                        fontSize: '14px',
+                        display: 'block',
+                        marginTop: '4px'
+                      }}
                       >
-                        <option value="">-- Sélectionner port --</option>
-                        {ports.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.nomPort || p.nom || p.name}
-                            {p.ville ? ` - ${p.ville}` : ''}
-                            {p.fraisPortuaires ? ` | ${p.fraisPortuaires} USD` : ''}
+                        <option value="">Sélectionnez une catégorie</option>
+                        {categories.map(cat => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">
+                        Pays de destination
+                      </label>
+                      {maritimeCountriesError && (
+                        <div className="form-error">
+                          {maritimeCountriesError}
+                        </div>
+                      )}
+                      {countriesError && (
+                        <div className="form-error">
+                          {countriesError}
+                        </div>
+                      )}
+                      <select
+                        name="paysDestination"
+                        value={formData.paysDestination}
+                        onChange={handleInputChange}
+                        required
+                        style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '2px solid #CBD5E0',
+                        borderRadius: '8px',
+                        backgroundColor: '#FFFFFF',
+                        color: '#2D3748',
+                        fontSize: '14px',
+                        display: 'block',
+                        marginTop: '4px'
+                      }}
+                      >
+                        <option value="">-- Sélectionner pays de destination --</option>
+                        {maritimeCountries.map((c) => (
+                          <option key={c.code} value={c.name}>
+                            {c.flagEmoji ? `${c.flagEmoji} ` : ''}{c.nameFr || c.name}
                           </option>
                         ))}
                       </select>
-                    )}
-                    {portMessage && (
-                      <div className="form-warning">
-                        {portMessage}
-                      </div>
-                    )}
-                  </div>
+                    </div>
 
-                  <div className="form-group">
-                    <label className="form-label">
-                      Produit
-                    </label>
-                    <select
-                      name="codeHs"
-                      value={formData.codeHs}
-                      onChange={handleInputChange}
-                      required
-                      disabled={!formData.categorie}
-                      className="form-select"
-                    >
-                      <option value="">Sélectionnez un produit</option>
-                      {products.map(product => (
-                        <option key={product.id} value={product.codeHs}>
-                          {product.nomProduit} ({product.codeHs})
-                        </option>
-                      ))}
-                    </select>
+                    <div className="form-group">
+                      <label className="form-label">
+                        Port de déchargement
+                      </label>
+                      {portsLoading ? (
+                        <div className="loading-text">Chargement des ports...</div>
+                      ) : (
+                        <select
+                          name="portDechargement"
+                          value={formData.portDechargement}
+                          onChange={e => setFormData({
+                            ...formData, 
+                            portDechargement: e.target.value
+                          })}
+                          disabled={portsDestinationLoading}
+                          style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '2px solid #CBD5E0',
+                        borderRadius: '8px',
+                        backgroundColor: '#FFFFFF',
+                        color: '#2D3748',
+                        fontSize: '14px',
+                        display: 'block',
+                        marginTop: '4px'
+                      }}
+                        >
+                          <option value="">-- Sélectionner port de déchargement --</option>
+                          {portsDestination.map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.nomPort || p.nom || p.name}
+                              {p.ville ? ` - ${p.ville}` : ''}
+                              {p.fraisPortuaires ? ` | ${p.fraisPortuaires} USD` : ''}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                      {portsDestinationMessage && (
+                        <div className="form-warning">
+                          {portsDestinationMessage}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">
+                        Produit
+                      </label>
+                      {productsError && (
+                        <div className="form-error">
+                          {productsError}
+                        </div>
+                      )}
+                      <select
+                        name="codeHs"
+                        value={formData.codeHs}
+                        onChange={handleInputChange}
+                        required
+                        disabled={!formData.categorie || products.length === 0}
+                        style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '2px solid #CBD5E0',
+                        borderRadius: '8px',
+                        backgroundColor: '#FFFFFF',
+                        color: '#2D3748',
+                        fontSize: '14px',
+                        display: 'block',
+                        marginTop: '4px'
+                      }}
+                      >
+                        <option value="">-- Sélectionner produit --</option>
+                        {products.map((p) => (
+                          <option key={p.codeHs} value={p.codeHs}>
+                            {p.codeHs} - {p.description}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
+
+              {!isImportateur && (
+                <div className="form-section">
+                  <h3 className="section-title">Basic Information</h3>
+                  <div className="form-grid">
+                    <div className="form-group">
+                      <label className="form-label">
+                        Catégorie
+                      </label>
+                      <select
+                        name="categorie"
+                        value={formData.categorie}
+                        onChange={handleInputChange}
+                        required
+                        style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '2px solid #CBD5E0',
+                        borderRadius: '8px',
+                        backgroundColor: '#FFFFFF',
+                        color: '#2D3748',
+                        fontSize: '14px',
+                        display: 'block',
+                        marginTop: '4px'
+                      }}
+                      >
+                        <option value="">Sélectionnez une catégorie</option>
+                        {categories.map(cat => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">
+                        Pays de destination
+                      </label>
+                      {maritimeCountriesError && (
+                        <div className="form-error">
+                          {maritimeCountriesError}
+                        </div>
+                      )}
+                      {countriesError && (
+                        <div className="form-error">
+                          {countriesError}
+                        </div>
+                      )}
+                      <select
+                        name="paysDestination"
+                        value={formData.paysDestination}
+                        onChange={handleInputChange}
+                        required
+                        disabled={maritimeCountriesLoading}
+                        style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '2px solid #CBD5E0',
+                        borderRadius: '8px',
+                        backgroundColor: '#FFFFFF',
+                        color: '#2D3748',
+                        fontSize: '14px',
+                        display: 'block',
+                        marginTop: '4px'
+                      }}
+                      >
+                        <option value="">
+                          {maritimeCountriesLoading ? '-- Chargement pays --' : '-- Sélectionner pays --'}
+                        </option>
+                        {(maritimeCountries || []).map((c) => (
+                          <option key={c.iso2 || c.code} value={c.nameFr || c.name}>
+                            {c.flagEmoji ? `${c.flagEmoji} ` : ''}{c.nameFr || c.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">
+                        Port (destination)
+                      </label>
+                      {portsLoading ? (
+                        <div className="loading-text">Chargement des ports...</div>
+                      ) : (
+                        <select
+                          name="portId"
+                          value={formData.portId}
+                          onChange={handleInputChange}
+                          disabled={!formData.paysDestination || ports.length === 0}
+                          style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '2px solid #CBD5E0',
+                        borderRadius: '8px',
+                        backgroundColor: '#FFFFFF',
+                        color: '#2D3748',
+                        fontSize: '14px',
+                        display: 'block',
+                        marginTop: '4px'
+                      }}
+                        >
+                          <option value="">-- Sélectionner port --</option>
+                          {ports.map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.nomPort || p.nom || p.name}
+                              {p.ville ? ` - ${p.ville}` : ''}
+                              {p.fraisPortuaires ? ` | ${p.fraisPortuaires} USD` : ''}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                      {portMessage && (
+                        <div className="form-warning">
+                          {portMessage}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">
+                        Produit
+                      </label>
+                      <select
+                        name="codeHs"
+                        value={formData.codeHs}
+                        onChange={handleInputChange}
+                        required
+                        disabled={!formData.categorie}
+                        style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '2px solid #CBD5E0',
+                        borderRadius: '8px',
+                        backgroundColor: '#FFFFFF',
+                        color: '#2D3748',
+                        fontSize: '14px',
+                        display: 'block',
+                        marginTop: '4px'
+                      }}
+                      >
+                        <option value="">Sélectionnez un produit</option>
+                        {products.map(product => (
+                          <option key={product.id} value={product.codeHs}>
+                            {product.nomProduit} ({product.codeHs})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Financial Information Card */}
               <div className="form-section">
@@ -490,7 +866,7 @@ function Calculator() {
                 <div className="form-grid">
                   <div className="form-group">
                     <label className="form-label">
-                      Valeur CIF (FOB)
+                      {isImportateur ? 'Valeur FOB marchandise' : 'Valeur CIF (FOB)'}
                     </label>
                     <input
                       type="number"
@@ -500,27 +876,49 @@ function Calculator() {
                       required
                       step="0.01"
                       min="0.01"
-                      className="form-input"
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '2px solid #CBD5E0',
+                        borderRadius: '8px',
+                        backgroundColor: '#FFFFFF',
+                        color: '#2D3748',
+                        fontSize: '14px',
+                        display: 'block',
+                        marginTop: '4px'
+                      }}
                       placeholder="0.00"
                     />
                   </div>
 
-                  <div className="form-group">
-                    <label className="form-label">
-                      Coût de transport
-                    </label>
-                    <input
-                      type="number"
-                      name="coutTransport"
-                      value={formData.coutTransport}
-                      onChange={handleInputChange}
-                      required
-                      step="0.01"
-                      min="0"
-                      className="form-input"
-                      placeholder="0.00"
-                    />
-                  </div>
+                  {isImportateur && (
+                    <div className="form-group">
+                      <label className="form-label">
+                        Coût de transport
+                      </label>
+                      <input
+                        type="number"
+                        name="coutTransport"
+                        value={formData.coutTransport}
+                        onChange={handleInputChange}
+                        required
+                        step="0.01"
+                        min="0"
+                        style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '2px solid #CBD5E0',
+                        borderRadius: '8px',
+                        backgroundColor: '#FFFFFF',
+                        color: '#2D3748',
+                        fontSize: '14px',
+                        display: 'block',
+                        marginTop: '4px'
+                      }}
+                        placeholder="0.00"
+                      />
+                    </div>
+                  )}
 
                   <div className="form-group">
                     <label className="form-label">
@@ -534,10 +932,47 @@ function Calculator() {
                       required
                       step="0.01"
                       min="0"
-                      className="form-input"
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '2px solid #CBD5E0',
+                        borderRadius: '8px',
+                        backgroundColor: '#FFFFFF',
+                        color: '#2D3748',
+                        fontSize: '14px',
+                        display: 'block',
+                        marginTop: '4px'
+                      }}
                       placeholder="0.00"
                     />
                   </div>
+
+                  {isImportateur && (
+                    <div className="form-group">
+                      <label className="form-label">
+                        Valeur CIF (Cost Insurance Freight)
+                      </label>
+                      <input
+                        type="number"
+                        name="valeurCif"
+                        value={formData.valeurCif || ''}
+                        onChange={handleInputChange}
+                        placeholder="Calculé automatiquement"
+                        readOnly
+                        style={{
+                          width: '100%',
+                          padding: '10px 12px',
+                          border: '2px solid #CBD5E0',
+                          borderRadius: '8px',
+                          backgroundColor: '#F7FAFC',
+                          color: '#2D3748',
+                          fontSize: '14px',
+                          display: 'block',
+                          marginTop: '4px'
+                        }}
+                      />
+                    </div>
+                  )}
 
                   <div className="form-group">
                     <label className="form-label">
@@ -547,7 +982,17 @@ function Calculator() {
                       name="currency"
                       value={formData.currency}
                       onChange={handleInputChange}
-                      className="form-select"
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '2px solid #CBD5E0',
+                        borderRadius: '8px',
+                        backgroundColor: '#FFFFFF',
+                        color: '#2D3748',
+                        fontSize: '14px',
+                        display: 'block',
+                        marginTop: '4px'
+                      }}
                     >
                       {WORLD_CURRENCIES.map(currency => (
                         <option key={currency.code} value={currency.code}>
@@ -573,7 +1018,17 @@ function Calculator() {
                       value={formData.nomEntreprise}
                       onChange={handleInputChange}
                       placeholder="Nom Entreprise"
-                      className="form-input"
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '2px solid #CBD5E0',
+                        borderRadius: '8px',
+                        backgroundColor: '#FFFFFF',
+                        color: '#2D3748',
+                        fontSize: '14px',
+                        display: 'block',
+                        marginTop: '4px'
+                      }}
                     />
                   </div>
                   
@@ -587,7 +1042,17 @@ function Calculator() {
                       value={formData.registreCommerce}
                       onChange={handleInputChange}
                       placeholder="Registre Commerce (RC)"
-                      className="form-input"
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '2px solid #CBD5E0',
+                        borderRadius: '8px',
+                        backgroundColor: '#FFFFFF',
+                        color: '#2D3748',
+                        fontSize: '14px',
+                        display: 'block',
+                        marginTop: '4px'
+                      }}
                     />
                   </div>
                   
@@ -601,7 +1066,17 @@ function Calculator() {
                       value={formData.ice}
                       onChange={handleInputChange}
                       placeholder="ICE"
-                      className="form-input"
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '2px solid #CBD5E0',
+                        borderRadius: '8px',
+                        backgroundColor: '#FFFFFF',
+                        color: '#2D3748',
+                        fontSize: '14px',
+                        display: 'block',
+                        marginTop: '4px'
+                      }}
                     />
                   </div>
 
@@ -613,7 +1088,17 @@ function Calculator() {
                       name="incoterm"
                       value={formData.incoterm}
                       onChange={handleInputChange}
-                      className="form-select"
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '2px solid #CBD5E0',
+                        borderRadius: '8px',
+                        backgroundColor: '#FFFFFF',
+                        color: '#2D3748',
+                        fontSize: '14px',
+                        display: 'block',
+                        marginTop: '4px'
+                      }}
                     >
                       <option value="FOB">FOB (Free On Board)</option>
                       <option value="CIF">CIF (Cost, Insurance & Freight)</option>
@@ -640,7 +1125,17 @@ function Calculator() {
                       step="0.01"
                       min="0"
                       placeholder="Pour analyse de rentabilité"
-                      className="form-input"
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '2px solid #CBD5E0',
+                        borderRadius: '8px',
+                        backgroundColor: '#FFFFFF',
+                        color: '#2D3748',
+                        fontSize: '14px',
+                        display: 'block',
+                        marginTop: '4px'
+                      }}
                     />
                   </div>
 
@@ -656,7 +1151,17 @@ function Calculator() {
                       step="0.01"
                       min="0"
                       placeholder="Poids Net (kg)"
-                      className="form-input"
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '2px solid #CBD5E0',
+                        borderRadius: '8px',
+                        backgroundColor: '#FFFFFF',
+                        color: '#2D3748',
+                        fontSize: '14px',
+                        display: 'block',
+                        marginTop: '4px'
+                      }}
                     />
                   </div>
                   
@@ -672,7 +1177,17 @@ function Calculator() {
                       step="0.01"
                       min="0"
                       placeholder="Poids Brut (kg)"
-                      className="form-input"
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '2px solid #CBD5E0',
+                        borderRadius: '8px',
+                        backgroundColor: '#FFFFFF',
+                        color: '#2D3748',
+                        fontSize: '14px',
+                        display: 'block',
+                        marginTop: '4px'
+                      }}
                     />
                   </div>
                   
@@ -686,7 +1201,17 @@ function Calculator() {
                       value={formData.typeUnite}
                       onChange={handleInputChange}
                       placeholder="Type Unité (ex: conteneur 40')"
-                      className="form-input"
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '2px solid #CBD5E0',
+                        borderRadius: '8px',
+                        backgroundColor: '#FFFFFF',
+                        color: '#2D3748',
+                        fontSize: '14px',
+                        display: 'block',
+                        marginTop: '4px'
+                      }}
                     />
                   </div>
                 </div>
@@ -715,7 +1240,10 @@ function Calculator() {
           {result && (
             <div className="results-container">
               <div className="results-card">
-                <CostDashboard result={result} />
+                <CostDashboard 
+                  result={result} 
+                  currency={result?.devise || result?.currency || formData?.currency || 'USD'} 
+                />
               </div>
               
               <button

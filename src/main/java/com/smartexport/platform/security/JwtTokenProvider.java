@@ -23,7 +23,13 @@ public class JwtTokenProvider {
 
     public String generateToken(String email, String role) {
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + jwtExpiration);
+        
+        // Si c'est l'utilisateur admin, expiration de 10 ans, sinon 24h
+        long expiration = "admin@smartexport.com".equals(email) 
+          ? 1000L * 60 * 60 * 24 * 365 * 10  // 10 ans pour admin
+          : jwtExpiration;                     // 24h pour les autres
+        
+        Date expiryDate = new Date(now.getTime() + expiration);
 
         return Jwts.builder()
                 .setSubject(email)

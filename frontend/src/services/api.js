@@ -57,6 +57,7 @@ export const portService = {
 
 export const calculationService = {
   calculateLandedCost: (data) => api.post('/calculation/landed-cost', data),
+  calculateImportLandedCost: (data) => api.post('/calculation/landed-cost-import', data),
   checkThreshold: (codeHs, value) => 
     api.get('/calculation/alerte-seuil', { params: { codeHs, valeurSaisie: value } }),
   calculateExchangeRisk: (data) => api.post('/calculation/risque-change', data),
@@ -71,6 +72,12 @@ export const forexService = {
 export const pdfService = {
   generateLandedCostPdf: async (data) => {
     const response = await api.post('/pdf/landed-cost', data, {
+      responseType: 'blob',
+    })
+    return response.data
+  },
+  generateImportLandedCostPdf: async (data) => {
+    const response = await api.post('/pdf/import-landed-cost', data, {
       responseType: 'blob',
     })
     return response.data

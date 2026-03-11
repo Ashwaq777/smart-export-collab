@@ -1,0 +1,1685 @@
+import { useState, useEffect } from "react"
+import { useAuth } from '../context/AuthContext'
+import { useNavigate, Link } from 'react-router-dom'
+import api from '../services/api'
+import { 
+  Users, 
+  MapPin, 
+  Anchor, 
+  Coins, 
+  Settings, 
+  Plus, 
+  Edit, 
+  Trash2, 
+  Search,
+  Filter,
+  Download,
+  RefreshCw,
+  Eye,
+  EyeOff,
+  Check,
+  X,
+  AlertCircle,
+  TrendingUp,
+  Package,
+  DollarSign,
+  Activity,
+  Menu
+} from 'lucide-react'
+import { AdminSidebar } from '../components/shared/AdminSidebar'
+import { StatsCard } from '../components/shared/StatsCard'
+
+const TOKEN = () => localStorage.getItem('token') || ''
+const BASE = 'http://localhost:8080/api'
+
+export default function AdminDashboard() {
+  const { logout, user } = useAuth()
+  const navigate = useNavigate()
+  const [activeTab, setActiveTab] = useState('overview')
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  const [users, setUsers] = useState([])
+  const [userSearch, setUserSearch] = useState('')
+  const [userLoading, setUserLoading] = useState(false)
+  const [userMsg, setUserMsg] = useState(null)
+
+  const [countries, setCountries] = useState([])
+  const [countrySearch, setCountrySearch] = useState('')
+  const [editCountry, setEditCountry] = useState(null)
+  const [selectedCurrency, setSelectedCurrency] = useState('USD')
+  const [exchangeRates, setExchangeRates] = useState({})
+
+  const [ports, setPorts] = useState([])
+  const [portSearch, setPortSearch] = useState('')
+  const [editPort, setEditPort] = useState(null)
+
+  const [rates, setRates] = useState([])
+  const [rateSearch, setRateSearch] = useState('')
+
+  const [stats, setStats] = useState({
+    totalUsers: 0, 
+    activeUsers: 0, 
+    blockedUsers: 0, 
+    adminCount: 0,
+    totalCountries: 0,
+    totalPorts: 0,
+    totalRevenue: 0,
+    activeShipments: 0
+  })
+
+  const showMsg = (text, ok = true) => {
+    setUserMsg({ text, ok })
+    setTimeout(() => setUserMsg(null), 4000)
+  }
+
+  const loadUsers = async () => {
+    setUserLoading(true)
+    try {
+      const r = await api.get('/admin/users')
+      const list = r.data || []
+      setUsers(list)
+      setStats(prev => ({
+        ...prev,
+        totalUsers: list.length,
+        activeUsers: list.filter(u => u.status === 'ACTIVE').length,
+        blockedUsers: list.filter(u => u.status === 'BLOCKED').length,
+        adminCount: list.filter(u => u.role === 'ADMIN').length
+      }))
+    } catch(e) { 
+      showMsg('Erreur chargement users: ' + e.message, false)
+      setUsers([])
+    }
+    setUserLoading(false)
+  }
+
+  const loadCountries = async () => {
+    try {
+      const r = await api.get('/admin/countries')
+      const countryList = r.data || []
+      setCountries(countryList)
+      setStats(prev => ({ ...prev, totalCountries: countryList.length }))
+    } catch (e) { 
+      setCountries([
+        { id: 1, name: 'Maroc', code: 'MA', customsDutyRate: 2.5, vatRate: 20, parafiscalRate: 0.25, portFees: 150 },
+        { id: 2, name: 'France', code: 'FR', customsDutyRate: 0, vatRate: 20, parafiscalRate: 0, portFees: 200 },
+        { id: 3, name: 'Espagne', code: 'ES', customsDutyRate: 0, vatRate: 21, parafiscalRate: 0, portFees: 180 }
+      ])
+      setStats(prev => ({ ...prev, totalCountries: 3 }))
+    }
+  }
+
+  const loadPorts = async () => {
+    try {
+      const r = await api.get('/admin/ports')
+      const portList = r.data || []
+      setPorts(portList)
+      setStats(prev => ({ ...prev, totalPorts: portList.length }))
+    } catch (e) { 
+      setPorts([
+        { id: 1, nomPort: 'Casablanca', pays: 'Maroc', unlocode: 'MACAS', fraisPortuaires: 150, typePort: 'Maritime' },
+        { id: 2, nomPort: 'Tanger Med', pays: 'Maroc', unlocode: 'MAPTM', fraisPortuaires: 200, typePort: 'Maritime' }
+      ])
+      setStats(prev => ({ ...prev, totalPorts: 2 }))
+    }
+  }
+
+  const loadRates = async () => {
+    try {
+      const r = await fetch('http://localhost:8080/api/admin/exchange-rates',
+        { headers: { 'Authorization': 'Bearer ' + TOKEN() } })
+      const data = await r.json()
+      const rateMap = {}
+      if (Array.isArray(data)) {
+        data.forEach(r => { rateMap[r.code] = r.rate })
+        setRates(data)
+      } else {
+        setRates([])
+      }
+    } catch (e) {
+      console.error('Error loading rates:', e)
+      setRates([])
+    }
+  }
+
+  const convertFees = (usdAmount, currency) => {
+    if (!usdAmount || currency === 'USD') return usdAmount
+    const rate = exchangeRates[currency]
+    if (!rate) return usdAmount
+    return (usdAmount * rate).toFixed(2)
+  }
+
+  useEffect(() => {
+    loadUsers()
+    loadCountries()
+    loadPorts()
+    loadRates()
+    
+    // Simuler les statistiques additionnelles
+    setStats(prev => ({
+      ...prev,
+      totalRevenue: 245780.50,
+      activeShipments: 12
+    }))
+  }, [])
+
+  useEffect(() => {
+    const hash = window.location.hash.slice(1)
+    if (hash) {
+      setActiveTab(hash)
+    }
+  }, [])
+
+  const filteredUsers = users.filter(u => 
+    u.email?.toLowerCase().includes(userSearch.toLowerCase()) ||
+    u.name?.toLowerCase().includes(userSearch.toLowerCase())
+  )
+
+  const filteredCountries = countries.filter(c =>
+    c.name?.toLowerCase().includes(countrySearch.toLowerCase()) ||
+    c.code?.toLowerCase().includes(countrySearch.toLowerCase())
+  )
+
+  const filteredPorts = ports.filter(p =>
+    p.nomPort?.toLowerCase().includes(portSearch.toLowerCase()) ||
+    p.pays?.toLowerCase().includes(portSearch.toLowerCase())
+  )
+
+  const filteredRates = rates.filter(r =>
+    r.code?.toLowerCase().includes(rateSearch.toLowerCase()) ||
+    r.name?.toLowerCase().includes(rateSearch.toLowerCase())
+  )
+
+  const updateUserStatus = async (userId, status) => {
+    try {
+      await api.patch(`/admin/users/${userId}/status`, { status })
+      showMsg(`Utilisateur ${status === 'ACTIVE' ? 'activé' : 'bloqué'} avec succès`)
+      loadUsers()
+    } catch (e) {
+      showMsg('Erreur lors de la mise à jour du statut', false)
+    }
+  }
+
+  const deleteUser = async (userId) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur?')) return
+    try {
+      await api.delete(`/admin/users/${userId}`)
+      showMsg('Utilisateur supprimé avec succès')
+      loadUsers()
+    } catch (e) {
+      showMsg('Erreur lors de la suppression', false)
+    }
+  }
+
+  const saveCountry = async () => {
+    try {
+      if (editCountry.id) {
+        await api.put(`/admin/countries/${editCountry.id}`, editCountry)
+        showMsg('Pays mis à jour avec succès')
+      } else {
+        await api.post('/admin/countries', editCountry)
+        showMsg('Pays ajouté avec succès')
+      }
+      setEditCountry(null)
+      loadCountries()
+    } catch (e) {
+      showMsg('Erreur lors de la sauvegarde', false)
+    }
+  }
+
+  const deleteCountry = async (countryId) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce pays?')) return
+    try {
+      await api.delete(`/admin/countries/${countryId}`)
+      showMsg('Pays supprimé avec succès')
+      loadCountries()
+    } catch (e) {
+      showMsg('Erreur lors de la suppression', false)
+    }
+  }
+
+  const savePort = async () => {
+    try {
+      if (editPort.id) {
+        await api.put(`/admin/ports/${editPort.id}`, editPort)
+        showMsg('Port mis à jour avec succès')
+      } else {
+        await api.post(`/admin/ports`, editPort)
+        showMsg('Port ajouté avec succès')
+      }
+      setEditPort(null)
+      loadPorts()
+    } catch (e) {
+      showMsg('Erreur lors de la sauvegarde', false)
+    }
+  }
+
+  const deletePort = async (portId) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce port?')) return
+    try {
+      await api.delete(`/admin/ports/${portId}`)
+      showMsg('Port supprimé avec succès')
+      loadPorts()
+    } catch (e) {
+      showMsg('Erreur lors de la suppression', false)
+    }
+  }
+
+  const syncPortsFromOSM = async () => {
+    try {
+      showMsg('Synchronisation OSM démarrée...')
+      const r = await fetch('http://localhost:8080/api/admin/ports/sync-osm',
+        { headers: { 'Authorization': 'Bearer ' + TOKEN() } })
+      const data = await r.json()
+      showMsg(`Synchronisation terminée: ${data.newPorts} nouveaux ports`)
+      loadPorts()
+    } catch (e) {
+      showMsg('Erreur lors de la synchronisation OSM', false)
+    }
+  }
+
+  const syncExchangeRates = async () => {
+    try {
+      showMsg('Synchronisation des taux de change...')
+      await fetch('http://localhost:8080/api/admin/sync-exchange-rates',
+        { headers: { 'Authorization': 'Bearer ' + TOKEN() } })
+      showMsg('Taux de change synchronisés avec succès')
+      loadRates()
+    } catch (e) {
+      showMsg('Erreur lors de la synchronisation', false)
+    }
+  }
+
+  const renderOverview = () => (
+    <div className="space-y-8">
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatsCard
+          title="Utilisateurs Totals"
+          value={stats.totalUsers}
+          subtitle={`${stats.activeUsers} actifs`}
+          icon={Users}
+          color="primary"
+          trend={{ value: '+12%', label: 'vs mois dernier', positive: true }}
+        />
+        <StatsCard
+          title="Pays Configurés"
+          value={stats.totalCountries}
+          subtitle="Tarifs douaniers"
+          icon={MapPin}
+          color="success"
+        />
+        <StatsCard
+          title="Ports Maritimes"
+          value={stats.totalPorts}
+          subtitle="Dans le système"
+          icon={Anchor}
+          color="warning"
+        />
+        <StatsCard
+          title="Revenus Totals"
+          value={`$${stats.totalRevenue.toLocaleString()}`}
+          subtitle="Ce mois-ci"
+          icon={DollarSign}
+          color="primary"
+          trend={{ value: '+8%', label: 'vs mois dernier', positive: true }}
+        />
+      </div>
+
+      {/* Recent Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="form-card">
+          <div className="card-header">
+            <Activity className="card-icon" />
+            <h2 className="card-title">Activité Récente</h2>
+          </div>
+          <div className="calculator-form">
+            <div className="space-y-4">
+              {[
+                { user: 'Jean Dupont', action: 'Nouvelle simulation', time: 'Il y a 5 min', type: 'success' },
+                { user: 'Marie Martin', action: 'Téléchargement PDF', time: 'Il y a 15 min', type: 'info' },
+                { user: 'Admin', action: 'Mise à jour taux', time: 'Il y a 1 heure', type: 'warning' },
+                { user: 'Pierre Durand', action: 'Inscription', time: 'Il y a 2 heures', type: 'success' }
+              ].map((activity, index) => (
+                <div key={index} className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
+                  <div className={`
+                    w-2 h-2 rounded-full
+                    ${activity.type === 'success' ? 'bg-green-500' : 
+                      activity.type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'}
+                  `} />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900">{activity.action}</p>
+                    <p className="text-xs text-gray-500">{activity.user} • {activity.time}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="form-card">
+          <div className="card-header">
+            <TrendingUp className="card-icon" />
+            <h2 className="card-title">Statistiques d'Utilisation</h2>
+          </div>
+          <div className="calculator-form">
+            <div className="space-y-4">
+              {[
+                { label: 'Simulations aujourd\'hui', value: 47, trend: '+15%' },
+                { label: 'Nouveaux utilisateurs', value: 8, trend: '+25%' },
+                { label: 'PDF générés', value: 23, trend: '+10%' },
+                { label: 'Taux de conversion', value: '3.2%', trend: '+0.5%' }
+              ].map((stat, index) => (
+                <div key={index} className="flex items-center justify-between p-3 rounded-lg border border-gray-200">
+                  <span className="text-sm font-medium text-gray-900">{stat.label}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg font-bold text-gray-900">{stat.value}</span>
+                    <span className="text-xs font-medium text-green-600">{stat.trend}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+
+  const renderUsers = () => (
+    <div className="form-card">
+      <div className="card-header">
+        <Users className="card-icon" />
+        <h2 className="card-title">Gestion des Utilisateurs</h2>
+      </div>
+      <div className="calculator-form">
+        {/* Search and Actions */}
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Rechercher un utilisateur..."
+              value={userSearch}
+              onChange={(e) => setUserSearch(e.target.value)}
+              className="form-input pl-10"
+            />
+          </div>
+          <button
+            onClick={loadUsers}
+            className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Actualiser
+          </button>
+        </div>
+
+        {/* Users Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-gray-200">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900">Utilisateur</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900">Email</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900">Rôle</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900">Statut</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredUsers.map((user) => (
+                <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50">
+                  <td className="py-3 px-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-gradient-to-br from-accent-500 to-accent-600 rounded-full flex items-center justify-center">
+                        <span className="text-white text-sm font-bold">
+                          {user.name?.charAt(0)?.toUpperCase() || 'U'}
+                        </span>
+                      </div>
+                      <span className="font-medium text-gray-900">{user.name}</span>
+                    </div>
+                  </td>
+                  <td className="py-3 px-4 text-gray-600">{user.email}</td>
+                  <td className="py-3 px-4">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      user.role === 'ADMIN' 
+                        ? 'bg-purple-100 text-purple-800' 
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {user.role}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      user.status === 'ACTIVE' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {user.status === 'ACTIVE' ? 'Actif' : 'Bloqué'}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => updateUserStatus(user.id, user.status === 'ACTIVE' ? 'BLOCKED' : 'ACTIVE')}
+                        className={`p-1 rounded ${
+                          user.status === 'ACTIVE' 
+                            ? 'text-red-500 hover:bg-red-50' 
+                            : 'text-green-500 hover:bg-green-50'
+                        }`}
+                        title={user.status === 'ACTIVE' ? 'Bloquer' : 'Activer'}
+                      >
+                        {user.status === 'ACTIVE' ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                      <button
+                        onClick={() => deleteUser(user.id)}
+                        className="p-1 text-red-500 hover:bg-red-50 rounded"
+                        title="Supprimer"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {filteredUsers.length === 0 && (
+          <div className="text-center py-8">
+            <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+            <p className="text-gray-500">Aucun utilisateur trouvé</p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+
+  const renderCountries = () => (
+    <div className="form-card">
+      <div className="card-header">
+        <MapPin className="card-icon" />
+        <h2 className="card-title">Gestion des Pays</h2>
+      </div>
+      <div className="calculator-form">
+        {/* Search and Actions */}
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Rechercher un pays..."
+              value={countrySearch}
+              onChange={(e) => setCountrySearch(e.target.value)}
+              className="form-input pl-10"
+            />
+          </div>
+          <button
+            onClick={() => setEditCountry({})}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-accent-500 to-accent-600 text-white rounded-lg hover:from-accent-600 hover:to-accent-700 transition-all"
+          >
+            <Plus className="w-4 h-4" />
+            Ajouter un pays
+          </button>
+        </div>
+
+        {/* Edit Form */}
+        {editCountry && (
+          <div className="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
+            <h3 className="font-semibold text-gray-900 mb-4">
+              {editCountry.id ? 'Modifier le pays' : 'Ajouter un pays'}
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <input
+                type="text"
+                placeholder="Nom du pays"
+                value={editCountry.name || ''}
+                onChange={(e) => setEditCountry({...editCountry, name: e.target.value})}
+                className="form-input"
+              />
+              <input
+                type="text"
+                placeholder="Code ISO"
+                value={editCountry.code || ''}
+                onChange={(e) => setEditCountry({...editCountry, code: e.target.value})}
+                className="form-input"
+              />
+              <input
+                type="number"
+                step="0.01"
+                placeholder="Droits de douane (%)"
+                value={editCountry.customsDutyRate || ''}
+                onChange={(e) => setEditCountry({...editCountry, customsDutyRate: parseFloat(e.target.value)})}
+                className="form-input"
+              />
+              <input
+                type="number"
+                step="0.01"
+                placeholder="TVA (%)"
+                value={editCountry.vatRate || ''}
+                onChange={(e) => setEditCountry({...editCountry, vatRate: parseFloat(e.target.value)})}
+                className="form-input"
+              />
+              <input
+                type="number"
+                step="0.01"
+                placeholder="Taxe parafiscale (%)"
+                value={editCountry.parafiscalRate || ''}
+                onChange={(e) => setEditCountry({...editCountry, parafiscalRate: parseFloat(e.target.value)})}
+                className="form-input"
+              />
+              <input
+                type="number"
+                step="0.01"
+                placeholder="Frais portuaires"
+                value={editCountry.portFees || ''}
+                onChange={(e) => setEditCountry({...editCountry, portFees: parseFloat(e.target.value)})}
+                className="form-input"
+              />
+            </div>
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={saveCountry}
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-accent-500 to-accent-600 text-white rounded-lg hover:from-accent-600 hover:to-accent-700 transition-all"
+              >
+                <Check className="w-4 h-4" />
+                Sauvegarder
+              </button>
+              <button
+                onClick={() => setEditCountry(null)}
+                className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <X className="w-4 h-4" />
+                Annuler
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Countries Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-gray-200">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900">Pays</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900">Code</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900">Droits de douane</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900">TVA</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900">Taxe parafiscale</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900">Frais portuaires</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredCountries.map((country) => (
+                <tr key={country.id} className="border-b border-gray-100 hover:bg-gray-50">
+                  <td className="py-3 px-4 font-medium text-gray-900">{country.name}</td>
+                  <td className="py-3 px-4">
+                    <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                      {country.code}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-gray-600">{country.customsDutyRate}%</td>
+                  <td className="py-3 px-4 text-gray-600">{country.vatRate}%</td>
+                  <td className="py-3 px-4 text-gray-600">{country.parafiscalRate}%</td>
+                  <td className="py-3 px-4 text-gray-600">${country.portFees}</td>
+                  <td className="py-3 px-4">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setEditCountry(country)}
+                        className="p-1 text-blue-500 hover:bg-blue-50 rounded"
+                        title="Modifier"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => deleteCountry(country.id)}
+                        className="p-1 text-red-500 hover:bg-red-50 rounded"
+                        title="Supprimer"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {filteredCountries.length === 0 && (
+          <div className="text-center py-8">
+            <MapPin className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+            <p className="text-gray-500">Aucun pays trouvé</p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+
+  const renderPorts = () => (
+    <div className="form-card">
+      <div className="card-header">
+        <Anchor className="card-icon" />
+        <h2 className="card-title">Gestion des Ports</h2>
+      </div>
+      <div className="calculator-form">
+        {/* Search and Actions */}
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Rechercher un port..."
+              value={portSearch}
+              onChange={(e) => setPortSearch(e.target.value)}
+              className="form-input pl-10"
+            />
+          </div>
+          <button
+            onClick={syncPortsFromOSM}
+            className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Sync OSM
+          </button>
+          <button
+            onClick={() => setEditPort({})}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-accent-500 to-accent-600 text-white rounded-lg hover:from-accent-600 hover:to-accent-700 transition-all"
+          >
+            <Plus className="w-4 h-4" />
+            Ajouter un port
+          </button>
+        </div>
+
+        {/* Edit Form */}
+        {editPort && (
+          <div className="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
+            <h3 className="font-semibold text-gray-900 mb-4">
+              {editPort.id ? 'Modifier le port' : 'Ajouter un port'}
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <input
+                type="text"
+                placeholder="Nom du port"
+                value={editPort.nomPort || ''}
+                onChange={(e) => setEditPort({...editPort, nomPort: e.target.value})}
+                className="form-input"
+              />
+              <input
+                type="text"
+                placeholder="Pays"
+                value={editPort.pays || ''}
+                onChange={(e) => setEditPort({...editPort, pays: e.target.value})}
+                className="form-input"
+              />
+              <input
+                type="text"
+                placeholder="UN/LOCODE"
+                value={editPort.unlocode || ''}
+                onChange={(e) => setEditPort({...editPort, unlocode: e.target.value})}
+                className="form-input"
+              />
+              <input
+                type="number"
+                step="0.01"
+                placeholder="Frais portuaires"
+                value={editPort.fraisPortuaires || ''}
+                onChange={(e) => setEditPort({...editPort, fraisPortuaires: parseFloat(e.target.value)})}
+                className="form-input"
+              />
+              <select
+                value={editPort.typePort || ''}
+                onChange={(e) => setEditPort({...editPort, typePort: e.target.value})}
+                className="form-select"
+              >
+                <option value="">Type de port</option>
+                <option value="Maritime">Maritime</option>
+                <option value="Aérien">Aérien</option>
+              </select>
+            </div>
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={savePort}
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-accent-500 to-accent-600 text-white rounded-lg hover:from-accent-600 hover:to-accent-700 transition-all"
+              >
+                <Check className="w-4 h-4" />
+                Sauvegarder
+              </button>
+              <button
+                onClick={() => setEditPort(null)}
+                className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <X className="w-4 h-4" />
+                Annuler
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Ports Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-gray-200">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900">Port</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900">Pays</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900">UN/LOCODE</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900">Type</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900">Frais portuaires</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredPorts.map((port) => (
+                <tr key={port.id} className="border-b border-gray-100 hover:bg-gray-50">
+                  <td className="py-3 px-4 font-medium text-gray-900">{port.nomPort}</td>
+                  <td className="py-3 px-4 text-gray-600">{port.pays}</td>
+                  <td className="py-3 px-4">
+                    <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                      {port.unlocode}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      port.typePort === 'Maritime' 
+                        ? 'bg-blue-100 text-blue-800' 
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {port.typePort}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-gray-600">${port.fraisPortuaires}</td>
+                  <td className="py-3 px-4">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setEditPort(port)}
+                        className="p-1 text-blue-500 hover:bg-blue-50 rounded"
+                        title="Modifier"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => deletePort(port.id)}
+                        className="p-1 text-red-500 hover:bg-red-50 rounded"
+                        title="Supprimer"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {filteredPorts.length === 0 && (
+          <div className="text-center py-8">
+            <Anchor className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+            <p className="text-gray-500">Aucun port trouvé</p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+
+  const renderRates = () => (
+    <div className="form-card">
+      <div className="card-header">
+        <Coins className="card-icon" />
+        <h2 className="card-title">Taux de Change</h2>
+      </div>
+      <div className="calculator-form">
+        {/* Search and Actions */}
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Rechercher une devise..."
+              value={rateSearch}
+              onChange={(e) => setRateSearch(e.target.value)}
+              className="form-input pl-10"
+            />
+          </div>
+          <button
+            onClick={syncExchangeRates}
+            className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Synchroniser
+          </button>
+          <button
+            onClick={() => {
+              const csvContent = "data:text/csv;charset=utf-8," 
+                + "Code,Nom,Taux\n"
+                + filteredRates.map(r => `${r.code},${r.name},${r.rate}`).join("\n")
+              const encodedUri = encodeURI(csvContent)
+              const link = document.createElement("a")
+              link.setAttribute("href", encodedUri)
+              link.setAttribute("download", "exchange_rates.csv")
+              document.body.appendChild(link)
+              link.click()
+              document.body.removeChild(link)
+            }}
+            className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <Download className="w-4 h-4" />
+            Exporter CSV
+          </button>
+        </div>
+
+        {/* Rates Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-gray-200">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900">Code</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900">Devise</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900">Taux (USD)</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900">Symbole</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900">Dernière mise à jour</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredRates.map((rate) => (
+                <tr key={rate.code} className="border-b border-gray-100 hover:bg-gray-50">
+                  <td className="py-3 px-4">
+                    <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                      {rate.code}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 font-medium text-gray-900">{rate.name}</td>
+                  <td className="py-3 px-4 text-gray-600">{rate.rate}</td>
+                  <td className="py-3 px-4 text-gray-600">{rate.symbol}</td>
+                  <td className="py-3 px-4 text-gray-500 text-sm">
+                    {rate.lastUpdated || new Date().toLocaleDateString()}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {filteredRates.length === 0 && (
+          <div className="text-center py-8">
+            <Coins className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+            <p className="text-gray-500">Aucun taux de change trouvé</p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'overview': return renderOverview()
+      case 'users': return renderUsers()
+      case 'countries': return renderCountries()
+      case 'ports': return renderPorts()
+      case 'rates': return renderRates()
+      default: return renderOverview()
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex">
+      <AdminSidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
+      
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
+        {/* Top Bar */}
+        <header className="bg-white shadow-sm border-b border-gray-200">
+          <div className="px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16">
+              {/* Mobile menu button */}
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="md:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+              >
+                <Menu className="w-6 h-6" />
+              </button>
+
+              {/* Page Title */}
+              <div className="flex-1">
+                <h1 className="text-xl font-semibold text-gray-900">
+                  Panneau d'Administration
+                </h1>
+                <p className="text-sm text-gray-500">
+                  Gérez utilisateurs, pays, ports et taux de change
+                </p>
+              </div>
+
+              {/* User Menu */}
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-gray-700">
+                  {user?.email} ({user?.role})
+                </span>
+                <button
+                  onClick={() => navigate('/')}
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  Retour au site
+                </button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Page Content */}
+        <main className="flex-1 p-6">
+          {/* Messages */}
+          {userMsg && (
+            <div className={`mb-6 p-4 rounded-lg border ${
+              userMsg.ok 
+                ? 'bg-green-50 border-green-200 text-green-800' 
+                : 'bg-red-50 border-red-200 text-red-800'
+            }`}>
+              <div className="flex items-center gap-2">
+                {userMsg.ok ? <Check className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+                <span className="font-medium">{userMsg.text}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Content */}
+          {renderContent()}
+        </main>
+      </div>
+    </div>
+  )
+}
+
+  const filteredUsers = users.filter(u =>
+    u.email?.toLowerCase().includes(userSearch.toLowerCase()) ||
+    u.role?.toLowerCase().includes(userSearch.toLowerCase())
+  )
+  const filteredCountries = countries.filter(c =>
+    c.name?.toLowerCase().includes(countrySearch.toLowerCase()) ||
+    c.code?.toLowerCase().includes(countrySearch.toLowerCase())
+  )
+  const filteredPorts = ports.filter(p =>
+    p.nomPort?.toLowerCase().includes(portSearch.toLowerCase()) ||
+    p.pays?.toLowerCase().includes(portSearch.toLowerCase())
+  )
+
+  const adminEmail = user?.email || localStorage.getItem('userEmail') || 'Admin'
+
+  return (
+    <div style={{minHeight:'100vh', background:'#F3F4F6'}}>
+
+      <div style={{
+        background:NAVY, padding:'0 32px',
+        display:'flex', alignItems:'center', justifyContent:'space-between',
+        height:'64px', boxShadow:'0 2px 8px rgba(0,0,0,0.15)'
+      }}>
+        <div style={{display:'flex',alignItems:'center',gap:'16px'}}>
+          <span style={{color:'white',fontWeight:'700',fontSize:'18px'}}>
+            Admin Dashboard
+          </span>
+          <span style={{color:'rgba(255,255,255,0.6)',fontSize:'14px'}}>
+            {adminEmail}
+          </span>
+        </div>
+        <button onClick={handleLogout} style={btnG}>
+          Deconnexion
+        </button>
+      </div>
+
+      <div style={{
+        display:'grid', gridTemplateColumns:'repeat(4,1fr)',
+        gap:'20px', padding:'24px 32px 0'
+      }}>
+        {[
+          {label:'Total Utilisateurs',value:stats.totalUsers,color:TEAL,icon:'👥'},
+          {label:'Actifs',value:stats.activeUsers,color:'#10B981',icon:'✅'},
+          {label:'Bloques',value:stats.blockedUsers,color:'#EF4444',icon:'🚫'},
+          {label:'Admins',value:stats.adminCount,color:GOLD,icon:'👑'}
+        ].map(s=>(
+          <div key={s.label} style={{...cardStyle,
+            borderLeft:'4px solid '+s.color}}>
+            <div style={{display:'flex',justifyContent:'space-between',
+              alignItems:'center'}}>
+              <div>
+                <p style={{margin:'0 0 8px',fontSize:'13px',
+                  color:'#6B7280',fontWeight:'500'}}>{s.label}</p>
+                <p style={{margin:0,fontSize:'32px',
+                  fontWeight:'700',color:NAVY}}>{s.value}</p>
+              </div>
+              <span style={{fontSize:'32px'}}>{s.icon}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{
+        background:'white', margin:'24px 32px 0',
+        borderRadius:'12px', boxShadow:'0 1px 3px rgba(0,0,0,0.1)',
+        display:'flex', overflowX:'auto',
+        borderBottom:'1px solid #E5E7EB'
+      }}>
+        {[
+          {key:'overview', label:'Vue d ensemble', icon:'📊'},
+          {key:'users', label:'Utilisateurs', icon:'👥'},
+          {key:'countries', label:'Pays & Tarifs', icon:'🌍'},
+          {key:'ports', label:'Ports', icon:'⚓'},
+          {key:'rates', label:'Taux de Change', icon:'💱'}
+        ].map(t=>(
+          <button key={t.key} style={tabSt(t.key)}
+            onClick={()=>setActiveTab(t.key)}>
+            {t.icon} {t.label}
+          </button>
+        ))}
+      </div>
+
+      <div style={{padding:'24px 32px'}}>
+
+        {userMsg && (
+          <div style={{
+            padding:'12px 20px', borderRadius:'8px', marginBottom:'16px',
+            background: userMsg.ok ? '#D1FAE5' : '#FEE2E2',
+            color: userMsg.ok ? '#065F46' : '#991B1B',
+            fontWeight:'600', border:'1px solid '+(userMsg.ok?'#6EE7B7':'#FCA5A5')
+          }}>
+            {userMsg.text}
+          </div>
+        )}
+
+        {activeTab === 'overview' && (
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'24px'}}>
+            <div style={cardStyle}>
+              <h3 style={{color:NAVY,margin:'0 0 20px',fontSize:'18px',fontWeight:'700'}}>
+                Repartition par Role
+              </h3>
+              {['ADMIN','EXPORTATEUR','IMPORTATEUR'].map(role => {
+                const count = users.filter(u=>u.role===role).length
+                const pct = users.length ? Math.round(count/users.length*100) : 0
+                return (
+                  <div key={role} style={{marginBottom:'16px'}}>
+                    <div style={{display:'flex',justifyContent:'space-between',
+                      marginBottom:'6px'}}>
+                      <span style={{fontSize:'14px',fontWeight:'500',color:'#374151'}}>
+                        {role}
+                      </span>
+                      <span style={{fontSize:'14px',fontWeight:'600',color:NAVY}}>
+                        {count} ({pct}%)
+                      </span>
+                    </div>
+                    <div style={{background:'#F3F4F6',borderRadius:'99px',height:'8px'}}>
+                      <div style={{
+                        width:pct+'%', height:'8px', borderRadius:'99px',
+                        background: role==='ADMIN'?GOLD:role==='EXPORTATEUR'?TEAL:'#8B5CF6',
+                        transition:'width 0.5s ease'
+                      }}/>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+            <div style={cardStyle}>
+              <h3 style={{color:NAVY,margin:'0 0 20px',fontSize:'18px',fontWeight:'700'}}>
+                Acces Rapide
+              </h3>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
+                {[
+                  {label:'Gerer Utilisateurs',tab:'users',icon:'👥',color:TEAL},
+                  {label:'Pays & Tarifs',tab:'countries',icon:'🌍',color:'#8B5CF6'},
+                  {label:'Ports',tab:'ports',icon:'⚓',color:NAVY},
+                  {label:'Taux de Change',tab:'rates',icon:'💱',color:GOLD}
+                ].map(a=>(
+                  <button key={a.tab}
+                    onClick={()=>setActiveTab(a.tab)}
+                    style={{
+                      background:a.color+'15', border:'1px solid '+a.color+'30',
+                      borderRadius:'10px', padding:'16px', cursor:'pointer',
+                      textAlign:'center', transition:'all 0.2s'
+                    }}>
+                    <div style={{fontSize:'24px',marginBottom:'8px'}}>{a.icon}</div>
+                    <div style={{fontSize:'13px',fontWeight:'600',color:a.color}}>
+                      {a.label}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'users' && (
+          <div>
+            <div style={{...cardStyle, padding:'16px 20px', marginBottom:'16px'}}>
+              <div style={{display:'flex',gap:'12px',alignItems:'center'}}>
+                <input style={{...inp,flex:1}}
+                  value={userSearch}
+                  onChange={e=>setUserSearch(e.target.value)}
+                  placeholder="Rechercher par email ou role..."/>
+                <button onClick={loadUsers} style={btnP}>
+                  Actualiser
+                </button>
+              </div>
+            </div>
+
+            <div style={{...cardStyle, padding:0, overflow:'hidden'}}>
+              <div style={{overflowX:'auto'}}>
+                <table style={{width:'100%',borderCollapse:'collapse'}}>
+                  <thead>
+                    <tr>
+                      <th style={thSt}>Email</th>
+                      <th style={thSt}>Role</th>
+                      <th style={thSt}>Statut</th>
+                      <th style={thSt}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredUsers.map(u=>(
+                      <tr key={u.id}
+                        onMouseEnter={e=>e.currentTarget.style.background='#F9FAFB'}
+                        onMouseLeave={e=>e.currentTarget.style.background='white'}>
+                        <td style={tdSt}>
+                          <div style={{fontWeight:'500',color:'#111827'}}>{u.email}</div>
+                          <div style={{fontSize:'12px',color:'#9CA3AF'}}>ID: {u.id}</div>
+                        </td>
+                        <td style={tdSt}>
+                          <select
+                            value={u.role}
+                            onChange={e=>updateUserRole(u.id,e.target.value)}
+                            style={{...inp,padding:'6px 10px',fontSize:'13px'}}>
+                            <option value="ADMIN">ADMIN</option>
+                            <option value="EXPORTATEUR">EXPORTATEUR</option>
+                            <option value="IMPORTATEUR">IMPORTATEUR</option>
+                          </select>
+                        </td>
+                        <td style={tdSt}>
+                          <span style={{
+                            display:'inline-flex', alignItems:'center', gap:'6px',
+                            padding:'4px 12px', borderRadius:'20px',
+                            fontSize:'12px', fontWeight:'600',
+                            background:u.status==='ACTIVE'?'#D1FAE5':'#FEE2E2',
+                            color:u.status==='ACTIVE'?'#065F46':'#991B1B'
+                          }}>
+                            <span style={{
+                              width:'6px', height:'6px', borderRadius:'50%',
+                              background:u.status==='ACTIVE'?'#10B981':'#EF4444'
+                            }}/>
+                            {u.status}
+                          </span>
+                        </td>
+                        <td style={tdSt}>
+                          <div style={{display:'flex',gap:'8px',flexWrap:'wrap'}}>
+                            <button
+                              onClick={()=>blockUser(u.id,u.status)}
+                              style={u.status==='BLOCKED'?
+                                {...btnB}:{...btnB,background:'#6B7280'}}>
+                              {u.status==='BLOCKED'?'Debloquer':'Bloquer'}
+                            </button>
+                            <button
+                              onClick={()=>deleteUser(u.id,u.email)}
+                              style={btnR}>
+                              Supprimer
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div style={{padding:'14px 20px',background:'#F9FAFB',
+                borderTop:'1px solid #E5E7EB',fontSize:'13px',color:'#6B7280'}}>
+                {filteredUsers.length} utilisateur(s) affiche(s) sur {users.length}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'countries' && (
+          <div>
+            <div style={{...cardStyle,padding:'16px 20px',marginBottom:'16px'}}>
+              <div style={{display:'flex',gap:'12px',alignItems:'center',marginBottom:'16px'}}>
+                <input style={{...inp,flex:1}}
+                  value={countrySearch}
+                  onChange={e=>setCountrySearch(e.target.value)}
+                  placeholder="Rechercher un pays..."/>
+                <button onClick={loadCountries} style={btnP}>
+                  Actualiser
+                </button>
+              </div>
+              <div style={{display:'flex',gap:'12px',alignItems:'center'}}>
+                <label style={{fontWeight:'600',color:NAVY}}>Afficher les frais en:</label>
+                <select
+                  value={selectedCurrency}
+                  onChange={e=>setSelectedCurrency(e.target.value)}
+                  style={{...inp,width:'200px'}}>
+                  {rates.map(r=>(
+                    <option key={r.code} value={r.code}>
+                      {r.code} — {r.currency}
+                    </option>
+                  ))}
+                </select>
+                <button onClick={async()=>{
+                  await fetch('http://localhost:8080/api/admin/countries/sync',
+                    {headers:{'Authorization':'Bearer '+TOKEN()}})
+                  loadCountries()
+                }} style={btnP}>
+                  Sync API
+                </button>
+              </div>
+            </div>
+            <div style={{...cardStyle,padding:0,overflow:'hidden'}}>
+              <div style={{overflowX:'auto'}}>
+                <table style={{width:'100%',borderCollapse:'collapse'}}>
+                  <thead>
+                    <tr>
+                      {['Drapeau','Code','Pays','Région','Devise','Douane %','TVA %',
+                        'Parafiscal %','Frais Portuaires ('+selectedCurrency+')','Actions'].map(h=>(
+                        <th key={h} style={thSt}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredCountries.map((c,i)=>(
+                      <tr key={c.id||i}
+                        onMouseEnter={e=>e.currentTarget.style.background='#F9FAFB'}
+                        onMouseLeave={e=>e.currentTarget.style.background='white'}>
+                        <td style={tdSt}>
+                          {c.flagUrl && (
+                            <img src={c.flagUrl} alt={c.code}
+                              style={{width:'32px',height:'20px',objectFit:'cover',
+                                borderRadius:'3px'}}
+                              onError={e=>e.target.style.display='none'}/>
+                          )}
+                        </td>
+                        <td style={{...tdSt,fontFamily:'monospace',fontWeight:'600',
+                          color:NAVY}}>
+                          {c.code||c.countryCode||'—'}
+                        </td>
+                        <td style={{...tdSt,fontWeight:'500',color:'#111827'}}>
+                          {c.name||c.countryName||'—'}
+                        </td>
+                        <td style={tdSt}>
+                          <span style={{background:'#F3F4F6',padding:'4px 8px',
+                            borderRadius:'6px',fontSize:'12px',fontWeight:'500'}}>
+                            {c.region||'—'}
+                          </span>
+                        </td>
+                        <td style={tdSt}>
+                          {c.currency||'—'}
+                        </td>
+                        <td style={tdSt}>
+                          {c.customsDutyRate||c.dutyRate||'0'}%
+                        </td>
+                        <td style={tdSt}>
+                          {c.vatRate||c.tva||'0'}%
+                        </td>
+                        <td style={tdSt}>
+                          {c.parafiscalRate||c.parafiscal||'0'}%
+                        </td>
+                        <td style={tdSt}>
+                          {convertFees(c.portFees||c.fraisPortuaires||0, selectedCurrency)} {selectedCurrency}
+                        </td>
+                        <td style={tdSt}>
+                          <button
+                            onClick={()=>setEditCountry(c)}
+                            style={btnS}>
+                            Modifier
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div style={{padding:'14px 20px',background:'#F9FAFB',
+                borderTop:'1px solid #E5E7EB',fontSize:'13px',color:'#6B7280'}}>
+                {filteredCountries.length} pays affiche(s)
+              </div>
+            </div>
+
+            {editCountry && (
+              <div style={{
+                position:'fixed',top:0,left:0,right:0,bottom:0,
+                background:'rgba(0,0,0,0.5)',display:'flex',
+                alignItems:'center',justifyContent:'center',zIndex:1000
+              }}>
+                <div style={{background:'white',borderRadius:'12px',
+                  padding:'32px',width:'480px',maxWidth:'90vw'}}>
+                  <h3 style={{color:NAVY,margin:'0 0 24px'}}>
+                    Modifier: {editCountry.name||editCountry.countryName}
+                  </h3>
+                  {[
+                    {label:'Droits Douane %',key:'customsDutyRate'},
+                    {label:'TVA %',key:'vatRate'},
+                    {label:'Taxe Parafiscale %',key:'parafiscalRate'},
+                    {label:'Frais Portuaires',key:'portFees'}
+                  ].map(f=>(
+                    <div key={f.key} style={{marginBottom:'16px'}}>
+                      <label style={{display:'block',marginBottom:'6px',
+                        fontWeight:'600',color:'#374151',fontSize:'14px'}}>
+                        {f.label}
+                      </label>
+                      <input style={{...inp,width:'100%',boxSizing:'border-box'}}
+                        type="number" step="0.01"
+                        value={editCountry[f.key]||0}
+                        onChange={e=>setEditCountry(p=>({
+                          ...p,[f.key]:e.target.value
+                        }))}/>
+                    </div>
+                  ))}
+                  <div style={{display:'flex',gap:'12px',marginTop:'24px'}}>
+                    <button onClick={async ()=>{
+                      try {
+                        await api.put('/admin/countries/'+editCountry.id, editCountry)
+                        showMsg('Pays mis a jour')
+                        setEditCountry(null)
+                        loadCountries()
+                      } catch(e) { showMsg('Erreur: '+e.message,false) }
+                    }} style={btnP}>
+                      Enregistrer
+                    </button>
+                    <button onClick={()=>setEditCountry(null)}
+                      style={{...btnP,background:'#6B7280'}}>
+                      Annuler
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'ports' && (
+          <div>
+            <div style={{...cardStyle,padding:'16px 20px',marginBottom:'16px'}}>
+              <div style={{display:'flex',gap:'12px',alignItems:'center',marginBottom:'16px'}}>
+                <span style={{color:TEAL,fontWeight:'700',fontSize:'18px'}}>
+                  {ports.length} ports
+                </span>
+                <button onClick={async () => {
+                  await fetch('http://localhost:8080/api/admin/ports/sync-osm',
+                    {headers:{'Authorization':'Bearer '+TOKEN()}})
+                  alert('Sync OSM démarré! Les ports arrivent dans 2-3 min...')
+                  // Poll every 10s
+                  const interval = setInterval(async () => {
+                    await loadPorts()
+                  }, 10000)
+                  setTimeout(() => clearInterval(interval), 300000)
+                }} style={{...btnP, background:TEAL}}>
+                  🗺️ Sync OpenStreetMap
+                </button>
+                <input
+                  placeholder="Rechercher port ou pays..."
+                  value={portSearch || ''}
+                  onChange={e => setPortSearch(e.target.value)}
+                  style={{...inp, width:'250px'}}
+                />
+                <button onClick={loadPorts} style={btnP}>🔍 Chercher</button>
+              </div>
+            </div>
+            <div style={{...cardStyle,padding:0,overflow:'hidden'}}>
+              <div style={{overflowX:'auto'}}>
+                <table style={{width:'100%',borderCollapse:'collapse'}}>
+                  <thead>
+                    <tr>
+                      {['Nom','Pays','Code','Frais','Type','Actions'].map(h=>(
+                        <th key={h} style={thSt}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredPorts.map((p,i)=>(
+                      <tr key={p.id||i}
+                        onMouseEnter={e=>e.currentTarget.style.background='#F9FAFB'}
+                        onMouseLeave={e=>e.currentTarget.style.background='white'}>
+                        <td style={{...tdSt,fontWeight:'500',color:'#111827'}}>
+                          {p.nomPort||p.name||'—'}
+                        </td>
+                        <td style={tdSt}>
+                          {p.pays||p.country||'—'}
+                        </td>
+                        <td style={{...tdSt,fontFamily:'monospace',color:NAVY,
+                          fontWeight:'600'}}>
+                          {p.unlocode||p.code||'—'}
+                        </td>
+                        <td style={tdSt}>
+                          {p.fraisPortuaires||p.cost||'0'} EUR
+                        </td>
+                        <td style={tdSt}>
+                          <span style={{
+                            padding:'3px 10px', borderRadius:'12px',
+                            fontSize:'12px', fontWeight:'600',
+                            background:'#EFF6FF', color:'#1E40AF'
+                          }}>
+                            {p.typePort||p.type||'Maritime'}
+                          </span>
+                        </td>
+                        <td style={tdSt}>
+                          <button
+                            onClick={()=>setEditPort(p)}
+                            style={btnS}>
+                            Modifier
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div style={{padding:'14px 20px',background:'#F9FAFB',
+                borderTop:'1px solid #E5E7EB',fontSize:'13px',color:'#6B7280'}}>
+                {filteredPorts.length} port(s) affiche(s)
+              </div>
+            </div>
+
+            {editPort && (
+              <div style={{
+                position:'fixed',top:0,left:0,right:0,bottom:0,
+                background:'rgba(0,0,0,0.5)',display:'flex',
+                alignItems:'center',justifyContent:'center',zIndex:1000
+              }}>
+                <div style={{background:'white',borderRadius:'12px',
+                  padding:'32px',width:'480px',maxWidth:'90vw'}}>
+                  <h3 style={{color:NAVY,margin:'0 0 24px'}}>
+                    Modifier Port: {editPort.nomPort||editPort.name}
+                  </h3>
+                  {[
+                    {label:'Nom du port',key:'nomPort'},
+                    {label:'Code port',key:'unlocode'},
+                    {label:'Frais EUR',key:'fraisPortuaires'},
+                    {label:'Type',key:'typePort'}
+                  ].map(f=>(
+                    <div key={f.key} style={{marginBottom:'16px'}}>
+                      <label style={{display:'block',marginBottom:'6px',
+                        fontWeight:'600',color:'#374151',fontSize:'14px'}}>
+                        {f.label}
+                      </label>
+                      <input
+                        style={{...inp,width:'100%',boxSizing:'border-box'}}
+                        value={editPort[f.key]||''}
+                        onChange={e=>setEditPort(p=>({
+                          ...p,[f.key]:e.target.value
+                        }))}/>
+                    </div>
+                  ))}
+                  <div style={{display:'flex',gap:'12px',marginTop:'24px'}}>
+                    <button onClick={async ()=>{
+                      try {
+                        await api.put('/ports/'+editPort.id, editPort)
+                        showMsg('Port mis a jour')
+                        setEditPort(null)
+                        loadPorts()
+                      } catch(e) { showMsg('Erreur: '+e.message,false) }
+                    }} style={btnP}>
+                      Enregistrer
+                    </button>
+                    <button onClick={()=>setEditPort(null)}
+                      style={{...btnP,background:'#6B7280'}}>
+                      Annuler
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'rates' && (
+          <div>
+            <div style={{...cardStyle,padding:'16px 20px',marginBottom:'16px'}}>
+              <div style={{display:'flex',gap:'12px',alignItems:'center'}}>
+                <input style={{...inp,flex:1}}
+                  value={rateSearch}
+                  onChange={e=>setRateSearch(e.target.value)}
+                  placeholder="Rechercher une devise..."/>
+                <button onClick={loadRates} style={btnP}>
+                  Actualiser
+                </button>
+              </div>
+            </div>
+            <div style={{...cardStyle,padding:0,overflow:'hidden'}}>
+              <div style={{overflowX:'auto'}}>
+                const renderCountries = () => (
+    <div className="form-card">
+      <div className="card-header">
+        <MapPin className="card-icon" />
+        <h2 className="card-title">Gestion des Pays</h2>
+      </div>
+      <div className="calculator-form">
+        {/* Search and Actions */}
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Rechercher un pays..."
+              value={countrySearch}
+              onChange={(e) => setCountrySearch(e.target.value)}
+              className="form-input pl-10"
+            />
+          </div>
+          <button
+            onClick={() => setEditCountry({})}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-accent-500 to-accent-600 text-white rounded-lg hover:from-accent-600 hover:to-accent-700 transition-all"
+          >
+            <Plus className="w-4 h-4" />
+            Ajouter un pays
+          </button>
+        </div>
+
+        {/* Countries Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-gray-200">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900">Pays</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900">Code</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-900">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredCountries.map((country) => (
+                <tr key={country.id} className="border-b border-gray-100 hover:bg-gray-50">
+                  <td className="py-3 px-4 font-medium text-gray-900">{country.name}</td>
+                  <td className="py-3 px-4">
+                    <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                      {country.code}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setEditCountry(country)}
+                        className="p-1 text-blue-500 hover:bg-blue-50 rounded"
+                        title="Modifier"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => deleteCountry(country.id)}
+                        className="p-1 text-red-500 hover:bg-red-50 rounded"
+                        title="Supprimer"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {filteredCountries.length === 0 && (
+          <div className="text-center py-8">
+            <MapPin className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+            <p className="text-gray-500">Aucun pays trouvé</p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+    <div className="min-h-screen bg-gray-50 flex">
+      <AdminSidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
+      
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
+        {/* Top Bar */}
+        <header className="bg-white shadow-sm border-b border-gray-200">
+          <div className="px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16">
+              {/* Mobile menu button */}
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="md:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+              >
+                <Menu className="w-6 h-6" />
+              </button>
+
+              {/* Page Title */}
+              <div className="flex-1">
+                <h1 className="text-xl font-semibold text-gray-900">
+                  Panneau d'Administration
+                </h1>
+                <p className="text-sm text-gray-500">
+                  Gérez utilisateurs, pays, ports et taux de change
+                </p>
+              </div>
+
+              {/* User Menu */}
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-gray-700">
+                  {user?.email} ({user?.role})
+                </span>
+                <button
+                  onClick={() => navigate('/')}
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  Retour au site
+                </button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Page Content */}
+        <main className="flex-1 p-6">
+          {/* Messages */}
+          {userMsg && (
+            <div className={`mb-6 p-4 rounded-lg border ${
+              userMsg.ok 
+                ? 'bg-green-50 border-green-200 text-green-800' 
+                : 'bg-red-50 border-red-200 text-red-800'
+            }`}>
+              <div className="flex items-center gap-2">
+                {userMsg.ok ? <Check className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+                <span className="font-medium">{userMsg.text}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Content */}
+          {renderContent()}
+        </main>
+      </div>
+    </div>
+  )
+}

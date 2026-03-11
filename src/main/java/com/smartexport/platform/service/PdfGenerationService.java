@@ -777,4 +777,228 @@ public class PdfGenerationService {
         if (amount == null) return "0.00 " + (currency != null ? currency : "USD");
         return String.format("%.2f %s", amount.doubleValue(), currency != null ? currency : "USD");
     }
+
+    public byte[] generateImportLandedCostPdf(com.smartexport.platform.dto.ImportLandedCostResultDto result) 
+            throws java.io.IOException {
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        
+        PdfWriter writer = new PdfWriter(baos);
+        PdfDocument pdf = new PdfDocument(writer);
+        Document document = new Document(pdf);
+        
+        try {
+            // Police
+            PdfFont font = PdfFontFactory.createFont("Helvetica");
+            
+            // Page 1 - Cover + Détail importateur
+            addImportCoverPage(document, result, font);
+            
+            // Page 2 - Tableau des coûts détaillés
+            document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+            addImportCostBreakdownPage(document, result, font);
+            
+            // Page 3 - Analyse de sensibilité
+            document.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+            addImportAnalysisPage(document, result, font);
+            
+        } finally {
+            document.close();
+        }
+        
+        return baos.toByteArray();
+    }
+    
+    private void addImportCoverPage(Document document, com.smartexport.platform.dto.ImportLandedCostResultDto result, PdfFont font) {
+        // Titre principal
+        Paragraph title = new Paragraph("IMPORT COST REPORT")
+            .setFont(font)
+            .setFontSize(28)
+            .setBold()
+            .setTextAlignment(TextAlignment.CENTER)
+            .setMarginTop(100);
+        document.add(title);
+        
+        Paragraph subtitle = new Paragraph("Landed Cost Analysis")
+            .setFont(font)
+            .setFontSize(16)
+            .setTextAlignment(TextAlignment.CENTER)
+            .setMarginTop(10)
+            .setFontColor(new DeviceRgb(100, 100, 100));
+        document.add(subtitle);
+        
+        // Bloc méta
+        Table metaTable = new Table(3)
+            .setWidth(UnitValue.createPercentValue(80))
+            .setHorizontalAlignment(HorizontalAlignment.CENTER)
+            .setMarginTop(80);
+        
+        metaTable.addCell(createMetaCell("ORIGINE", result.getReference() != null ? result.getReference().split("-")[0] : "N/A", font));
+        metaTable.addCell(createMetaCell("DESTINATION", result.getDevise(), font));
+        metaTable.addCell(createMetaCell("CODE HS", "IMPORT", font));
+        
+        document.add(metaTable);
+        
+        // Référence
+        Paragraph ref = new Paragraph("Référence: " + (result.getReference() != null ? result.getReference() : "N/A"))
+            .setFont(font)
+            .setFontSize(12)
+            .setTextAlignment(TextAlignment.CENTER)
+            .setMarginTop(50);
+        document.add(ref);
+    }
+    
+    private void addImportCostBreakdownPage(Document document, com.smartexport.platform.dto.ImportLandedCostResultDto result, PdfFont font) {
+        Paragraph title = new Paragraph("DÉTAIL DES COÛTS D'IMPORTATION")
+            .setFont(font)
+            .setFontSize(20)
+            .setBold()
+            .setTextAlignment(TextAlignment.CENTER)
+            .setMarginTop(50);
+        document.add(title);
+        
+        // Tableau des coûts
+        Table costTable = new Table(3)
+            .setWidth(UnitValue.createPercentValue(90))
+            .setHorizontalAlignment(HorizontalAlignment.CENTER)
+            .setMarginTop(30);
+        
+        // En-tête
+        costTable.addCell(createHeaderCell("LIBELLÉ", font));
+        costTable.addCell(createHeaderCell("MONTANT", font));
+        costTable.addCell(createHeaderCell("%", font));
+        
+        // Lignes de coûts
+        addCostRow(costTable, "Valeur FOB", result.getValeurFob(), result.getValeurFob(), font, result.getDevise());
+        addCostRow(costTable, "Fret maritime", result.getFretMaritime(), result.getValeurFob(), font, result.getDevise());
+        addCostRow(costTable, "Assurance", result.getAssurance(), result.getValeurFob(), font, result.getDevise());
+        
+        // Sous-total CIF
+        addSubtotalRow(costTable, "Valeur CIF", result.getValeurCif(), font, result.getDevise());
+        
+        addCostRow(costTable, "Droits de douane", result.getDroitsDouaneImport(), result.getValeurCif(), font, result.getDevise());
+        addCostRow(costTable, "TVA import", result.getTvaImport(), result.getValeurCif(), font, result.getDevise());
+        addCostRow(costTable, "Frais portuaires", result.getFraisPortuairesDestination(), result.getValeurCif(), font, result.getDevise());
+        addCostRow(costTable, "Autres frais", result.getAutresFrais(), result.getValeurCif(), font, result.getDevise());
+        
+        // Total
+        addTotalRow(costTable, "TOTAL LANDED COST", result.getTotalLandedCost(), font, result.getDevise());
+        
+        document.add(costTable);
+    }
+    
+    private void addImportAnalysisPage(Document document, com.smartexport.platform.dto.ImportLandedCostResultDto result, PdfFont font) {
+        Paragraph title = new Paragraph("ANALYSE DE SENSIBILITÉ")
+            .setFont(font)
+            .setFontSize(20)
+            .setBold()
+            .setTextAlignment(TextAlignment.CENTER)
+            .setMarginTop(50);
+        document.add(title);
+        
+        // Analyse simplifiée
+        Table analysisTable = new Table(2)
+            .setWidth(UnitValue.createPercentValue(80))
+            .setHorizontalAlignment(HorizontalAlignment.CENTER)
+            .setMarginTop(30);
+        
+        analysisTable.addCell(createHeaderCell("SCÉNARIO", font));
+        analysisTable.addCell(createHeaderCell("TOTAL LANDED COST", font));
+        
+        // Scénario base
+        Cell baseScenario = new Cell()
+            .add(new Paragraph("Scénario base").setFont(font).setFontSize(12))
+            .setBorder(new SolidBorder(ColorConstants.BLACK, 1))
+            .setPadding(8);
+        analysisTable.addCell(baseScenario);
+        
+        Cell baseCost = new Cell()
+            .add(new Paragraph(safeMoney(result.getTotalLandedCost(), result.getDevise())).setFont(font).setFontSize(12))
+            .setBorder(new SolidBorder(ColorConstants.BLACK, 1))
+            .setPadding(8);
+        analysisTable.addCell(baseCost);
+        
+        document.add(analysisTable);
+    }
+    
+    private Cell createMetaCell(String label, String value, PdfFont font) {
+        Cell cell = new Cell()
+            .add(new Paragraph(label).setFont(font).setFontSize(10).setBold())
+            .add(new Paragraph(value).setFont(font).setFontSize(12))
+            .setBorder(new SolidBorder(ColorConstants.BLACK, 1))
+            .setPadding(10)
+            .setTextAlignment(TextAlignment.CENTER);
+        return cell;
+    }
+    
+    private Cell createHeaderCell(String text, PdfFont font) {
+        Cell cell = new Cell()
+            .add(new Paragraph(text).setFont(font).setFontSize(12).setBold())
+            .setBackgroundColor(new DeviceRgb(50, 50, 50))
+            .setFontColor(ColorConstants.WHITE)
+            .setBorder(new SolidBorder(ColorConstants.BLACK, 1))
+            .setPadding(8)
+            .setTextAlignment(TextAlignment.CENTER);
+        return cell;
+    }
+    
+    private void addCostRow(Table table, String label, java.math.BigDecimal amount, java.math.BigDecimal base, PdfFont font, String currency) {
+        table.addCell(new Cell()
+            .add(new Paragraph(label).setFont(font).setFontSize(11))
+            .setBorder(new SolidBorder(ColorConstants.BLACK, 1))
+            .setPadding(6));
+        
+        table.addCell(new Cell()
+            .add(new Paragraph(safeMoney(amount, currency)).setFont(font).setFontSize(11))
+            .setBorder(new SolidBorder(ColorConstants.BLACK, 1))
+            .setPadding(6));
+        
+        java.math.BigDecimal percentage = base != null && base.compareTo(java.math.BigDecimal.ZERO) > 0 
+            ? amount.divide(base, 4, java.math.RoundingMode.HALF_UP).multiply(java.math.BigDecimal.valueOf(100))
+            : java.math.BigDecimal.ZERO;
+        
+        table.addCell(new Cell()
+            .add(new Paragraph(String.format("%.2f%%", percentage.doubleValue())).setFont(font).setFontSize(11))
+            .setBorder(new SolidBorder(ColorConstants.BLACK, 1))
+            .setPadding(6));
+    }
+    
+    private void addSubtotalRow(Table table, String label, java.math.BigDecimal amount, PdfFont font, String currency) {
+        table.addCell(new Cell()
+            .add(new Paragraph(label).setFont(font).setFontSize(11).setBold())
+            .setBorder(new SolidBorder(ColorConstants.BLACK, 1))
+            .setPadding(6));
+        
+        table.addCell(new Cell()
+            .add(new Paragraph(safeMoney(amount, currency)).setFont(font).setFontSize(11).setBold())
+            .setBorder(new SolidBorder(ColorConstants.BLACK, 1))
+            .setPadding(6));
+        
+        table.addCell(new Cell()
+            .add(new Paragraph("").setFont(font).setFontSize(11))
+            .setBorder(new SolidBorder(ColorConstants.BLACK, 1))
+            .setPadding(6));
+    }
+    
+    private void addTotalRow(Table table, String label, java.math.BigDecimal amount, PdfFont font, String currency) {
+        table.addCell(new Cell()
+            .add(new Paragraph(label).setFont(font).setFontSize(12).setBold())
+            .setBackgroundColor(new DeviceRgb(0, 0, 0))
+            .setFontColor(ColorConstants.WHITE)
+            .setBorder(new SolidBorder(ColorConstants.BLACK, 1))
+            .setPadding(8));
+        
+        table.addCell(new Cell()
+            .add(new Paragraph(safeMoney(amount, currency)).setFont(font).setFontSize(12).setBold())
+            .setBackgroundColor(new DeviceRgb(0, 0, 0))
+            .setFontColor(ColorConstants.WHITE)
+            .setBorder(new SolidBorder(ColorConstants.BLACK, 1))
+            .setPadding(8));
+        
+        table.addCell(new Cell()
+            .add(new Paragraph("").setFont(font).setFontSize(12))
+            .setBackgroundColor(new DeviceRgb(0, 0, 0))
+            .setFontColor(ColorConstants.WHITE)
+            .setBorder(new SolidBorder(ColorConstants.BLACK, 1))
+            .setPadding(8));
+    }
 }

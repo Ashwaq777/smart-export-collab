@@ -7,7 +7,7 @@ const CostDashboard = ({ result }) => {
   const formatCurrency = (value, currency = result.currency) => {
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
-      currency: currency,
+      currency: currency || 'USD',
       minimumFractionDigits: 2,
     }).format(value)
   }
@@ -114,13 +114,14 @@ const CostDashboard = ({ result }) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
         {kpiCards.map((kpi, index) => {
           const Icon = kpi.icon
           return (
             <div
               key={index}
               className="bg-white border-2 border-gray-200 rounded-xl p-6 hover:border-accent-500 transition-all duration-300 hover:shadow-lg group"
+              style={{ flex: '1', minWidth: '0', overflow: 'visible' }}
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="p-2 rounded-lg bg-accent-100 group-hover:bg-accent-200 transition-colors">
@@ -132,8 +133,8 @@ const CostDashboard = ({ result }) => {
                   </span>
                 )}
               </div>
-              <p className="text-xs text-gray-500 mb-1 font-semibold uppercase tracking-wide">{kpi.title}</p>
-              <p className="text-2xl font-bold text-maritime-navy">
+              <p className="text-xs text-gray-500 mb-1 font-semibold uppercase tracking-wide break-words overflow-hidden whitespace-normal">{kpi.title}</p>
+              <p className="text-base font-bold text-maritime-navy" style={{ overflow: 'visible', wordBreak: 'break-all', fontSize: '14px', lineHeight: '1.2' }}>
                 {formatCurrency(kpi.value, kpi.currency)}
               </p>
             </div>
@@ -388,7 +389,7 @@ const CostLine = ({ label, value, currency, bold = false, large = false }) => {
   const formatCurrency = (val, curr) => {
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
-      currency: curr,
+      currency: curr || 'USD',
       minimumFractionDigits: 2,
     }).format(val)
   }

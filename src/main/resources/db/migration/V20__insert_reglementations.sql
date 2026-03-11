@@ -1,0 +1,60 @@
+CREATE TABLE IF NOT EXISTS reglementation_config (
+  id BIGSERIAL PRIMARY KEY,
+  code VARCHAR(50) UNIQUE NOT NULL,
+  nom VARCHAR(200) NOT NULL,
+  zone VARCHAR(50) NOT NULL,
+  pays VARCHAR(100),
+  description TEXT,
+  champs_obligatoires TEXT,
+  actif BOOLEAN DEFAULT true
+);
+
+CREATE TABLE IF NOT EXISTS reglementation_champs_obligatoires (
+  id BIGSERIAL PRIMARY KEY,
+  reglementation_id BIGINT NOT NULL,
+  champ VARCHAR(100) NOT NULL,
+  FOREIGN KEY (reglementation_id) REFERENCES reglementation_config(id) ON DELETE CASCADE
+);
+
+INSERT INTO reglementation_config 
+(code, nom, zone, pays, description, champs_obligatoires) VALUES
+('FSMA_204','FSMA 204','AMÉRIQUES','États-Unis','Food Safety Modernization Act',
+'traceabilityLotCode,producteur,dateRecolte,nomExpediteur,dateExpedition'),
+('SFCA','Safe Food for Canadians Act','AMÉRIQUES','Canada',
+'Réglementation canadienne','traceabilityLotCode,producteur,dateRecolte'),
+('UE_178_2002','Règlement UE 178/2002','EUROPE','Union Européenne',
+'Traçabilité générale UE','traceabilityLotCode,producteur,nomDestinataire'),
+('FR_AGRO','FR_AGRO','EUROPE','France',
+'Réglementation française','traceabilityLotCode,producteur,dateRecolte,parcelle'),
+('DE_LMBG','DE LMBG','EUROPE','Allemagne',
+'Réglementation allemande','traceabilityLotCode,producteur,siteProductionNom'),
+('FSANZ','Food Standards Australia NZ','OCÉANIE','Australie/NZ',
+'Standard alimentaire','traceabilityLotCode,producteur'),
+('NZ_FSA','NZ FSA','OCÉANIE','Nouvelle-Zélande',
+'Autorité alimentaire NZ','traceabilityLotCode,producteur,lotCommercial'),
+('FSSAI','Food Safety Standards','ASIE','Inde',
+'Autorité sécurité alimentaire Inde','traceabilityLotCode,producteur,dateRecolte'),
+('GB_2763','GB 2763','ASIE','Chine',
+'Résidus pesticides Chine','traceabilityLotCode,producteur,parcelle'),
+('JP_FSL','JP Food Sanitation','ASIE','Japon',
+'Loi sanitaire Japon','traceabilityLotCode,producteur,siteProductionAdresse'),
+('KR_MFDS','KR MFDS','ASIE','Corée du Sud',
+'Autorité sécurité alimentaire Corée','traceabilityLotCode,producteur,lotSanitaire'),
+('SFDA','Saudi Food & Drug Authority','MOYEN-ORIENT','Arabie Saoudite',
+'Réglementation saoudienne','traceabilityLotCode,producteur'),
+('AE_ESMA','AE ESMA','MOYEN-ORIENT','Émirats Arabes Unis',
+'Autorité Émirats','traceabilityLotCode,producteur,nomExpediteur'),
+('ARS_855','ARS 855','AFRIQUE','Afrique du Sud',
+'Standard Afrique du Sud','traceabilityLotCode,producteur'),
+('NG_NAFDAC','NG NAFDAC','AFRIQUE','Nigeria',
+'Autorité Nigériane','traceabilityLotCode,producteur,dateProduction'),
+('KE_KEBS','KE KEBS','AFRIQUE','Kenya',
+'Bureau standards Kenya','traceabilityLotCode,producteur,destination'),
+('BR_ANVISA','BR ANVISA','AMÉRIQUES','Brésil',
+'Agence Brésilienne','traceabilityLotCode,producteur,lotCommercial'),
+('MX_COFEPRIS','MX COFEPRIS','AMÉRIQUES','Mexique',
+'Autorité Mexicaine','traceabilityLotCode,producteur,numeroAgrementSanitaire'),
+('IT_SANITA','IT SANITA','EUROPE','Italie',
+'Autorité Italienne','traceabilityLotCode,producteur,numeroDocument'),
+('ES_AECOSAN','ES AECOSAN','EUROPE','Espagne',
+'Agence Espagnole','traceabilityLotCode,producteur,certificatSanitaire');

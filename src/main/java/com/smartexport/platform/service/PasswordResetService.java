@@ -42,7 +42,7 @@ public class PasswordResetService {
 
     public void requestReset(String email) {
         // ADDED: Do not disclose whether email exists
-        Optional<User> userOpt = userRepository.findByEmailIgnoreCase(email);
+        Optional<User> userOpt = userRepository.findByEmail(email);
         if (userOpt.isEmpty()) {
             return;
         }
@@ -52,20 +52,20 @@ public class PasswordResetService {
         LocalDateTime expiry = LocalDateTime.now().plusMinutes(expiryMinutes);
 
         PasswordReset pr = new PasswordReset();
-        pr.user = user;
-        pr.token = token;
-        pr.expiryDate = expiry;
-        pr.used = false;
+        pr.setUser(user);
+        pr.setToken(token);
+        pr.setExpiryDate(expiry);
+        pr.setUsed(false);
 
         passwordResetRepository.save(pr);
 
         String link = resetPasswordBaseUrl + "?token=" + token;
-        emailService.sendPasswordResetEmail(user.getEmail(), link, expiryMinutes);
+        emailService.sendPasswordResetEmail(user.getEmail(), token);
     }
 
     public boolean validateToken(String token) {
         return passwordResetRepository.findByToken(token)
-                .filter(pr -> Boolean.FALSE.equals(pr.used))
+                .filter(pr -> Boolean.FALSE.equals(pr.getUsed()))
                 .filter(pr -> pr.getExpiryDate() != null && LocalDateTime.now().isBefore(pr.getExpiryDate()))
                 .isPresent();
     }
@@ -74,15 +74,15 @@ public class PasswordResetService {
         PasswordReset pr = passwordResetRepository.findByToken(token)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid token"));
 
-        if (Boolean.TRUE.equals(pr.used)) {
+        if (Boolean.TRUE.equals(pr.getUsed())) {
             throw new IllegalArgumentException("Token already used");
         }
         if (pr.getExpiryDate() == null || LocalDateTime.now().isAfter(pr.getExpiryDate())) {
             throw new IllegalArgumentException("Token expired");
         }
 
-        User user = pr.user;
-        user.passwordHash = passwordEncoder.encode(newPassword);
+        User user = pr.getUser();
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
         userRepository.save(user);
 
         pr.setUsed(true);

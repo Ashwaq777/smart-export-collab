@@ -2,6 +2,7 @@ package com.smartexport.platform.controller;
 
 import com.smartexport.platform.dto.*;
 import com.smartexport.platform.service.CalculationService;
+import com.smartexport.platform.service.ImportCalculationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,11 +17,19 @@ import java.math.BigDecimal;
 public class CalculationController {
     
     private final CalculationService calculationService;
+    private final ImportCalculationService importCalculationService;
     
     @PostMapping("/landed-cost")
     public ResponseEntity<LandedCostResultDto> calculateLandedCost(
             @Valid @RequestBody LandedCostCalculationDto request) {
         LandedCostResultDto result = calculationService.calculateLandedCost(request);
+        return ResponseEntity.ok(result);
+    }
+    
+    @PostMapping("/landed-cost-import")
+    public ResponseEntity<ImportLandedCostResultDto> calculateImportLandedCost(
+            @Valid @RequestBody ImportLandedCostDto request) {
+        ImportLandedCostResultDto result = importCalculationService.calculateImportLandedCost(request);
         return ResponseEntity.ok(result);
     }
     

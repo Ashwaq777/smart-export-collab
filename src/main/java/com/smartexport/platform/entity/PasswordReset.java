@@ -40,4 +40,17 @@ public class PasswordReset {
             createdAt = LocalDateTime.now();
         }
     }
+    
+    // Getters et Setters manuels pour le champ used
+    public boolean isUsed() {
+        return used;
+    }
+    
+    public boolean getUsed() {
+        return used;
+    }
+    
+    public void setUsed(boolean used) {
+        this.used = used;
+    }
 }

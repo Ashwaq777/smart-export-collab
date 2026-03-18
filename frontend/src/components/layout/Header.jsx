@@ -21,6 +21,11 @@ export const Header = () => {
     { path: '/', label: 'Home' },
     ...(user?.role !== 'ADMIN' ? [{ path: '/calculator', label: 'Calculator' }] : []),
     ...(user?.role !== 'ADMIN' ? [{ path: '/traceability', label: 'Traçabilité' }] : []),
+    ...(user?.role !== 'ADMIN' ? [
+      { path: '/containers', label: '🚢 Conteneurs' },
+      { path: '/containers/matches', label: '🤝 Correspondances' },
+      { path: '/containers/transactions', label: '📋 Transactions' }
+    ] : []),
     { path: '/about', label: 'About Us' },
     ...(user?.role === 'ADMIN' ? [{ path: '/admin', label: 'Admin' }] : []),
   ]
@@ -32,7 +37,8 @@ export const Header = () => {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      style={{ position: 'relative', zIndex: 100 }}
+      className={`fixed top-0 left-0 right-0 transition-all duration-300 ${
         isScrolled
           ? 'bg-white shadow-lg py-3'
           : 'bg-white/95 backdrop-blur-sm py-4'

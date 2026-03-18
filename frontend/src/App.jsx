@@ -14,6 +14,9 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
+import ContainerDashboard from './pages/containers/ContainerDashboard'
+import MatchesPage from './pages/containers/MatchesPage'
+import TransactionsPage from './pages/containers/TransactionsPage'
 
 function App() {
   return (
@@ -53,6 +56,29 @@ function App() {
               <ProtectedRoute>
                 <MainLayout>
                   <About />
+                </MainLayout>
+              </ProtectedRoute>
+            } />
+
+            {/* Container Routes */}
+            <Route path="/containers" element={
+              <ProtectedRoute excludeRole="ADMIN">
+                <MainLayout>
+                  <ContainerDashboard />
+                </MainLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/containers/matches" element={
+              <ProtectedRoute excludeRole="ADMIN">
+                <MainLayout>
+                  <MatchesPage />
+                </MainLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/containers/transactions" element={
+              <ProtectedRoute excludeRole="ADMIN">
+                <MainLayout>
+                  <TransactionsPage />
                 </MainLayout>
               </ProtectedRoute>
             } />

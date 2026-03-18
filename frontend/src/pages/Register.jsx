@@ -37,7 +37,7 @@ const Register = () => {
     'Oman', 'Ouganda', 'Ouzbékistan',
     'Pakistan', 'Palaos', 'Panama', 'Papouasie-Nouvelle-Guinée', 'Paraguay', 'Pays-Bas', 'Pérou', 'Philippines', 'Pologne', 'Portugal', 'Qatar',
     'Roumanie', 'Royaume-Uni', 'Russie', 'Rwanda',
-    'Saint-Christophe-et-Niévès', 'Sainte-Lucie', 'Saint-Marin', 'Saint-Vincent-et-les-Grenadines', 'Salomon', 'Salvador', 'Samoa', 'Sao Tomé-et-Principe', 'Sénégal', 'Serbie', 'Seychelles', 'Sierra Leone', 'Singapour', 'Slovaquie', 'Slovénie', 'Somalie', 'Soudan', 'Sri Lanka', 'Suisse', 'Suriname', 'Suède', 'Suisse', 'Syrie',
+    'Saint-Christophe-et-Niévès', 'Sainte-Lucie', 'Saint-Marin', 'Saint-Vincent-et-les-Grenadines', 'Salomon', 'Salvador', 'Samoa', 'Sao Tomé-et-Principe', 'Sénégal', 'Serbie', 'Seychelles', 'Sierra Leone', 'Singapour', 'Slovaquie', 'Slovénie', 'Somalie', 'Soudan', 'Sri Lanka', 'Suisse', 'Suriname', 'Suède', 'Syrie',
     'Tadjikistan', 'Tanzanie', 'Tchad', 'Thaïlande', 'Togo', 'Tonga', 'Trinité-et-Tobago', 'Tunisie', 'Turkménistan', 'Turquie', 'Tuvalu',
     'Ukraine', 'Uruguay',
     'Vanuatu', 'Vatican', 'Venezuela', 'Vietnam',
@@ -293,8 +293,8 @@ const Register = () => {
                   required
                 >
                   <option value="">Sélectionnez un pays</option>
-                  {countries.map((countryName) => (
-                    <option key={countryName} value={countryName}>
+                  {countries.map((countryName, index) => (
+                    <option key={`${countryName}-${index}`} value={countryName}>
                       {countryName}
                     </option>
                   ))}

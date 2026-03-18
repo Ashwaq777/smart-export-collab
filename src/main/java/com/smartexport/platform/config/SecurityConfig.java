@@ -51,6 +51,12 @@ public class SecurityConfig {
                 .requestMatchers("/api/forex/**").permitAll()
                 .requestMatchers("/api/countries/**").permitAll()
                 .requestMatchers("/api/admin/**").permitAll()
+                .requestMatchers("/api/v1/containers/transactions/*/eir").authenticated()
+                .requestMatchers(HttpMethod.GET, "/api/v1/containers/**").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/v1/containers/**").authenticated()
+                .requestMatchers(HttpMethod.PUT, "/api/v1/containers/**").authenticated()
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/containers/**").authenticated()
+                .requestMatchers(HttpMethod.PATCH, "/api/v1/containers/**").authenticated()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, 

@@ -69,28 +69,6 @@ const Register = () => {
       return false;
     }
     
-    if (!phone.trim()) {
-      setError('Le numéro de téléphone est obligatoire');
-      return false;
-    }
-    
-    // Validation format téléphone (simple)
-    const phoneRegex = /^[\d\s\+\-\(\)]+$/;
-    if (!phoneRegex.test(phone) || phone.length < 8) {
-      setError('Veuillez entrer un numéro de téléphone valide');
-      return false;
-    }
-    
-    if (!companyName.trim()) {
-      setError('Le nom de l\'entreprise est obligatoire');
-      return false;
-    }
-    
-    if (!country) {
-      setError('Le pays est obligatoire');
-      return false;
-    }
-    
     if (!password) {
       setError('Le mot de passe est obligatoire');
       return false;
@@ -136,10 +114,6 @@ const Register = () => {
         lastName,
         email,
         password,
-        phone,
-        birthDate,
-        companyName,
-        country,
         role
       };
       
@@ -230,13 +204,12 @@ const Register = () => {
 
               <div>
                 <label htmlFor="phone" className={labelClasses}>
-                  Téléphone *
+                  Téléphone
                 </label>
                 <input
                   id="phone"
                   name="phone"
                   type="tel"
-                  required
                   className={inputClasses}
                   placeholder="+33 6 12 34 56 78"
                   value={phone}
@@ -266,13 +239,12 @@ const Register = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="companyName" className={labelClasses}>
-                  Nom de l'entreprise *
+                  Nom de l'entreprise
                 </label>
                 <input
                   id="companyName"
                   name="companyName"
                   type="text"
-                  required
                   className={inputClasses}
                   placeholder="Nom de votre entreprise"
                   value={companyName}
@@ -282,7 +254,7 @@ const Register = () => {
 
               <div>
                 <label htmlFor="country" className={labelClasses}>
-                  Pays *
+                  Pays
                 </label>
                 <select
                   id="country"
@@ -290,7 +262,6 @@ const Register = () => {
                   value={country}
                   onChange={(e) => setCountry(e.target.value)}
                   className={selectClasses}
-                  required
                 >
                   <option value="">Sélectionnez un pays</option>
                   {countries.map((countryName, index) => (

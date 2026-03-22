@@ -36,21 +36,16 @@ const ContainerDashboard = () => {
 
   const loadDashboardData = async () => {
     try {
-      const [dashRes, offersRes, requestsRes, allOffersRes] = await Promise.all([
+      const [dashRes, allOffersRes] = await Promise.all([
         containerService.getDashboard(),
-        containerService.getMyOffers(),
-        containerService.getMyRequests(),
         containerService.getAvailableOffers(),
       ]);
       
+      console.log('DASHBOARD RAW:', dashRes.data);
       const dash = dashRes.data?.data || dashRes.data;
       setDashboardData(dash);
-      
-      const offers = offersRes.data?.data || offersRes.data || [];
-      setMyOffers(offers);
-      
-      const requests = requestsRes.data?.data || requestsRes.data || [];
-      setMyRequests(requests);
+      setMyOffers(dash?.myOffers || []);
+      setMyRequests(dash?.myRequests || []);
       
       const allOffers = allOffersRes.data?.data || allOffersRes.data || [];
       setAllOffers(allOffers);

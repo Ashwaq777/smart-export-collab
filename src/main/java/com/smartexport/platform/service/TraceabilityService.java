@@ -35,8 +35,10 @@ import jakarta.persistence.criteria.Predicate;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 public class TraceabilityService {
 
     private final TraceabilityRecordRepository recordRepository;
@@ -62,7 +64,7 @@ public class TraceabilityService {
             history.setVersion(record.getVersion());
             historyRepository.save(history);
         } catch (Exception e) {
-            System.err.println("Failed to save history: " + e.getMessage());
+            log.error("Failed to save history: {}", e.getMessage());
         }
     }
 

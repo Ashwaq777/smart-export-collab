@@ -13,5 +13,5 @@ public interface ContainerMatchRepository extends JpaRepository<ContainerMatch, 
 
     List<ContainerMatch> findByRequestId(Long requestId);
 
-    List<ContainerMatch> findByOfferProviderIdOrRequestSeekerId(Long providerId, Long seekerId);
+    List<ContainerMatch> findByOffer_Provider_IdOrRequest_Seeker_Id(Long providerId, Long seekerId);
 }

@@ -11,6 +11,7 @@ import com.smartexport.platform.containers.repository.ContainerMatchRepository;
 import com.smartexport.platform.containers.repository.ContainerTransactionRepository;
 import com.smartexport.platform.entity.User;
 import com.smartexport.platform.repository.UserRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +20,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class ContainerRequestService {
 
     private final ContainerRequestRepository requestRepository;
@@ -98,14 +100,14 @@ public class ContainerRequestService {
                 "Request not found: " + id));
         
         Long seekerId = request.getSeeker().getId();
-        System.err.println("UPDATE CHECK - Request " + id + " owned by " + seekerId + ", user " + userId);
+        log.debug("UPDATE CHECK - Request {} owned by {}, user {}", id, seekerId, userId);
         
         if (seekerId == null || userId == null || !seekerId.equals(userId)) {
-            System.err.println("UPDATE FAILED - User " + userId + " tried to update request " + id + " owned by " + seekerId);
+            log.warn("UPDATE FAILED - User {} tried to update request {} owned by {}", userId, id, seekerId);
             throw new UnauthorizedContainerAccessException(
                 "Not authorized");
         }
-        System.out.println("UPDATE SUCCESS - User " + userId + " updating request " + id + " owned by " + seekerId);
+        log.debug("UPDATE SUCCESS - User {} updating request {} owned by {}", userId, id, seekerId);
         if (dto.getLoadingLocation() != null)
             request.setLoadingLocation(dto.getLoadingLocation());
         if (dto.getContainerType() != null)

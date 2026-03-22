@@ -12,9 +12,11 @@ import com.smartexport.platform.containers.entity.enums.WorkflowStatus;
 import com.smartexport.platform.containers.exception.ContainerNotFoundException;
 import com.smartexport.platform.containers.exception.UnauthorizedContainerAccessException;
 import com.smartexport.platform.containers.notification.ContainerEmailService;
+import com.smartexport.platform.notification.PushNotificationService;
 import com.smartexport.platform.containers.repository.ContainerMatchRepository;
 import com.smartexport.platform.containers.repository.ContainerTransactionRepository;
 import com.smartexport.platform.containers.service.ContainerTransactionService;
+import com.smartexport.platform.containers.service.EirPdfService;
 import com.smartexport.platform.entity.User;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,6 +41,12 @@ class ContainerTransactionServiceTest {
     
     @Mock
     ContainerEmailService emailService;
+    
+    @Mock
+    PushNotificationService pushNotificationService;
+    
+    @Mock
+    EirPdfService eirPdfService;
     
     @InjectMocks
     ContainerTransactionService transactionService;

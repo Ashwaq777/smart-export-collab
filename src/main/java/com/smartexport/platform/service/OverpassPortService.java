@@ -2,6 +2,7 @@ package com.smartexport.platform.service;
 
 import com.smartexport.platform.entity.Port;
 import com.smartexport.platform.repository.PortRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -11,6 +12,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class OverpassPortService {
 
     @Autowired
@@ -30,9 +32,9 @@ public class OverpassPortService {
     @PostConstruct
     public void init() {
         long count = portRepository.count();
-        System.out.println("[OSM] Current ports in DB: " + count);
+        log.info("[OSM] Current ports in DB: {}", count);
         if (count < 150) {
-            System.out.println("[OSM] Starting background port sync...");
+            log.info("[OSM] Starting background port sync...");
             new Thread(this::syncFromOSM).start();
         }
     }
@@ -49,7 +51,7 @@ public class OverpassPortService {
             .filter(s -> !s.isEmpty())
             .collect(Collectors.toSet());
 
-        System.out.println("[OSM] Existing ports: " + existing.size());
+        log.info("[OSM] Existing ports: {}", existing.size());
 
         // Single global query — most efficient, avoids multiple rate-limit hits
         // Fetches seamark harbours AND harbour=yes nodes globally
@@ -63,7 +65,7 @@ public class OverpassPortService {
 
         for (String mirror : MIRRORS) {
             try {
-                System.out.println("[OSM] Trying mirror: " + mirror);
+                log.info("[OSM] Trying mirror: {}", mirror);
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
                 headers.set("User-Agent", "SmartExportPlatform/1.0");
@@ -74,7 +76,7 @@ public class OverpassPortService {
                     mirror, HttpMethod.POST, entity, Map.class);
 
                 if (response.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS) {
-                    System.out.println("[OSM] Rate limited on " + mirror + ", trying next...");
+                    log.warn("[OSM] Rate limited on {}, trying next...", mirror);
                     Thread.sleep(5000);
                     continue;
                 }
@@ -83,7 +85,7 @@ public class OverpassPortService {
                 List<Map> elements = (List<Map>) response.getBody().get("elements");
                 if (elements == null || elements.isEmpty()) continue;
 
-                System.out.println("[OSM] Got " + elements.size() + " elements from " + mirror);
+                log.info("[OSM] Got {} elements from {}", elements.size(), mirror);
 
                 List<Port> batch = new ArrayList<>();
                 for (Map el : elements) {
@@ -132,18 +134,17 @@ public class OverpassPortService {
                 if (!batch.isEmpty()) {
                     portRepository.saveAll(batch);
                     totalSaved += batch.size();
-                    System.out.println("[OSM] Saved " + batch.size() +
-                        " ports. DB total: " + portRepository.count());
+                    log.info("[OSM] Saved {} ports. DB total: {}", batch.size(), portRepository.count());
                 }
                 break; // Success — no need to try other mirrors
 
             } catch (Exception e) {
-                System.err.println("[OSM] Mirror failed: " + mirror + " — " + e.getMessage());
+                log.error("[OSM] Mirror failed: {} — {}", mirror, e.getMessage());
                 try { Thread.sleep(3000); } catch (Exception ignored) {}
             }
         }
 
-        System.out.println("[OSM] Sync complete. New ports: " + totalSaved);
+        log.info("[OSM] Sync complete. New ports: {}", totalSaved);
         Map<String, Object> result = new HashMap<>();
         result.put("newPorts", totalSaved);
         result.put("totalPorts", portRepository.count());

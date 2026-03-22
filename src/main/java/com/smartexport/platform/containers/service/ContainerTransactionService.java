@@ -8,6 +8,8 @@ import com.smartexport.platform.containers.entity.enums.WorkflowStatus;
 import com.smartexport.platform.containers.exception.ContainerNotFoundException;
 import com.smartexport.platform.containers.exception.UnauthorizedContainerAccessException;
 import com.smartexport.platform.containers.notification.ContainerEmailService;
+import com.smartexport.platform.notification.PushNotificationService;
+import com.smartexport.platform.notification.dto.NotificationPayload;
 import com.smartexport.platform.containers.repository.ContainerMatchRepository;
 import com.smartexport.platform.containers.repository.ContainerTransactionRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -30,13 +32,19 @@ public class ContainerTransactionService {
     private final ContainerTransactionRepository transactionRepository;
     private final ContainerMatchRepository matchRepository;
     private final ContainerEmailService emailService;
+    private final PushNotificationService pushNotificationService;
+    private final EirPdfService eirPdfService;
 
     public ContainerTransactionService(ContainerTransactionRepository transactionRepository,
                                        ContainerMatchRepository matchRepository,
-                                       ContainerEmailService emailService) {
+                                       ContainerEmailService emailService,
+                                       PushNotificationService pushNotificationService,
+                                       EirPdfService eirPdfService) {
         this.transactionRepository = transactionRepository;
         this.matchRepository = matchRepository;
         this.emailService = emailService;
+        this.pushNotificationService = pushNotificationService;
+        this.eirPdfService = eirPdfService;
     }
 
     public void confirmByProvider(Long matchId, Long userId) {
@@ -52,15 +60,37 @@ public class ContainerTransactionService {
         if (Boolean.TRUE.equals(tx.getConfirmedBySeeker())) {
             match.setStatus(ContainerMatchStatus.CONFIRMED);
             matchRepository.save(match);
+            transactionRepository.save(tx);
+            
+            // Auto-generate EIR PDF when both confirmed
+            try {
+                String pdfPath = eirPdfService.generateEirPdf(tx);
+                tx.setEirDocumentPath(pdfPath);
+                transactionRepository.save(tx);
+                log.info("EIR PDF auto-generated: {}", pdfPath);
+            } catch (Exception e) {
+                log.error("EIR PDF generation failed: {}", e.getMessage());
+            }
+            
             // Send confirmation email when both parties have confirmed
             try {
                 emailService.sendMatchConfirmedEmail(tx);
+                
+                // Push notifications for match confirmation
+                pushNotificationService.notifyUser(
+                    tx.getMatch().getOffer().getProvider().getEmail(),
+                    NotificationPayload.matchConfirmed(tx.getId()));
+                pushNotificationService.notifyUser(
+                    tx.getMatch().getRequest().getSeeker().getEmail(),
+                    NotificationPayload.matchConfirmed(tx.getId()));
+                    
             } catch (Exception e) {
-                log.warn("Email notification failed for transaction {}: {}", 
+                log.warn("Notification failed for transaction {}: {}", 
                     tx.getId(), e.getMessage());
             }
+        } else {
+            transactionRepository.save(tx);
         }
-        transactionRepository.save(tx);
     }
 
     public void confirmBySeeker(Long matchId, Long userId) {
@@ -76,15 +106,37 @@ public class ContainerTransactionService {
         if (Boolean.TRUE.equals(tx.getConfirmedByProvider())) {
             match.setStatus(ContainerMatchStatus.CONFIRMED);
             matchRepository.save(match);
+            transactionRepository.save(tx);
+            
+            // Auto-generate EIR PDF when both confirmed
+            try {
+                String pdfPath = eirPdfService.generateEirPdf(tx);
+                tx.setEirDocumentPath(pdfPath);
+                transactionRepository.save(tx);
+                log.info("EIR PDF auto-generated: {}", pdfPath);
+            } catch (Exception e) {
+                log.error("EIR PDF generation failed: {}", e.getMessage());
+            }
+            
             // Send confirmation email when both parties have confirmed
             try {
                 emailService.sendMatchConfirmedEmail(tx);
+                
+                // Push notifications for match confirmation
+                pushNotificationService.notifyUser(
+                    tx.getMatch().getOffer().getProvider().getEmail(),
+                    NotificationPayload.matchConfirmed(tx.getId()));
+                pushNotificationService.notifyUser(
+                    tx.getMatch().getRequest().getSeeker().getEmail(),
+                    NotificationPayload.matchConfirmed(tx.getId()));
+                    
             } catch (Exception e) {
-                log.warn("Email notification failed for transaction {}: {}", 
+                log.warn("Notification failed for transaction {}: {}", 
                     tx.getId(), e.getMessage());
             }
+        } else {
+            transactionRepository.save(tx);
         }
-        transactionRepository.save(tx);
     }
 
     public ContainerTransactionDTO getTransaction(Long transactionId) {
@@ -117,8 +169,16 @@ public class ContainerTransactionService {
         // Send workflow update email
         try {
             emailService.sendWorkflowUpdateEmail(tx);
+            
+            // Push notification for workflow update
+            pushNotificationService.notifyUser(
+                tx.getMatch().getRequest().getSeeker().getEmail(),
+                NotificationPayload.workflowUpdate(
+                    tx.getId(),
+                    newStatus.toString()));
+                    
         } catch (Exception e) {
-            log.warn("Email notification failed for transaction {}: {}", 
+            log.warn("Notification failed for transaction {}: {}", 
                 tx.getId(), e.getMessage());
         }
     }
@@ -154,10 +214,67 @@ public class ContainerTransactionService {
     return filename;
 }
 
+    public void deleteEirDocument(Long transactionId, Long userId) {
+        ContainerTransaction tx = transactionRepository
+            .findById(transactionId)
+            .orElseThrow(() -> new ContainerNotFoundException(
+                "Transaction not found: " + transactionId));
+
+        // Delete physical file if exists
+        if (tx.getEirDocumentPath() != null) {
+            try {
+                java.nio.file.Files.deleteIfExists(
+                    java.nio.file.Paths.get(
+                        tx.getEirDocumentPath()));
+            } catch (Exception e) {
+                log.warn("Could not delete file: {}", 
+                    e.getMessage());
+            }
+        }
+
+        tx.setEirDocumentPath(null);
+        transactionRepository.save(tx);
+        log.info("EIR deleted for tx {}", transactionId);
+    }
+
+    public void deleteTransaction(Long transactionId, Long userId) {
+        ContainerTransaction tx = transactionRepository
+            .findById(transactionId)
+            .orElseThrow(() -> new ContainerNotFoundException(
+                "Transaction not found: " + transactionId));
+
+        // Delete physical EIR file if exists
+        if (tx.getEirDocumentPath() != null) {
+            try {
+                java.nio.file.Files.deleteIfExists(
+                    java.nio.file.Paths.get(
+                        tx.getEirDocumentPath()));
+            } catch (Exception e) {
+                log.warn("Could not delete EIR file: {}",
+                    e.getMessage());
+            }
+        }
+
+        transactionRepository.delete(tx);
+        log.info("Transaction {} deleted by user {}",
+            transactionId, userId);
+    }
+
     public List<ContainerTransactionDTO> getMyTransactions(Long userId) {
         return transactionRepository
                 .findByMatchOfferProviderIdOrMatchRequestSeekerId(userId, userId)
-                .stream().map(this::mapToDTO).collect(Collectors.toList());
+                .stream()
+                .map(tx -> {
+                    try {
+                        return mapToDTO(tx);
+                    } catch (Exception e) {
+                        log.error("Error mapping tx {}: {}",
+                            tx.getId(), e.getMessage());
+                        return null;
+                    }
+                })
+                .filter(dto -> dto != null)
+                .collect(Collectors.toList());
     }
 
     private ContainerTransaction getOrCreateTransaction(ContainerMatch match) {
@@ -186,11 +303,15 @@ public class ContainerTransactionService {
     private ContainerTransactionDTO mapToDTO(ContainerTransaction tx) {
         ContainerTransactionDTO dto = new ContainerTransactionDTO();
         dto.setId(tx.getId());
-        dto.setMatchId(tx.getMatch().getId());
-        dto.setOfferId(tx.getMatch().getOffer().getId());
-        dto.setRequestId(tx.getMatch().getRequest().getId());
-        dto.setConfirmedByProvider(tx.getConfirmedByProvider());
-        dto.setConfirmedBySeeker(tx.getConfirmedBySeeker());
+        dto.setMatchId(tx.getMatch() != null ? tx.getMatch().getId() : null);
+        dto.setOfferId(tx.getMatch() != null && tx.getMatch().getOffer() != null 
+            ? tx.getMatch().getOffer().getId() : null);
+        dto.setRequestId(tx.getMatch() != null && tx.getMatch().getRequest() != null 
+            ? tx.getMatch().getRequest().getId() : null);
+        dto.setConfirmedByProvider(tx.getConfirmedByProvider() != null 
+            ? tx.getConfirmedByProvider() : false);
+        dto.setConfirmedBySeeker(tx.getConfirmedBySeeker() != null 
+            ? tx.getConfirmedBySeeker() : false);
         dto.setEirDocumentPath(tx.getEirDocumentPath());
         dto.setWorkflowStatus(tx.getWorkflowStatus());
         dto.setCreatedAt(tx.getCreatedAt());

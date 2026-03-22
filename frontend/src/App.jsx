@@ -17,6 +17,7 @@ import ResetPassword from './pages/ResetPassword'
 import ContainerDashboard from './pages/containers/ContainerDashboard'
 import MatchesPage from './pages/containers/MatchesPage'
 import TransactionsPage from './pages/containers/TransactionsPage'
+import VesselTrackingPage from './pages/vessels/VesselTrackingPage'
 
 function App() {
   return (
@@ -79,6 +80,15 @@ function App() {
               <ProtectedRoute excludeRole="ADMIN">
                 <MainLayout>
                   <TransactionsPage />
+                </MainLayout>
+              </ProtectedRoute>
+            } />
+
+            {/* Vessel Tracking Route */}
+            <Route path="/vessels" element={
+              <ProtectedRoute excludeRole="ADMIN">
+                <MainLayout>
+                  <VesselTrackingPage />
                 </MainLayout>
               </ProtectedRoute>
             } />

@@ -1,5 +1,6 @@
 package com.smartexport.platform.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -7,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.smartexport.platform.service.ReglementationService;
 
 @Component
+@Slf4j
 public class DataInitializer implements CommandLineRunner {
 
     private final ReglementationService reglementationService;
@@ -21,9 +23,9 @@ public class DataInitializer implements CommandLineRunner {
         // Initialiser les réglementations au démarrage de l'application
         try {
             reglementationService.initializeReglementations();
-            System.out.println("✅ Réglementations initialisées avec succès");
+            log.info("Réglementations initialisées avec succès");
         } catch (Exception e) {
-            System.err.println("❌ Erreur lors de l'initialisation des réglementations: " + e.getMessage());
+            log.error("Erreur lors de l'initialisation des réglementations: {}", e.getMessage());
             // Ne pas arrêter l'application si l'initialisation échoue
         }
     }

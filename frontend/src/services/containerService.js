@@ -91,6 +91,16 @@ const containerService = {
   // Dashboard
   getDashboard: () =>
     api.get('/v1/containers/dashboard'),
+
+  // Vessel Tracking
+  getVesselPosition: (imo) =>
+    axios.get(`/api/v1/vessels/${imo}`),
+
+  getVesselDistance: (imo, port) =>
+    axios.get(`/api/v1/vessels/${imo}/distance?port=${port}`),
+
+  trackVessel: (imo, place, email) =>
+    axios.post('/api/v1/vessels/track', { imo, place, email }),
 };
 
 export default containerService;

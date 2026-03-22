@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Ship, Anchor, Menu, X, UserCircle, LogOut } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
+import NotificationBell from '../notifications/NotificationBell'
 
 export const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false)
@@ -24,7 +25,8 @@ export const Header = () => {
     ...(user?.role !== 'ADMIN' ? [
       { path: '/containers', label: '🚢 Conteneurs' },
       { path: '/containers/matches', label: '🤝 Correspondances' },
-      { path: '/containers/transactions', label: '📋 Transactions' }
+      { path: '/containers/transactions', label: '📋 Transactions' },
+      { path: '/vessels', label: '🚢 Tracking Navires' }
     ] : []),
     { path: '/about', label: 'About Us' },
     ...(user?.role === 'ADMIN' ? [{ path: '/admin', label: 'Admin' }] : []),
@@ -91,6 +93,8 @@ export const Header = () => {
             >
               Start Simulation
             </Link>
+
+            {user && <NotificationBell />}
 
             {user ? (
               <button

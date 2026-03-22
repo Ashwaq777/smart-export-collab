@@ -12,11 +12,12 @@ export default function MatchesPage() {
     try {
       setLoading(true);
       const res = await containerService.getMyMatches();
+      console.log('MATCHES RAW:', res.data);
       const data = res.data?.data || res.data || [];
       setMatches(Array.isArray(data) ? data : []);
     } catch (err) {
-      setError('Erreur lors du chargement des correspondances');
-      console.error(err);
+      console.error('MATCHES ERROR:', err.response?.data || err.message);
+      setError('Erreur chargement correspondances');
     } finally {
       setLoading(false);
     }

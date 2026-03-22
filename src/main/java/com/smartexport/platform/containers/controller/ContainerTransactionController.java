@@ -9,6 +9,9 @@ import com.smartexport.platform.repository.UserRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -78,6 +81,59 @@ public class ContainerTransactionController {
                 .body(ContainerApiResponse.error(
                     "Upload failed: " + e.getMessage()));
         }
+    }
+
+    @GetMapping("/{id}/eir/download")
+    @Operation(summary = "Download EIR PDF document")
+    public ResponseEntity<FileSystemResource> downloadEir(
+            @PathVariable Long id) throws IOException {
+        Long userId = ContainerSecurityUtils
+            .getCurrentUserId(userRepository);
+        
+        ContainerTransactionDTO tx = 
+            transactionService.getTransaction(id);
+        
+        String path = tx.getEirDocumentPath();
+        if (path == null || path.isBlank()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        java.io.File file = new java.io.File(path);
+        if (!file.exists()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        FileSystemResource resource = 
+            new FileSystemResource(file);
+        
+        return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_DISPOSITION,
+                "attachment; filename=\"" 
+                + file.getName() + "\"")
+            .contentType(MediaType.APPLICATION_PDF)
+            .body(resource);
+    }
+
+    @DeleteMapping("/{id}/eir")
+    @Operation(summary = "Delete EIR document")
+    public ResponseEntity<ContainerApiResponse<Void>> deleteEir(
+            @PathVariable Long id) {
+        Long userId = ContainerSecurityUtils
+            .getCurrentUserId(userRepository);
+        transactionService.deleteEirDocument(id, userId);
+        return ResponseEntity.ok(
+            ContainerApiResponse.success("EIR deleted", null));
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete transaction")
+    public ResponseEntity<ContainerApiResponse<Void>>
+            deleteTransaction(@PathVariable Long id) {
+        Long userId = ContainerSecurityUtils
+            .getCurrentUserId(userRepository);
+        transactionService.deleteTransaction(id, userId);
+        return ResponseEntity.ok(
+            ContainerApiResponse.success("Transaction deleted", null));
     }
 
     // GET /match/{matchId}

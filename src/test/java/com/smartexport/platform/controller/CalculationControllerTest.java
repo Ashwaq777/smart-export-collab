@@ -6,6 +6,7 @@ import com.smartexport.platform.dto.LandedCostResultDto;
 import com.smartexport.platform.service.CalculationService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -20,6 +21,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(CalculationController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class CalculationControllerTest {
 
     @Autowired
@@ -30,6 +32,12 @@ class CalculationControllerTest {
 
     @MockBean
     private CalculationService calculationService;
+    
+    @MockBean
+    private com.smartexport.platform.service.ImportCalculationService importCalculationService;
+    
+    @MockBean
+    private com.smartexport.platform.security.JwtTokenProvider jwtTokenProvider;
 
     @Test
     void testCalculateLandedCost_Success() throws Exception {

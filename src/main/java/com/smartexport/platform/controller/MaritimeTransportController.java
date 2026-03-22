@@ -89,9 +89,6 @@ public class MaritimeTransportController {
         return ResponseEntity.ok(cost);
     }
     
-    @lombok.Data
-    @lombok.NoArgsConstructor
-    @lombok.AllArgsConstructor
     public static class MaritimeTransportCostRequest {
         private String vesselMmsi;
         private String vesselName;
@@ -101,21 +98,71 @@ public class MaritimeTransportController {
         private String containerType;
         private String incoterm;
         private BigDecimal fobValue;
+        
+        // Constructors
+        public MaritimeTransportCostRequest() {}
+        
+        public MaritimeTransportCostRequest(
+            String vesselMmsi, String vesselName, Long originPortId, Long destPortId,
+            BigDecimal weightTonnes, String containerType, String incoterm, BigDecimal fobValue) {
+            
+            this.vesselMmsi = vesselMmsi;
+            this.vesselName = vesselName;
+            this.originPortId = originPortId;
+            this.destPortId = destPortId;
+            this.weightTonnes = weightTonnes;
+            this.containerType = containerType;
+            this.incoterm = incoterm;
+            this.fobValue = fobValue;
+        }
+        
+        // Getters and Setters
+        public String getVesselMmsi() { return vesselMmsi; }
+        public void setVesselMmsi(String vesselMmsi) { this.vesselMmsi = vesselMmsi; }
+        
+        public String getVesselName() { return vesselName; }
+        public void setVesselName(String vesselName) { this.vesselName = vesselName; }
+        
+        public Long getOriginPortId() { return originPortId; }
+        public void setOriginPortId(Long originPortId) { this.originPortId = originPortId; }
+        
+        public Long getDestPortId() { return destPortId; }
+        public void setDestPortId(Long destPortId) { this.destPortId = destPortId; }
+        
+        public BigDecimal getWeightTonnes() { return weightTonnes; }
+        public void setWeightTonnes(BigDecimal weightTonnes) { this.weightTonnes = weightTonnes; }
+        
+        public String getContainerType() { return containerType; }
+        public void setContainerType(String containerType) { this.containerType = containerType; }
+        
+        public String getIncoterm() { return incoterm; }
+        public void setIncoterm(String incoterm) { this.incoterm = incoterm; }
+        
+        public BigDecimal getFobValue() { return fobValue; }
+        public void setFobValue(BigDecimal fobValue) { this.fobValue = fobValue; }
     }
     
-    @lombok.Data
-    @lombok.NoArgsConstructor
-    @lombok.AllArgsConstructor
     public static class DistanceResponse {
-        private String message;
-        private BigDecimal distanceNm;
-        private BigDecimal distanceKm;
+        public String dataSource;
+        public BigDecimal distanceNm;
+        public BigDecimal distanceKm;
+        
+        public DistanceResponse() {}
+        
+        public DistanceResponse(String dataSource, BigDecimal distanceNm, BigDecimal distanceKm) {
+            this.dataSource = dataSource;
+            this.distanceNm = distanceNm;
+            this.distanceKm = distanceKm;
+        }
     }
 
-    @lombok.Data
-    @lombok.NoArgsConstructor
-    @lombok.AllArgsConstructor
     public static class FreightRateResponse {
-        private BigDecimal unitRate;
+        public BigDecimal unitRate;
+        
+        public FreightRateResponse() {}
+        
+        public FreightRateResponse(BigDecimal unitRate) {
+            this.unitRate = unitRate;
+        }
     }
 }

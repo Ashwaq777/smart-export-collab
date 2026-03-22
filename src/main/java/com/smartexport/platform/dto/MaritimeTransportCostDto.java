@@ -13,29 +13,29 @@ import java.math.BigDecimal;
 @Builder
 public class MaritimeTransportCostDto {
     
-    private String vesselMmsi;
-    private String vesselName;
+    public String vesselMmsi;
+    public String vesselName;
     
-    private String originPortName;
-    private String destPortName;
-    private BigDecimal distanceNm;
-    private BigDecimal distanceKm;
-    private Integer estimatedDays;
+    public String originPortName;
+    public String destPortName;
+    public BigDecimal distanceNm;
+    public BigDecimal distanceKm;
+    public Integer estimatedDays;
     
-    private BigDecimal weightTonnes;
-    private String containerType;
-    private String incoterm;
+    public BigDecimal weightTonnes;
+    public String containerType;
+    public String incoterm;
     
-    private BigDecimal freightCost;
-    private BigDecimal originPortFees;
-    private BigDecimal destPortFees;
-    private BigDecimal bunkerSurcharge;
-    private BigDecimal canalFees;
-    private BigDecimal securitySurcharge;
-    private BigDecimal insuranceCost;
+    public BigDecimal freightCost;
+    public BigDecimal originPortFees;
+    public BigDecimal destPortFees;
+    public BigDecimal bunkerSurcharge;
+    public BigDecimal canalFees;
+    public BigDecimal securitySurcharge;
+    public BigDecimal insuranceCost;
     
-    private BigDecimal totalCost;
+    public BigDecimal totalCost;
     
-    private String currency;
-    private String dataSource;
+    public String currency;
+    public String dataSource;
 }

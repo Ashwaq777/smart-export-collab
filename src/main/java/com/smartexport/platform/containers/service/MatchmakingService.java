@@ -9,6 +9,8 @@ import com.smartexport.platform.containers.entity.enums.ContainerOfferStatus;
 import com.smartexport.platform.containers.exception.ContainerNotFoundException;
 import com.smartexport.platform.containers.exception.UnauthorizedContainerAccessException;
 import com.smartexport.platform.containers.notification.ContainerEmailService;
+import com.smartexport.platform.notification.PushNotificationService;
+import com.smartexport.platform.notification.dto.NotificationPayload;
 import com.smartexport.platform.containers.repository.ContainerMatchRepository;
 import com.smartexport.platform.containers.repository.ContainerOfferRepository;
 import com.smartexport.platform.containers.repository.ContainerRequestRepository;
@@ -27,15 +29,18 @@ public class MatchmakingService {
     private final ContainerOfferRepository offerRepository;
     private final ContainerMatchRepository matchRepository;
     private final ContainerEmailService emailService;
+    private final PushNotificationService pushNotificationService;
 
     public MatchmakingService(ContainerRequestRepository requestRepository,
                               ContainerOfferRepository offerRepository,
                               ContainerMatchRepository matchRepository,
-                              ContainerEmailService emailService) {
+                              ContainerEmailService emailService,
+                              PushNotificationService pushNotificationService) {
         this.requestRepository = requestRepository;
         this.offerRepository = offerRepository;
         this.matchRepository = matchRepository;
         this.emailService = emailService;
+        this.pushNotificationService = pushNotificationService;
     }
 
     public List<ContainerMatchDTO> findMatches(Long requestId) {
@@ -100,8 +105,25 @@ public class MatchmakingService {
         for (ContainerMatch savedMatch : savedMatches) {
             try {
                 emailService.sendMatchFoundEmail(savedMatch);
+                
+                // Push notification to provider
+                pushNotificationService.notifyUser(
+                    savedMatch.getOffer().getProvider().getEmail(),
+                    NotificationPayload.matchFound(
+                        savedMatch.getId(),
+                        savedMatch.getOffer().getContainerType().toString(),
+                        savedMatch.getOffer().getLocation()));
+
+                // Push notification to seeker
+                pushNotificationService.notifyUser(
+                    savedMatch.getRequest().getSeeker().getEmail(),
+                    NotificationPayload.matchFound(
+                        savedMatch.getId(),
+                        savedMatch.getOffer().getContainerType().toString(),
+                        savedMatch.getOffer().getLocation()));
+                        
             } catch (Exception e) {
-                log.warn("Email notification failed for match {}: {}", 
+                log.warn("Notification failed for match {}: {}", 
                     savedMatch.getId(), e.getMessage());
             }
         }
@@ -138,7 +160,7 @@ public class MatchmakingService {
 
     public List<ContainerMatchDTO> getMatchesByUserId(Long userId) {
         return matchRepository
-                .findByOfferProviderIdOrRequestSeekerId(userId, userId)
+                .findByOffer_Provider_IdOrRequest_Seeker_Id(userId, userId)
                 .stream().map(this::mapToDTO).collect(Collectors.toList());
     }
 

@@ -5,6 +5,7 @@ import com.smartexport.platform.dto.PortDto;
 import com.smartexport.platform.service.PortService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -21,6 +22,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(PortController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class PortControllerTest {
 
     @Autowired
@@ -31,6 +33,9 @@ class PortControllerTest {
 
     @MockBean
     private PortService portService;
+    
+    @MockBean
+    private com.smartexport.platform.security.JwtTokenProvider jwtTokenProvider;
 
     @Test
     void testGetAllPorts() throws Exception {

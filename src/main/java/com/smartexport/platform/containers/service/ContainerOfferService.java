@@ -5,9 +5,11 @@ import com.smartexport.platform.containers.entity.ContainerOffer;
 import com.smartexport.platform.containers.entity.enums.ContainerOfferStatus;
 import com.smartexport.platform.containers.exception.ContainerNotFoundException;
 import com.smartexport.platform.containers.exception.UnauthorizedContainerAccessException;
+import com.smartexport.platform.containers.repository.ContainerMatchRepository;
 import com.smartexport.platform.containers.repository.ContainerOfferRepository;
 import com.smartexport.platform.entity.User;
 import com.smartexport.platform.repository.UserRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
@@ -16,18 +18,22 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class ContainerOfferService {
 
     private final ContainerOfferRepository offerRepository;
+    private final ContainerMatchRepository matchRepository;
     private final UserRepository userRepository;
     private final GeocodingService geocodingService;
     private final PortService portService;
 
     public ContainerOfferService(ContainerOfferRepository offerRepository,
+                                  ContainerMatchRepository matchRepository,
                                   UserRepository userRepository,
                                   GeocodingService geocodingService,
                                   @Qualifier("containerPortService") PortService portService) {
         this.offerRepository = offerRepository;
+        this.matchRepository = matchRepository;
         this.userRepository = userRepository;
         this.geocodingService = geocodingService;
         this.portService = portService;
@@ -129,11 +135,25 @@ public class ContainerOfferService {
         ContainerOffer offer = offerRepository.findById(offerId)
                 .orElseThrow(() -> new ContainerNotFoundException(
                         "Offer not found: " + offerId));
+        
+        log.warn("DELETE OFFER: offerId={} userId={} providerId={}",
+            offerId, userId, 
+            offer.getProvider().getId());
+        
         if (!offer.getProvider().getId().equals(userId)) {
             throw new UnauthorizedContainerAccessException(
-                    "User " + userId + " is not the owner of offer " + offerId);
+                    "Not authorized to delete offer: " + offerId);
         }
+        
+        // Delete related matches first to avoid foreign key constraint violation
+        var matches = matchRepository.findByOfferId(offerId);
+        if (!matches.isEmpty()) {
+            log.info("Deleting {} related matches for offer {}", matches.size(), offerId);
+            matchRepository.deleteAll(matches);
+        }
+        
         offerRepository.delete(offer);
+        log.info("Offer {} deleted successfully", offerId);
     }
 
     private ContainerOfferDTO mapToDTO(ContainerOffer offer) {

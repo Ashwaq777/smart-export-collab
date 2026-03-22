@@ -7,6 +7,7 @@ import com.smartexport.platform.containers.entity.enums.ContainerOfferStatus;
 import com.smartexport.platform.containers.entity.enums.ContainerType;
 import com.smartexport.platform.containers.exception.ContainerNotFoundException;
 import com.smartexport.platform.containers.notification.ContainerEmailService;
+import com.smartexport.platform.notification.PushNotificationService;
 import com.smartexport.platform.containers.repository.ContainerMatchRepository;
 import com.smartexport.platform.containers.repository.ContainerOfferRepository;
 import com.smartexport.platform.containers.repository.ContainerRequestRepository;
@@ -26,6 +27,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,6 +44,9 @@ class MatchmakingServiceTest {
     
     @Mock
     ContainerEmailService emailService;
+    
+    @Mock
+    PushNotificationService pushNotificationService;
     
     @InjectMocks
     MatchmakingService matchmakingService;

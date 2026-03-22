@@ -1,6 +1,7 @@
 package com.smartexport.platform.service;
 
 import com.smartexport.platform.dto.ForexConversionDto;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import java.math.BigDecimal;
@@ -10,6 +11,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class ExchangeRateService {
 
     private final RestTemplate restTemplate = new RestTemplate();
@@ -37,15 +39,15 @@ public class ExchangeRateService {
         BigDecimal rate = getRate(fromCurrency, toCurrency);
         BigDecimal convertedAmount = amount.multiply(rate).setScale(2, RoundingMode.HALF_UP);
         
-        return ForexConversionDto.builder()
-            .amount(amount)
-            .fromCurrency(fromCurrency)
-            .toCurrency(toCurrency)
-            .exchangeRate(rate)
-            .convertedAmount(convertedAmount)
-            .source("ExchangeRate-API")
-            .timestamp(LocalDateTime.now())
-            .build();
+        return new ForexConversionDto(
+            amount,
+            fromCurrency,
+            toCurrency,
+            rate,
+            convertedAmount,
+            "ExchangeRate-API",
+            LocalDateTime.now()
+        );
     }
 
     public List<Map<String, Object>> getAllRates() {
@@ -76,11 +78,11 @@ public class ExchangeRateService {
                     }
                 }
                 result.sort(Comparator.comparing(m -> (String) m.get("code")));
-                System.out.println("Exchange rates loaded from API: " + result.size() + " currencies");
+                log.info("Exchange rates loaded from API: {} currencies", result.size());
                 return result;
             }
         } catch (Exception e) {
-            System.out.println("Exchange API unavailable, using hardcoded rates: " + e.getMessage());
+            log.info("Exchange API unavailable, using hardcoded rates: {}", e.getMessage());
         }
         return getAllHardcodedRates();
     }

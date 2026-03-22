@@ -27,6 +27,7 @@ public class GeocodingService {
     }
 
     public Optional<GeocodingResult> geocode(String address) {
+        log.info("Geocoding address: {}", address);
         if (address == null || address.isBlank()) {
             return Optional.empty();
         }
@@ -53,6 +54,7 @@ public class GeocodingService {
             double lon = Double.parseDouble((String) first.get("lon"));
             String displayName = (String) first.get("display_name");
 
+            log.info("Geocoding result: lat={} lon={}", lat, lon);
             log.info("Geocoded '{}' → lat={}, lon={}", address, lat, lon);
             return Optional.of(new GeocodingResult(lat, lon, displayName));
 

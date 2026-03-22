@@ -78,3 +78,8 @@ container:
   mail:
     enabled: true
     from: amanouzachwak7@gmail.com
+
+vessel:
+  tracking:
+    api-key: qxwQtKsWKFlnhnPfyblcKjHKN
+    proximity-threshold-km: 5.0

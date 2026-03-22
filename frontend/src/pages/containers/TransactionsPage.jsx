@@ -13,11 +13,13 @@ export default function TransactionsPage() {
     try {
       setLoading(true);
       const res = await containerService.getMyTransactions();
+      console.log('TRANSACTIONS RAW:', res.data);
       const data = res.data?.data || res.data || [];
       setTransactions(Array.isArray(data) ? data : []);
     } catch (err) {
-      setError('Erreur lors du chargement des transactions');
-      console.error(err);
+      console.error('TRANSACTIONS ERROR:', 
+        err.response?.data || err.message);
+      setError('Erreur chargement transactions');
     } finally {
       setLoading(false);
     }
@@ -78,6 +80,86 @@ export default function TransactionsPage() {
     setUploadingEir(null);
   }
 };
+
+  const handleDownloadEir = async (txId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(
+        `/api/v1/containers/transactions/${txId}/eir/download`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}` 
+          }
+        }
+      );
+
+      if (!response.ok) {
+        alert('EIR non disponible');
+        return;
+      }
+
+      // Create blob and download
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `EIR_Transaction_${txId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      alert('Erreur téléchargement: ' + err.message);
+    }
+  };
+
+  const handleDeleteEir = async (txId) => {
+    if (!window.confirm(
+      'Supprimer le document EIR ?')) return;
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(
+        `/api/v1/containers/transactions/${txId}/eir`,
+        {
+          method: 'DELETE',
+          headers: { 
+            'Authorization': `Bearer ${token}` 
+          }
+        }
+      );
+      if (response.ok) {
+        await loadTransactions();
+      } else {
+        alert('Erreur suppression EIR');
+      }
+    } catch (err) {
+      alert('Erreur: ' + err.message);
+    }
+  };
+
+  const handleDeleteTransaction = async (txId) => {
+    if (!window.confirm(
+      'Supprimer cette transaction ?')) return;
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(
+        `/api/v1/containers/transactions/${txId}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}` 
+          }
+        }
+      );
+      if (response.ok) {
+        await loadTransactions();
+      } else {
+        alert('Erreur suppression');
+      }
+    } catch (err) {
+      alert('Erreur: ' + err.message);
+    }
+  };
 
   const getWorkflowBadge = (status) => {
     const styles = {
@@ -231,20 +313,38 @@ export default function TransactionsPage() {
                 </div>
               )}
 
+              {/* Delete transaction button */}
+              <button
+                onClick={() => handleDeleteTransaction(tx.id)}
+                style={{
+                  marginTop: '8px',
+                  padding: '6px 12px',
+                  background: '#fee2e2',
+                  color: '#991b1b',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                  fontWeight: '500',
+                  border: '1px solid #fca5a5'
+                }}
+              >
+                🗑️ Supprimer la transaction
+              </button>
+
               {/* EIR Document */}
-              <div style={{ 
-                marginTop: '1rem', 
+              <div style={{
+                marginTop: '1rem',
                 paddingTop: '1rem',
                 borderTop: '1px solid #e5e7eb'
               }}>
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
                   gap: '1rem',
                   flexWrap: 'wrap'
                 }}>
-                  <span style={{ 
-                    fontSize: '13px', 
+                  <span style={{
+                    fontSize: '13px',
                     color: '#6b7280',
                     fontWeight: '500'
                   }}>
@@ -252,37 +352,73 @@ export default function TransactionsPage() {
                   </span>
 
                   {tx.eirDocumentPath ? (
+                    <>
+                      <span style={{
+                        fontSize: '13px',
+                        color: '#16a34a',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}>
+                        ✅ Document disponible
+                      </span>
+
+                      {/* Download button */}
+                      <button
+                        onClick={() => handleDownloadEir(tx.id)}
+                        style={{
+                          padding: '6px 12px',
+                          background: '#d1fae5',
+                          color: '#065f46',
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          fontSize: '13px',
+                          fontWeight: '500',
+                          border: '1px solid #6ee7b7',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px'
+                        }}
+                      >
+                        📥 Télécharger EIR
+                      </button>
+
+                      {/* Delete button */}
+                      <button
+                        onClick={() => handleDeleteEir(tx.id)}
+                        style={{
+                          padding: '6px 12px',
+                          background: '#fee2e2',
+                          color: '#991b1b',
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          fontSize: '13px',
+                          fontWeight: '500',
+                          border: '1px solid #fca5a5'
+                        }}
+                      >
+                        🗑️ Supprimer EIR
+                      </button>
+                    </>
+                  ) : (
                     <span style={{
                       fontSize: '13px',
-                      color: '#16a34a',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px'
+                      color: '#f59e0b'
                     }}>
-                      ✅ Document uploadé
-                      <span style={{ 
-                        fontSize: '11px', 
-                        color: '#6b7280',
-                        marginLeft: '4px'
-                      }}>
-                        {tx.eirDocumentPath.split('/').pop()}
-                      </span>
-                    </span>
-                  ) : (
-                    <span style={{ 
-                      fontSize: '13px', 
-                      color: '#f59e0b' 
-                    }}>
-                      ⚠️ Aucun document
+                      ⏳ Généré automatiquement à la confirmation
                     </span>
                   )}
 
+                  {/* Upload button — always visible */}
                   <label style={{
                     padding: '6px 12px',
-                    background: uploadingEir === tx.id ? '#e5e7eb' : '#eff6ff',
-                    color: uploadingEir === tx.id ? '#6b7280' : '#1d4ed8',
+                    background: uploadingEir === tx.id 
+                      ? '#e5e7eb' : '#eff6ff',
+                    color: uploadingEir === tx.id 
+                      ? '#6b7280' : '#1d4ed8',
                     borderRadius: '8px',
-                    cursor: uploadingEir === tx.id ? 'not-allowed' : 'pointer',
+                    cursor: uploadingEir === tx.id 
+                      ? 'not-allowed' : 'pointer',
                     fontSize: '13px',
                     fontWeight: '500',
                     border: '1px solid #bfdbfe',
@@ -290,14 +426,12 @@ export default function TransactionsPage() {
                     alignItems: 'center',
                     gap: '6px'
                   }}>
-                    {uploadingEir === tx.id ? (
-                      '⏳ Upload en cours...'
-                    ) : (
-                      <>📤 {tx.eirDocumentPath ? 'Remplacer EIR' : 'Upload EIR'}</>
-                    )}
+                    {uploadingEir === tx.id
+                      ? '⏳ Upload...'
+                      : '📤 Remplacer EIR'}
                     <input
                       type="file"
-                      accept=".pdf,.doc,.docx,.jpg,.png"
+                      accept=".pdf,.doc,.docx"
                       style={{ display: 'none' }}
                       disabled={uploadingEir === tx.id}
                       onChange={(e) => {
@@ -308,6 +442,30 @@ export default function TransactionsPage() {
                     />
                   </label>
                 </div>
+              </div>
+
+              {/* Vessel Tracking Link */}
+              <div style={{ 
+                marginTop: '1rem', 
+                paddingTop: '1rem',
+                borderTop: '1px solid #e5e7eb'
+              }}>
+                <a
+                  href={`/vessels?imo=${tx.vesselImo || ''}`}
+                  style={{
+                    display: 'inline-block',
+                    padding: '6px 12px',
+                    background: '#eff6ff',
+                    color: '#1d4ed8',
+                    borderRadius: '8px',
+                    fontSize: '13px',
+                    textDecoration: 'none',
+                    border: '1px solid #bfdbfe',
+                    cursor: 'pointer'
+                  }}
+                >
+                  🚢 Suivre le navire
+                </a>
               </div>
             </div>
           ))}

@@ -4,7 +4,6 @@ import com.smartexport.platform.dto.MaritimeTransportCostDto;
 import com.smartexport.platform.entity.Port;
 import com.smartexport.platform.repository.PortRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -15,8 +14,10 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class MaritimeTransportService {
+    
+    private static final org.slf4j.Logger log = 
+        org.slf4j.LoggerFactory.getLogger(MaritimeTransportService.class);
     
     private final PortRepository portRepository;
     private final DatalasticSeaRoutesService seaRoutesService;

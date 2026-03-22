@@ -891,8 +891,7 @@ function Calculator() {
                     />
                   </div>
 
-                  {isImportateur && (
-                    <div className="form-group">
+                  <div className="form-group">
                       <label className="form-label">
                         Coût de transport
                       </label>
@@ -915,10 +914,9 @@ function Calculator() {
                         display: 'block',
                         marginTop: '4px'
                       }}
-                        placeholder="0.00"
+                        placeholder="Ex: 500"
                       />
                     </div>
-                  )}
 
                   <div className="form-group">
                     <label className="form-label">

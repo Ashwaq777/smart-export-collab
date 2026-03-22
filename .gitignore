@@ -81,3 +81,18 @@ jwt-secret.txt
 users.csv
 export-data/
 import-data/
+# Token files
+*.json
+login*.json
+token*.json
+*_token.json
+imp_token.json
+exp_token.json
+
+# Generated EIR files
+uploads/
+
+# Logs
+*.log
+backend.log
+frontend.log

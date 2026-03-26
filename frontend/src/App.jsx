@@ -21,6 +21,7 @@ import TransactionsPage from './pages/containers/TransactionsPage'
 import MarketplacePage from './pages/containers/MarketplacePage'
 import OfferDetailPage from './pages/containers/OfferDetailPage'
 import SendDirectRequestPage from './pages/containers/SendDirectRequestPage'
+import SupportPage from './pages/support/SupportPage'
 import VesselTrackingPage from './pages/vessels/VesselTrackingPage'
 
 function App() {
@@ -107,6 +108,15 @@ function App() {
               <ProtectedRoute excludeRole="ADMIN">
                 <MainLayout>
                   <VesselTrackingPage />
+                </MainLayout>
+              </ProtectedRoute>
+            } />
+
+            {/* Support Route */}
+            <Route path="/support" element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <SupportPage />
                 </MainLayout>
               </ProtectedRoute>
             } />

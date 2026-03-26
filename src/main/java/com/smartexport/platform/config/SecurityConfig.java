@@ -58,6 +58,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/containers/offers/images/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/containers/requests/**").authenticated()
                 .requestMatchers("/api/v1/containers/direct-requests/**").authenticated()
+                .requestMatchers("/api/v1/support/**").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/v1/containers/**").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/v1/containers/**").authenticated()
                 .requestMatchers(HttpMethod.PUT, "/api/v1/containers/**").authenticated()

@@ -27,6 +27,7 @@ export const Header = () => {
       { path: '/containers/transactions', label: '📋 Transactions' },
       { path: '/vessels', label: '🚢 Tracking Navires' }
     ] : []),
+    { path: '/support', label: '🎫 Support' },
     { path: '/about', label: 'About Us' },
     ...(user?.role === 'ADMIN' ? [{ path: '/admin', label: 'Admin' }] : []),
   ]

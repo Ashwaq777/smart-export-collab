@@ -13,6 +13,7 @@ const CreateOfferModal = ({ isOpen, onClose, onSuccess }) => {
     technicalDetails: ''
   })
   const [loading, setLoading] = useState(false)
+  const [selectedFiles, setSelectedFiles] = useState([])
   const [countries, setCountries] = useState([])
   const [ports, setPorts] = useState([])
   const [portsLoading, setPortsLoading] = useState(false)
@@ -95,7 +96,26 @@ const CreateOfferModal = ({ isOpen, onClose, onSuccess }) => {
     setLoading(true)
 
     try {
-      await containerService.createOffer(formData)
+      // Add coordinates from selected port
+      const selectedPort = ports.find(p => (p.nomPort || p.nom) === formData.location)
+      const offerData = {
+        ...formData,
+        latitude: selectedPort?.coordinates?.lat || null,
+        longitude: selectedPort?.coordinates?.lng || selectedPort?.coordinates?.lon || null
+      }
+      
+      const response = await containerService.createOffer(offerData)
+      const newOffer = response.data?.data || response.data
+      const offerId = newOffer?.id
+
+      if (offerId && selectedFiles.length > 0) {
+        try {
+          await containerService.uploadOfferImages(offerId, selectedFiles)
+        } catch(e) {
+          console.warn('Image upload failed:', e.message)
+        }
+      }
+      
       onSuccess()
       onClose()
       // Reset form
@@ -109,6 +129,7 @@ const CreateOfferModal = ({ isOpen, onClose, onSuccess }) => {
       })
       setSelectedCountry('')
       setPorts([])
+      setSelectedFiles([])
     } catch (error) {
       console.error('Error creating offer:', error)
       alert('Erreur lors de la création de l\'offre')
@@ -265,6 +286,43 @@ const CreateOfferModal = ({ isOpen, onClose, onSuccess }) => {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Informations techniques supplémentaires..."
             />
+          </div>
+
+          {/* Image Upload */}
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{
+              display: 'block',
+              fontSize: '13px',
+              fontWeight: '500',
+              color: '#374151',
+              marginBottom: '6px'
+            }}>
+              📸 Photos du conteneur (optionnel)
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={e => setSelectedFiles(Array.from(e.target.files))}
+              style={{
+                width: '100%',
+                padding: '8px',
+                border: '1px dashed #d1d5db',
+                borderRadius: '8px',
+                fontSize: '13px',
+                cursor: 'pointer',
+                boxSizing: 'border-box'
+              }}
+            />
+            {selectedFiles.length > 0 && (
+              <p style={{
+                fontSize: '12px',
+                color: '#16a34a',
+                marginTop: '4px', margin: 0
+              }}>
+                ✅ {selectedFiles.length} photo(s) sélectionnée(s)
+              </p>
+            )}
           </div>
 
           {/* Buttons */}

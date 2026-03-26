@@ -32,6 +32,12 @@ const containerService = {
   createOffer: (data) =>
     api.post('/v1/containers/offers', data),
 
+  getAllOffers: () => 
+    api.get('/v1/containers/offers'),
+
+  getOfferById: (id) => 
+    api.get(`/v1/containers/offers/${id}`),
+
   getAvailableOffers: () =>
     api.get('/v1/containers/offers'),
 
@@ -43,6 +49,23 @@ const containerService = {
 
   updateOffer: (id, data) =>
     api.put(`/v1/containers/offers/${id}`, data),
+
+  uploadOfferImages: async (offerId, files) => {
+    const formData = new FormData();
+    files.forEach(f => formData.append('files', f));
+    const token = localStorage.getItem('token');
+    const response = await fetch(
+      `/api/v1/containers/offers/${offerId}/images`,
+      {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${token}` 
+        },
+        body: formData
+      }
+    );
+    return response.json();
+  },
 
   // Requests
   createRequest: (data) =>

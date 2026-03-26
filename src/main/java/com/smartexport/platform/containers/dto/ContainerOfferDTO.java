@@ -10,6 +10,7 @@ import lombok.AllArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -29,4 +30,9 @@ public class ContainerOfferDTO {
     private LocalDate availableDate;
     private ContainerOfferStatus status;
     private LocalDateTime createdAt;
+    private List<String> imageUrls;
+    private String description;
+    private String technicalCondition;
+    private Integer yearOfManufacture;
+    private String containerNumber;
 }

@@ -25,6 +25,8 @@ import java.util.stream.Collectors;
 @Slf4j
 public class MatchmakingService {
 
+    private static final double MAX_DISTANCE_KM = 10000.0;
+
     private final ContainerRequestRepository requestRepository;
     private final ContainerOfferRepository offerRepository;
     private final ContainerMatchRepository matchRepository;
@@ -55,43 +57,69 @@ public class MatchmakingService {
         List<ContainerMatch> scoredMatches = new ArrayList<>();
 
         for (ContainerOffer offer : availableOffers) {
+            
+            // Skip if offer belongs to the same user as request
+            if (offer.getProvider() != null && request.getSeeker() != null &&
+                offer.getProvider().getId().equals(request.getSeeker().getId())) {
+                continue;
+            }
 
             double distance = calculateDistance(
                     offer.getLatitude(), offer.getLongitude(),
                     request.getLoadingLatitude(), request.getLoadingLongitude()
             );
 
+            // Skip if distance exceeds maximum threshold
+            if (distance > MAX_DISTANCE_KM) {
+                continue;
+            }
+
             double score = 0;
 
+            // Distance scoring (more points for closer offers)
             if (distance < 100) {
                 score += 40;
             } else if (distance < 500) {
-                score += 25;
+                score += 30;
+            } else if (distance < 1000) {
+                score += 20;
             } else {
                 score += 10;
             }
 
+            // Exact container type match
             if (offer.getContainerType() == request.getContainerType()) {
                 score += 40;
             }
 
+            // Cargo type match (if both specified)
+            if (offer.getCargoType() == request.getCargoType()) {
+                score += 20;
+            }
+
+            // Date availability (offer must be available before required date)
             if (!offer.getAvailableDate().isAfter(request.getRequiredDate())) {
                 score += 20;
             }
 
-            ContainerMatch match = new ContainerMatch();
-            match.setOffer(offer);
-            match.setRequest(request);
-            match.setDistanceKm(distance);
-            match.setCompatibilityScore(score);
-            match.setStatus(ContainerMatchStatus.PENDING);
+            // Only include offers with minimum score threshold
+            if (score >= 30) {
+                ContainerMatch match = new ContainerMatch();
+                match.setOffer(offer);
+                match.setRequest(request);
+                match.setDistanceKm(distance);
+                match.setCompatibilityScore(score);
+                match.setStatus(ContainerMatchStatus.PENDING);
 
-            scoredMatches.add(match);
+                scoredMatches.add(match);
+            }
         }
 
+        // Sort by compatibility score (highest first)
         scoredMatches.sort((a, b) ->
                 Double.compare(b.getCompatibilityScore(), a.getCompatibilityScore()));
 
+        // Return top 5 matches
         List<ContainerMatch> top5 = scoredMatches.stream()
                 .limit(5)
                 .collect(Collectors.toList());

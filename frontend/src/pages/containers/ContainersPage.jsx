@@ -53,6 +53,8 @@ export default function ContainersPage() {
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
+  const [matchingId, setMatchingId] = useState(null);
+  const [matchedOfferIds, setMatchedOfferIds] = useState([]);
 
   useEffect(() => { loadAll(); }, []);
 
@@ -74,26 +76,35 @@ export default function ContainersPage() {
 
       // Load direct requests
       try {
-        if (isImportateur || user?.role === 'IMPORTATEUR') {
-          const recv = await fetch(
-            '/api/v1/containers/direct-requests/received',
-            { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') } }
-          );
-          if (recv.ok) {
-            const recvData = await recv.json();
-            setReceivedRequests(recvData.data || []);
-          }
-        }
-        const sent = await fetch(
-          '/api/v1/containers/direct-requests/my',
-          { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') } }
+        const recvRes = await fetch(
+          '/api/v1/containers/direct-requests/received',
+          { headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+          }}
         );
-        if (sent.ok) {
-          const sentData = await sent.json();
+        if (recvRes.ok) {
+          const recvData = await recvRes.json();
+          setReceivedRequests(recvData.data || []);
+        }
+      } catch(e) {
+        console.warn('Direct requests not available yet');
+        setReceivedRequests([]);
+      }
+
+      try {
+        const sentRes = await fetch(
+          '/api/v1/containers/direct-requests/my',
+          { headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+          }}
+        );
+        if (sentRes.ok) {
+          const sentData = await sentRes.json();
           setSentRequests(sentData.data || []);
         }
-      } catch (e) {
-        console.warn('Direct requests:', e.message);
+      } catch(e) {
+        console.warn('Sent requests not available yet');
+        setSentRequests([]);
       }
     } catch (err) {
       console.error('Load error:', err);
@@ -128,16 +139,30 @@ export default function ContainersPage() {
     } catch (e) { alert('Erreur: ' + e.message); }
   };
 
-  const handleMatch = async (id) => {
-    try {
-      const res = await containerService.triggerMatchmaking(id);
-      const count = res.data?.data?.length || 0;
-      alert(`${count} correspondance(s) trouvée(s) !`);
-      navigate('/containers/matches');
-    } catch (e) {
-      alert('Erreur matchmaking: ' + e.message);
+  const handleMatch = async (requestId) => {
+  setMatchingId(requestId);
+  try {
+    const res = await containerService.triggerMatchmaking(requestId);
+    const matches = res.data?.data || [];
+    const count = Array.isArray(matches) ? matches.length : 0;
+    
+    if (count > 0) {
+      // Store matched offer IDs for highlighting
+      const offerIds = matches.map(m => m.offerId);
+      setMatchedOfferIds(offerIds);
+      setActiveTab(0); // Switch to marketplace tab
+      alert(`✅ ${count} conteneur(s) correspondant(s) trouvé(s) !\nIls sont mis en évidence dans le marketplace.`);
+    } else {
+      alert('Aucun conteneur disponible ne correspond à votre demande pour le moment.');
     }
-  };
+    await loadAll();
+  } catch(err) {
+    console.error('Match error:', err);
+    alert('Erreur: ' + (err.response?.data?.message || err.message));
+  } finally {
+    setMatchingId(null);
+  }
+};
 
   const handleRespondDirectRequest = async (reqId, accepted) => {
     const response = accepted
@@ -419,69 +444,88 @@ export default function ContainersPage() {
             </div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
-              {filteredOffers.map(offer => (
-                <div
-                  key={offer.id}
-                  onClick={() => navigate(`/containers/marketplace/${offer.id}`)}
-                  style={{
-                    background: 'white', borderRadius: '16px', overflow: 'hidden',
-                    border: '1px solid #e5e7eb', cursor: 'pointer',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.08)', transition: 'transform 0.2s'
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-4px)'}
-                  onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
-                >
-                  <div style={{
-                    height: '180px', background: '#f3f4f6', display: 'flex',
-                    alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative'
-                  }}>
-                    {offer.imageUrls?.length > 0 ? (
-                      <img src={offer.imageUrls[0]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    ) : (
-                      <span style={{ fontSize: '56px' }}>📦</span>
-                    )}
-                    <span style={{
-                      position: 'absolute', top: '10px', right: '10px',
-                      background: '#16a34a', color: 'white', fontSize: '11px',
-                      padding: '3px 8px', borderRadius: '99px', fontWeight: '600'
-                    }}>
-                      ✅ Disponible
-                    </span>
-                  </div>
-                  <div style={{ padding: '1rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                      <span style={{ fontWeight: '600', fontSize: '14px' }}>
-                        {offer.containerType?.replace(/_/g, ' ')}
-                      </span>
-                      <span style={{
-                        fontSize: '11px', background: '#dbeafe', color: '#1e40af',
-                        padding: '2px 7px', borderRadius: '99px'
-                      }}>
-                        {offer.cargoType}
-                      </span>
-                    </div>
-                    <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '4px' }}>
-                      📍 {offer.location}
-                    </div>
-                    {offer.description && (
-                      <div style={{
-                        fontSize: '12px', color: '#9ca3af', marginBottom: '8px',
-                        overflow: 'hidden', display: '-webkit-box',
-                        WebkitLineClamp: 2, WebkitBoxOrient: 'vertical'
-                      }}>
-                        {offer.description}
-                      </div>
-                    )}
+              {filteredOffers.map(offer => {
+                const isMatched = matchedOfferIds.includes(offer.id);
+                return (
+                  <div
+                    key={offer.id}
+                    onClick={() => navigate(`/containers/marketplace/${offer.id}`)}
+                    style={{
+                      background: 'white', borderRadius: '16px', overflow: 'hidden',
+                      border: isMatched ? '2px solid #16a34a' : '1px solid #e5e7eb', cursor: 'pointer',
+                      boxShadow: isMatched ? '0 0 0 3px rgba(22,163,74,0.15)' : '0 2px 8px rgba(0,0,0,0.08)', 
+                      transition: 'transform 0.2s'
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-4px)'}
+                    onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+                  >
                     <div style={{
-                      display: 'flex', justifyContent: 'space-between',
-                      paddingTop: '8px', borderTop: '1px solid #f3f4f6', fontSize: '12px'
+                      height: '180px', background: '#f3f4f6', display: 'flex',
+                      alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative'
                     }}>
-                      <span style={{ color: '#6b7280' }}>📅 {offer.availableDate}</span>
-                      <span style={{ color: '#1d4ed8', fontWeight: '500' }}>Voir détails →</span>
+                      {offer.imageUrls?.length > 0 ? (
+                        <img src={offer.imageUrls[0]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <span style={{ fontSize: '56px' }}>📦</span>
+                      )}
+                      <span style={{
+                        position: 'absolute', top: '10px', right: '10px',
+                        background: '#16a34a', color: 'white', fontSize: '11px',
+                        padding: '3px 8px', borderRadius: '99px', fontWeight: '600'
+                      }}>
+                        ✅ Disponible
+                      </span>
+                      {isMatched && (
+                        <span style={{
+                          position: 'absolute',
+                          top: '10px', left: '10px',
+                          background: '#16a34a',
+                          color: 'white',
+                          fontSize: '11px',
+                          fontWeight: '700',
+                          padding: '4px 10px',
+                          borderRadius: '99px',
+                          zIndex: 2
+                        }}>
+                          🎯 Correspond à votre demande
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ padding: '1rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                        <span style={{ fontWeight: '600', fontSize: '14px' }}>
+                          {offer.containerType?.replace(/_/g, ' ')}
+                        </span>
+                        <span style={{
+                          fontSize: '11px', background: '#dbeafe', color: '#1e40af',
+                          padding: '2px 7px', borderRadius: '99px'
+                        }}>
+                          {offer.cargoType}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '4px' }}>
+                        📍 {offer.location}
+                      </div>
+                      {offer.description && (
+                        <div style={{
+                          fontSize: '12px', color: '#9ca3af', marginBottom: '8px',
+                          overflow: 'hidden', display: '-webkit-box',
+                          WebkitLineClamp: 2, WebkitBoxOrient: 'vertical'
+                        }}>
+                          {offer.description}
+                        </div>
+                      )}
+                      <div style={{
+                        display: 'flex', justifyContent: 'space-between',
+                        paddingTop: '8px', borderTop: '1px solid #f3f4f6', fontSize: '12px'
+                      }}>
+                        <span style={{ color: '#6b7280' }}>📅 {offer.availableDate}</span>
+                        <span style={{ color: '#1d4ed8', fontWeight: '500' }}>Voir détails →</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -515,12 +559,27 @@ export default function ContainersPage() {
                   <div style={{ display: 'flex', gap: '6px' }}>
                     <button
                       onClick={() => handleMatch(r.id)}
+                      disabled={matchingId === r.id}
                       style={{
-                        padding: '6px 12px', background: '#d1fae5', color: '#065f46',
-                        border: '1px solid #6ee7b7', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: '500'
+                        padding: '6px 12px', 
+                        background: matchingId === r.id 
+                          ? '#e5e7eb' : '#d1fae5',
+                        color: matchingId === r.id 
+                          ? '#6b7280' : '#065f46',
+                        border: '1px solid #6ee7b7',
+                        borderRadius: '8px',
+                        cursor: matchingId === r.id 
+                          ? 'not-allowed' : 'pointer',
+                        fontSize: '12px',
+                        fontWeight: '500',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
                       }}
                     >
-                      🔍 Matcher
+                      {matchingId === r.id 
+                        ? '⏳ Recherche...' 
+                        : '🔍 Trouver conteneurs'}
                     </button>
                     <button
                       onClick={() => { setSelectedRequest(r); setShowEditModal(true); }}

@@ -65,6 +65,18 @@ public class ContainerOffer {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    @Column(name = "technical_condition")
+    private String technicalCondition;
+
+    @Column(name = "year_of_manufacture")
+    private Integer yearOfManufacture;
+
+    @Column(name = "container_number")
+    private String containerNumber;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

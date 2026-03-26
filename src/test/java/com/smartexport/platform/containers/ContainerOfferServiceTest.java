@@ -8,6 +8,8 @@ import com.smartexport.platform.containers.entity.enums.CargoType;
 import com.smartexport.platform.containers.exception.ContainerNotFoundException;
 import com.smartexport.platform.containers.exception.UnauthorizedContainerAccessException;
 import com.smartexport.platform.containers.repository.ContainerOfferRepository;
+import com.smartexport.platform.containers.repository.ContainerOfferImageRepository;
+import com.smartexport.platform.containers.repository.ContainerMatchRepository;
 import com.smartexport.platform.containers.service.ContainerOfferService;
 import com.smartexport.platform.containers.service.GeocodingService;
 import com.smartexport.platform.containers.service.PortService;
@@ -34,6 +36,12 @@ class ContainerOfferServiceTest {
 
     @Mock
     ContainerOfferRepository offerRepository;
+    
+    @Mock
+    ContainerMatchRepository matchRepository;
+    
+    @Mock
+    ContainerOfferImageRepository imageRepository;
     
     @Mock
     UserRepository userRepository;
@@ -84,6 +92,7 @@ class ContainerOfferServiceTest {
         ContainerOffer savedOffer = createOffer(1L, provider);
         when(userRepository.findById(1L)).thenReturn(Optional.of(provider));
         when(offerRepository.save(any())).thenReturn(savedOffer);
+        when(imageRepository.findByOfferIdOrderByImageOrder(any())).thenReturn(java.util.Collections.emptyList());
 
         ContainerOfferDTO result = offerService.createOffer(createOfferDTO(), 1L);
 
@@ -107,6 +116,7 @@ class ContainerOfferServiceTest {
                 createOffer(2L, provider)
         );
         when(offerRepository.findByProviderId(1L)).thenReturn(offers);
+        when(imageRepository.findByOfferIdOrderByImageOrder(any())).thenReturn(java.util.Collections.emptyList());
 
         List<ContainerOfferDTO> result = offerService.getOffersByProvider(1L);
 

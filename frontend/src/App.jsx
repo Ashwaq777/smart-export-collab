@@ -15,8 +15,11 @@ import Register from './pages/Register'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import ContainerDashboard from './pages/containers/ContainerDashboard'
+import ContainersPage from './pages/containers/ContainersPage'
 import MatchesPage from './pages/containers/MatchesPage'
 import TransactionsPage from './pages/containers/TransactionsPage'
+import MarketplacePage from './pages/containers/MarketplacePage'
+import OfferDetailPage from './pages/containers/OfferDetailPage'
 import VesselTrackingPage from './pages/vessels/VesselTrackingPage'
 
 function App() {
@@ -65,14 +68,21 @@ function App() {
             <Route path="/containers" element={
               <ProtectedRoute excludeRole="ADMIN">
                 <MainLayout>
-                  <ContainerDashboard />
+                  <ContainersPage />
                 </MainLayout>
               </ProtectedRoute>
             } />
-            <Route path="/containers/matches" element={
+            <Route path="/containers/marketplace" element={
               <ProtectedRoute excludeRole="ADMIN">
                 <MainLayout>
-                  <MatchesPage />
+                  <ContainersPage />
+                </MainLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/containers/marketplace/:id" element={
+              <ProtectedRoute excludeRole="ADMIN">
+                <MainLayout>
+                  <OfferDetailPage />
                 </MainLayout>
               </ProtectedRoute>
             } />

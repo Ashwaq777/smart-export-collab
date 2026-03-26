@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -92,5 +93,48 @@ public class ContainerOfferController {
         offerService.deleteOffer(id, userId);
         return ResponseEntity.ok(
             ContainerApiResponse.success("Offer deleted", null));
+    }
+
+    @PostMapping("/{id}/images")
+    @Operation(summary = "Upload images for offer")
+    public ResponseEntity<ContainerApiResponse<List<String>>>
+            uploadImages(
+                @PathVariable Long id,
+                @RequestParam("files") 
+                    List<MultipartFile> files)
+                throws java.io.IOException {
+        Long userId = ContainerSecurityUtils.getCurrentUserId(userRepository);
+        List<String> urls = 
+            offerService.uploadImages(id, files, userId);
+        return ResponseEntity.ok(
+            ContainerApiResponse.success(
+                "Images uploaded", urls));
+    }
+
+    @GetMapping("/images/{filename:.+}")
+    @Operation(summary = "Serve image file")
+    public ResponseEntity<org.springframework.core.io.Resource> 
+            serveImage(@PathVariable String filename) {
+        try {
+            java.io.File file = new java.io.File(
+                "uploads/containers/images/" + filename);
+            if (!file.exists()) {
+                return ResponseEntity.notFound().build();
+            }
+            org.springframework.core.io.Resource resource =
+                new org.springframework.core.io
+                    .FileSystemResource(file);
+            String ct = filename.endsWith(".png")
+                ? "image/png"
+                : filename.endsWith(".webp")
+                ? "image/webp" : "image/jpeg";
+            return ResponseEntity.ok()
+                .contentType(
+                    org.springframework.http.MediaType
+                        .parseMediaType(ct))
+                .body(resource);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

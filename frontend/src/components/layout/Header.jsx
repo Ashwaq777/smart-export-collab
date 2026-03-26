@@ -23,8 +23,7 @@ export const Header = () => {
     ...(user?.role !== 'ADMIN' ? [{ path: '/calculator', label: 'Calculator' }] : []),
     ...(user?.role !== 'ADMIN' ? [{ path: '/traceability', label: 'Traçabilité' }] : []),
     ...(user?.role !== 'ADMIN' ? [
-      { path: '/containers', label: '🚢 Conteneurs' },
-      { path: '/containers/matches', label: '🤝 Correspondances' },
+      { path: '/containers/marketplace', label: '🚢 Conteneurs' },
       { path: '/containers/transactions', label: '📋 Transactions' },
       { path: '/vessels', label: '🚢 Tracking Navires' }
     ] : []),

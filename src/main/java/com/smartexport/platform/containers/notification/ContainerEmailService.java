@@ -117,6 +117,26 @@ public class ContainerEmailService {
         log.info("Email sent → {} | {}", to, subject);
     }
 
+    public void sendHtmlEmail(String to,
+            String subject, String html) {
+        try {
+            MimeMessage message = 
+                mailSender.createMimeMessage();
+            MimeMessageHelper helper =
+                new MimeMessageHelper(
+                    message, true, "UTF-8");
+            helper.setFrom(fromAddress);
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(html, true);
+            mailSender.send(message);
+            log.info("HTML email sent to: {}", to);
+        } catch (Exception e) {
+            log.error("Failed to send email to {}: {}",
+                to, e.getMessage());
+        }
+    }
+
     private Context buildMatchFoundContext(ContainerMatch match) {
         Context ctx = new Context(Locale.FRENCH);
         // Use EXACT field names from User entity read in STEP 3

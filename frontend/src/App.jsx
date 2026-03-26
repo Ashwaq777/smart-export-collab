@@ -20,6 +20,7 @@ import MatchesPage from './pages/containers/MatchesPage'
 import TransactionsPage from './pages/containers/TransactionsPage'
 import MarketplacePage from './pages/containers/MarketplacePage'
 import OfferDetailPage from './pages/containers/OfferDetailPage'
+import SendDirectRequestPage from './pages/containers/SendDirectRequestPage'
 import VesselTrackingPage from './pages/vessels/VesselTrackingPage'
 
 function App() {
@@ -76,6 +77,13 @@ function App() {
               <ProtectedRoute excludeRole="ADMIN">
                 <MainLayout>
                   <ContainersPage />
+                </MainLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/containers/marketplace/:id/request" element={
+              <ProtectedRoute excludeRole="ADMIN">
+                <MainLayout>
+                  <SendDirectRequestPage />
                 </MainLayout>
               </ProtectedRoute>
             } />

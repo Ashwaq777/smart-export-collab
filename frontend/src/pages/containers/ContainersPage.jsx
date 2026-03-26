@@ -55,6 +55,7 @@ export default function ContainersPage() {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [matchingId, setMatchingId] = useState(null);
   const [matchedOfferIds, setMatchedOfferIds] = useState([]);
+  const [matchScores, setMatchScores] = useState({});
 
   useEffect(() => { loadAll(); }, []);
 
@@ -147,9 +148,14 @@ export default function ContainersPage() {
     const count = Array.isArray(matches) ? matches.length : 0;
     
     if (count > 0) {
-      // Store matched offer IDs for highlighting
+      // Store matched offer IDs and scores for highlighting
       const offerIds = matches.map(m => m.offerId);
+      const scoreMap = {};
+      matches.forEach(m => {
+        scoreMap[m.offerId] = m.compatibilityScore;
+      });
       setMatchedOfferIds(offerIds);
+      setMatchScores(scoreMap);
       setActiveTab(0); // Switch to marketplace tab
       alert(`✅ ${count} conteneur(s) correspondant(s) trouvé(s) !\nIls sont mis en évidence dans le marketplace.`);
     } else {
@@ -446,6 +452,7 @@ export default function ContainersPage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
               {filteredOffers.map(offer => {
                 const isMatched = matchedOfferIds.includes(offer.id);
+                const matchScore = matchScores[offer.id];
                 return (
                   <div
                     key={offer.id}
@@ -489,6 +496,23 @@ export default function ContainersPage() {
                         }}>
                           🎯 Correspond à votre demande
                         </span>
+                      )}
+                      {isMatched && matchScore && (
+                        <div style={{
+                          position: 'absolute',
+                          bottom: '10px', right: '10px',
+                          background: 'white',
+                          borderRadius: '8px',
+                          padding: '4px 8px',
+                          fontSize: '12px',
+                          fontWeight: '700',
+                          color: matchScore >= 70 ? '#16a34a' 
+                               : matchScore >= 50 ? '#d97706' 
+                               : '#6b7280',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+                        }}>
+                          {Math.round(matchScore)}% compatible
+                        </div>
                       )}
                     </div>
                     <div style={{ padding: '1rem' }}>

@@ -96,3 +96,4 @@ uploads/
 *.log
 backend.log
 frontend.log
+ACCOUNTS.md

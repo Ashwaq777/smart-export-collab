@@ -1,0 +1,5 @@
+ALTER TABLE cont_offer 
+ADD COLUMN IF NOT EXISTS description TEXT,
+ADD COLUMN IF NOT EXISTS technical_condition VARCHAR(100),
+ADD COLUMN IF NOT EXISTS year_of_manufacture INT,
+ADD COLUMN IF NOT EXISTS container_number VARCHAR(50);

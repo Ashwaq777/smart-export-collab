@@ -157,9 +157,15 @@ export default function ContainersPage() {
       setMatchedOfferIds(offerIds);
       setMatchScores(scoreMap);
       setActiveTab(0); // Switch to marketplace tab
-      alert(`✅ ${count} conteneur(s) correspondant(s) trouvé(s) !\nIls sont mis en évidence dans le marketplace.`);
+      
+      // Create detailed match info for the alert
+      const matchDetails = matches.map(m => 
+        `• Offre à ${m.offerLocation} - ${Math.round(m.compatibilityScore)}% compatible (${Math.round(m.distanceKm)}km)`
+      ).join('\n');
+      
+      alert(`✅ ${count} correspondance(s) trouvée(s) !\n\n${matchDetails}\n\n📍 Les offres correspondantes sont maintenant mises en évidence en vert dans le marketplace ci-dessus avec le badge "🎯 Correspond à votre demande".\n\nVous pouvez aussi voir toutes vos correspondances dans l'onglet "🤝 Mes Correspondances" du menu.`);
     } else {
-      alert('Aucun conteneur disponible ne correspond à votre demande pour le moment.');
+      alert('❌ Aucun conteneur disponible ne correspond à votre demande pour le moment.\n\nEssayez de :\n• Modifier les critères (type de conteneur, cargaison)\n• Choisir une date requise plus tardive\n• Élargir la zone de recherche');
     }
     await loadAll();
   } catch(err) {
@@ -483,35 +489,41 @@ export default function ContainersPage() {
                         ✅ Disponible
                       </span>
                       {isMatched && (
-                        <span style={{
+                        <div style={{
                           position: 'absolute',
                           top: '10px', left: '10px',
-                          background: '#16a34a',
+                          background: 'linear-gradient(135deg, #16a34a, #22c55e)',
                           color: 'white',
                           fontSize: '11px',
                           fontWeight: '700',
-                          padding: '4px 10px',
+                          padding: '6px 12px',
                           borderRadius: '99px',
-                          zIndex: 2
+                          zIndex: 2,
+                          boxShadow: '0 2px 8px rgba(22,163,74,0.4)',
+                          border: '2px solid white',
+                          maxWidth: '200px',
+                          textAlign: 'center'
                         }}>
-                          🎯 Correspond à votre demande
-                        </span>
+                          🎯 CORRESPONDANCE TROUVÉE
+                        </div>
                       )}
                       {isMatched && matchScore && (
                         <div style={{
                           position: 'absolute',
                           bottom: '10px', right: '10px',
-                          background: 'white',
-                          borderRadius: '8px',
-                          padding: '4px 8px',
+                          background: matchScore >= 80 ? 'linear-gradient(135deg, #16a34a, #22c55e)' 
+                               : matchScore >= 60 ? 'linear-gradient(135deg, #d97706, #f59e0b)' 
+                               : 'linear-gradient(135deg, #6b7280, #9ca3af)',
+                          color: 'white',
+                          borderRadius: '10px',
+                          padding: '6px 10px',
                           fontSize: '12px',
-                          fontWeight: '700',
-                          color: matchScore >= 70 ? '#16a34a' 
-                               : matchScore >= 50 ? '#d97706' 
-                               : '#6b7280',
-                          boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+                          fontWeight: '800',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                          border: '2px solid white',
+                          textAlign: 'center'
                         }}>
-                          {Math.round(matchScore)}% compatible
+                          {Math.round(matchScore)}% COMPATIBLE
                         </div>
                       )}
                     </div>
@@ -602,8 +614,8 @@ export default function ContainersPage() {
                       }}
                     >
                       {matchingId === r.id 
-                        ? '⏳ Recherche...' 
-                        : '🔍 Trouver conteneurs'}
+                        ? '⏳ Recherche en cours...' 
+                        : '🎯 Trouver des correspondances'}
                     </button>
                     <button
                       onClick={() => { setSelectedRequest(r); setShowEditModal(true); }}

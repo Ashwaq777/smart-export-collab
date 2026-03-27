@@ -257,8 +257,16 @@ public class ContainerTransactionService {
     }
 
     public List<ContainerTransactionDTO> getMyTransactions(Long userId) {
-        return transactionRepository
-                .findByMatchOfferProviderIdOrMatchRequestSeekerId(userId, userId)
+        List<ContainerTransaction> transactions = transactionRepository
+                .findByMatchOfferProviderIdOrMatchRequestSeekerId(userId, userId);
+        
+        // If the automatic query doesn't work, fallback to manual query
+        if (transactions.isEmpty()) {
+            log.warn("Automatic query returned empty for user {}, trying manual JPQL", userId);
+            transactions = transactionRepository.findMyTransactionsManual(userId);
+        }
+        
+        return transactions
                 .stream()
                 .map(tx -> {
                     try {

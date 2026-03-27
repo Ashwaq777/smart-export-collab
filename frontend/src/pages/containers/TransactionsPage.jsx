@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import containerService from '../../services/containerService';
 
 export default function TransactionsPage() {
+  const { user } = useAuth();
+  const isProvider = user?.role === 'IMPORTATEUR';
+  const isSeeker = user?.role === 'EXPORTATEUR';
+  
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -331,117 +336,132 @@ export default function TransactionsPage() {
                 🗑️ Supprimer la transaction
               </button>
 
-              {/* EIR Document */}
+              {/* EIR Section */}
               <div style={{
                 marginTop: '1rem',
                 paddingTop: '1rem',
                 borderTop: '1px solid #e5e7eb'
               }}>
                 <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '1rem',
-                  flexWrap: 'wrap'
+                  fontSize: '13px', fontWeight: '500',
+                  marginBottom: '8px', color: '#374151'
                 }}>
-                  <span style={{
-                    fontSize: '13px',
-                    color: '#6b7280',
-                    fontWeight: '500'
-                  }}>
-                    📎 Document EIR:
-                  </span>
+                  📎 Document EIR
+                </div>
 
-                  {tx.eirDocumentPath ? (
-                    <>
+                {isProvider && (
+                  <div style={{
+                    display: 'flex', gap: '8px',
+                    flexWrap: 'wrap', alignItems: 'center'
+                  }}>
+                    {tx.eirDocumentPath ? (
+                      <>
+                        <span style={{
+                          fontSize: '12px', color: '#16a34a'
+                        }}>
+                          ✅ Document déposé
+                        </span>
+                        <button
+                          onClick={() => handleDownloadEir(tx.id)}
+                          style={{
+                            padding: '5px 12px',
+                            background: '#d1fae5',
+                            color: '#065f46',
+                            border: '1px solid #6ee7b7',
+                            borderRadius: '6px',
+                            cursor: 'pointer', fontSize: '12px'
+                          }}
+                        >
+                          📥 Voir
+                        </button>
+                        <button
+                          onClick={() => handleDeleteEir(tx.id)}
+                          style={{
+                            padding: '5px 12px',
+                            background: '#fee2e2',
+                            color: '#991b1b',
+                            border: '1px solid #fca5a5',
+                            borderRadius: '6px',
+                            cursor: 'pointer', fontSize: '12px'
+                          }}
+                        >
+                          🗑️ Supprimer
+                        </button>
+                      </>
+                    ) : (
                       <span style={{
-                        fontSize: '13px',
-                        color: '#16a34a',
-                        display: 'flex',
-                        alignItems: 'center',
+                        fontSize: '12px', color: '#6b7280'
+                      }}>
+                        Aucun document — uploadez l'EIR
+                      </span>
+                    )}
+                    <label style={{
+                      padding: '5px 12px',
+                      background: uploadingEir === tx.id
+                        ? '#e5e7eb' : '#eff6ff',
+                      color: uploadingEir === tx.id
+                        ? '#6b7280' : '#1d4ed8',
+                      border: '1px solid #bfdbfe',
+                      borderRadius: '6px', cursor: 'pointer',
+                      fontSize: '12px', fontWeight: '500'
+                    }}>
+                      {uploadingEir === tx.id
+                        ? '⏳ Upload...'
+                        : '📤 ' + (tx.eirDocumentPath
+                          ? 'Remplacer' : 'Déposer EIR')}
+                      <input
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        style={{ display: 'none' }}
+                        disabled={uploadingEir === tx.id}
+                        onChange={e => {
+                          if (e.target.files[0]) {
+                            handleEirUpload(tx.id, e.target.files[0]);
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
+                )}
+
+                {isSeeker && (
+                  <div>
+                    {tx.eirDocumentPath ? (
+                      <div style={{
+                        display: 'flex', gap: '8px',
+                        alignItems: 'center'
+                      }}>
+                        <span style={{
+                          fontSize: '12px', color: '#16a34a'
+                        }}>
+                          ✅ Document disponible
+                        </span>
+                        <button
+                          onClick={() => handleDownloadEir(tx.id)}
+                          style={{
+                            padding: '5px 12px',
+                            background: '#d1fae5',
+                            color: '#065f46',
+                            border: '1px solid #6ee7b7',
+                            borderRadius: '6px',
+                            cursor: 'pointer', fontSize: '12px',
+                            fontWeight: '500'
+                          }}
+                        >
+                          📥 Télécharger EIR
+                        </button>
+                      </div>
+                    ) : (
+                      <span style={{
+                        fontSize: '12px', color: '#f59e0b',
+                        display: 'flex', alignItems: 'center',
                         gap: '4px'
                       }}>
-                        ✅ Document disponible
+                        ⏳ En attente du document EIR du provider
                       </span>
-
-                      {/* Download button */}
-                      <button
-                        onClick={() => handleDownloadEir(tx.id)}
-                        style={{
-                          padding: '6px 12px',
-                          background: '#d1fae5',
-                          color: '#065f46',
-                          borderRadius: '8px',
-                          cursor: 'pointer',
-                          fontSize: '13px',
-                          fontWeight: '500',
-                          border: '1px solid #6ee7b7',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px'
-                        }}
-                      >
-                        📥 Télécharger EIR
-                      </button>
-
-                      {/* Delete button */}
-                      <button
-                        onClick={() => handleDeleteEir(tx.id)}
-                        style={{
-                          padding: '6px 12px',
-                          background: '#fee2e2',
-                          color: '#991b1b',
-                          borderRadius: '8px',
-                          cursor: 'pointer',
-                          fontSize: '13px',
-                          fontWeight: '500',
-                          border: '1px solid #fca5a5'
-                        }}
-                      >
-                        🗑️ Supprimer EIR
-                      </button>
-                    </>
-                  ) : (
-                    <span style={{
-                      fontSize: '13px',
-                      color: '#f59e0b'
-                    }}>
-                      ⏳ Généré automatiquement à la confirmation
-                    </span>
-                  )}
-
-                  {/* Upload button — always visible */}
-                  <label style={{
-                    padding: '6px 12px',
-                    background: uploadingEir === tx.id 
-                      ? '#e5e7eb' : '#eff6ff',
-                    color: uploadingEir === tx.id 
-                      ? '#6b7280' : '#1d4ed8',
-                    borderRadius: '8px',
-                    cursor: uploadingEir === tx.id 
-                      ? 'not-allowed' : 'pointer',
-                    fontSize: '13px',
-                    fontWeight: '500',
-                    border: '1px solid #bfdbfe',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px'
-                  }}>
-                    {uploadingEir === tx.id
-                      ? '⏳ Upload...'
-                      : '📤 Remplacer EIR'}
-                    <input
-                      type="file"
-                      accept=".pdf,.doc,.docx"
-                      style={{ display: 'none' }}
-                      disabled={uploadingEir === tx.id}
-                      onChange={(e) => {
-                        if (e.target.files[0]) {
-                          handleEirUpload(tx.id, e.target.files[0]);
-                        }
-                      }}
-                    />
-                  </label>
-                </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Vessel Tracking Link */}

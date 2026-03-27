@@ -62,16 +62,6 @@ public class ContainerTransactionService {
             matchRepository.save(match);
             transactionRepository.save(tx);
             
-            // Auto-generate EIR PDF when both confirmed
-            try {
-                String pdfPath = eirPdfService.generateEirPdf(tx);
-                tx.setEirDocumentPath(pdfPath);
-                transactionRepository.save(tx);
-                log.info("EIR PDF auto-generated: {}", pdfPath);
-            } catch (Exception e) {
-                log.error("EIR PDF generation failed: {}", e.getMessage());
-            }
-            
             // Send confirmation email when both parties have confirmed
             try {
                 emailService.sendMatchConfirmedEmail(tx);
@@ -107,16 +97,6 @@ public class ContainerTransactionService {
             match.setStatus(ContainerMatchStatus.CONFIRMED);
             matchRepository.save(match);
             transactionRepository.save(tx);
-            
-            // Auto-generate EIR PDF when both confirmed
-            try {
-                String pdfPath = eirPdfService.generateEirPdf(tx);
-                tx.setEirDocumentPath(pdfPath);
-                transactionRepository.save(tx);
-                log.info("EIR PDF auto-generated: {}", pdfPath);
-            } catch (Exception e) {
-                log.error("EIR PDF generation failed: {}", e.getMessage());
-            }
             
             // Send confirmation email when both parties have confirmed
             try {
@@ -191,26 +171,42 @@ public class ContainerTransactionService {
         .orElseThrow(() -> new ContainerNotFoundException(
             "Transaction not found: " + transactionId));
 
+    // Only provider can upload EIR
+    Long providerId = transaction.getMatch().getOffer()
+        .getProvider().getId();
+    if (!providerId.equals(userId)) {
+        throw new UnauthorizedContainerAccessException(
+            "Only provider can upload EIR document");
+    }
+
     // Save file
-    String uploadDir = "uploads/eir/";
+    String uploadDir = "uploads/eir-documents/";
     java.nio.file.Path uploadPath = 
         java.nio.file.Paths.get(uploadDir);
     if (!java.nio.file.Files.exists(uploadPath)) {
         java.nio.file.Files.createDirectories(uploadPath);
     }
 
-    String filename = java.util.UUID.randomUUID() + "_" 
-        + file.getOriginalFilename();
+    String ext = "";
+    String orig = file.getOriginalFilename();
+    if (orig != null && orig.contains(".")) {
+        ext = orig.substring(orig.lastIndexOf("."));
+    }
+    String filename = "EIR_" + transactionId
+        + "_" + System.currentTimeMillis() + ext;
     java.nio.file.Path filePath = uploadPath.resolve(filename);
     java.nio.file.Files.copy(
         file.getInputStream(), filePath,
         java.nio.file.StandardCopyOption.REPLACE_EXISTING);
 
     transaction.setEirDocumentPath(uploadDir + filename);
-    transactionRepository.save(transaction);
+    ContainerTransaction saved = transactionRepository.save(transaction);
 
-    log.info("EIR uploaded for tx {} by user {}: {}", 
-        transactionId, userId, filename);
+    // Notify seeker by email
+    notifySeekerEirUploaded(saved);
+
+    log.info("EIR uploaded for tx {} by provider {}",
+        transactionId, userId);
     return filename;
 }
 
@@ -286,6 +282,49 @@ public class ContainerTransactionService {
             newTx.setWorkflowStatus(WorkflowStatus.AT_PROVIDER);
             return transactionRepository.save(newTx);
         });
+    }
+
+    private void notifySeekerEirUploaded(ContainerTransaction tx) {
+        try {
+            String seekerEmail = tx.getMatch()
+                .getRequest().getSeeker().getEmail();
+            String seekerName = tx.getMatch()
+                .getRequest().getSeeker().getFirstName();
+
+            String html = """
+              <div style="font-family:Arial,sans-serif;
+                max-width:600px;margin:0 auto;">
+                <div style="background:#1a73e8;color:white;
+                  padding:20px;border-radius:8px 8px 0 0;">
+                  <h2 style="margin:0">
+                    📄 Document EIR Disponible
+                  </h2>
+                </div>
+                <div style="padding:24px;background:#f8f9fa;
+                  border-radius:0 0 8px 8px;">
+                  <p>Bonjour %s,</p>
+                  <p>Le provider a déposé le document 
+                  <b>EIR (Equipment Interchange Receipt)</b>
+                  pour votre transaction.</p>
+                  <p>Connectez-vous à la plateforme pour 
+                  le télécharger dans l'onglet 
+                  <b>Transactions</b>.</p>
+                  <p style="color:#6b7280;font-size:12px;">
+                    © 2026 Smart Export Global
+                  </p>
+                </div>
+              </div>
+              """.formatted(seekerName);
+
+            emailService.sendHtmlEmail(
+                seekerEmail,
+                "📄 Document EIR disponible — "
+                + "Smart Export Global",
+                html);
+        } catch (Exception e) {
+            log.error("EIR notification failed: {}",
+                e.getMessage());
+        }
     }
 
     private boolean isUserInvolved(ContainerTransaction tx, Long userId) {

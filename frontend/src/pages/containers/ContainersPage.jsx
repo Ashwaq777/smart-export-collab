@@ -165,7 +165,7 @@ export default function ContainersPage() {
       
       alert(`✅ ${count} correspondance(s) trouvée(s) !\n\n${matchDetails}\n\n📍 Les offres correspondantes sont maintenant mises en évidence en vert dans le marketplace ci-dessus avec le badge "🎯 Correspond à votre demande".\n\nVous pouvez aussi voir toutes vos correspondances dans l'onglet "🤝 Mes Correspondances" du menu.`);
     } else {
-      alert('❌ Aucun conteneur disponible ne correspond à votre demande pour le moment.\n\nEssayez de :\n• Modifier les critères (type de conteneur, cargaison)\n• Choisir une date requise plus tardive\n• Élargir la zone de recherche');
+      alert(`❌ Aucune nouvelle correspondance trouvée pour cette demande.\n\n💡 Vous avez déjà des correspondances existantes !\n\nPour voir toutes vos correspondances :\n• Allez dans l\'onglet "🤝 Mes Correspondances" du menu\n\nOu essayez de :\n• Modifier les critères (type de conteneur, cargaison)\n• Choisir une date requise plus tardive\n• Créer une nouvelle demande`);
     }
     await loadAll();
   } catch(err) {

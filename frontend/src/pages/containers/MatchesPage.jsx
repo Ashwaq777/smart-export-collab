@@ -46,7 +46,7 @@ export default function MatchesPage() {
   const getScoreColor = (score) => {
     if (score >= 70) return '#16a34a';
     if (score >= 40) return '#d97706';
-    return '#dc2626';
+    return '#6b7280';
   };
 
   const getStatusBadge = (status) => {

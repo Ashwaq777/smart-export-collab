@@ -511,8 +511,8 @@ export default function ContainersPage() {
                         <div style={{
                           position: 'absolute',
                           bottom: '10px', right: '10px',
-                          background: matchScore >= 80 ? 'linear-gradient(135deg, #16a34a, #22c55e)' 
-                               : matchScore >= 60 ? 'linear-gradient(135deg, #d97706, #f59e0b)' 
+                          background: matchScore >= 70 ? 'linear-gradient(135deg, #16a34a, #22c55e)' 
+                               : matchScore >= 40 ? 'linear-gradient(135deg, #d97706, #f59e0b)' 
                                : 'linear-gradient(135deg, #6b7280, #9ca3af)',
                           color: 'white',
                           borderRadius: '10px',

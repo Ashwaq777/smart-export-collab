@@ -18,6 +18,7 @@ import ContainerDashboard from './pages/containers/ContainerDashboard'
 import ContainersPage from './pages/containers/ContainersPage'
 import MatchesPage from './pages/containers/MatchesPage'
 import TransactionsPage from './pages/containers/TransactionsPage'
+import EirDocumentsPage from './pages/containers/EirDocumentsPage'
 import MarketplacePage from './pages/containers/MarketplacePage'
 import OfferDetailPage from './pages/containers/OfferDetailPage'
 import SendDirectRequestPage from './pages/containers/SendDirectRequestPage'
@@ -99,6 +100,13 @@ function App() {
               <ProtectedRoute excludeRole="ADMIN">
                 <MainLayout>
                   <TransactionsPage />
+                </MainLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/containers/eir-documents" element={
+              <ProtectedRoute excludeRole="ADMIN">
+                <MainLayout>
+                  <EirDocumentsPage />
                 </MainLayout>
               </ProtectedRoute>
             } />

@@ -357,4 +357,16 @@ public class ContainerTransactionService {
         dto.setUpdatedAt(tx.getUpdatedAt());
         return dto;
     }
+
+    public Long getProviderIdForTransaction(Long transactionId) {
+        ContainerTransaction tx = transactionRepository.findById(transactionId)
+            .orElseThrow(() -> new ContainerNotFoundException("Transaction not found: " + transactionId));
+        return tx.getMatch().getOffer().getProvider().getId();
+    }
+
+    public Long getSeekerIdForTransaction(Long transactionId) {
+        ContainerTransaction tx = transactionRepository.findById(transactionId)
+            .orElseThrow(() -> new ContainerNotFoundException("Transaction not found: " + transactionId));
+        return tx.getMatch().getRequest().getSeeker().getId();
+    }
 }

@@ -64,6 +64,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PUT, "/api/v1/containers/**").authenticated()
                 .requestMatchers(HttpMethod.DELETE, "/api/v1/containers/**").authenticated()
                 .requestMatchers(HttpMethod.PATCH, "/api/v1/containers/**").authenticated()
+                .requestMatchers("/api/v1/eir/**").authenticated()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, 

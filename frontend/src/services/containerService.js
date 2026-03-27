@@ -69,57 +69,57 @@ const containerService = {
 
   // Requests
   createRequest: (data) =>
-    api.post('/api/v1/containers/requests', data),
+    api.post('/v1/containers/requests', data),
 
   getMyRequests: () =>
-    api.get('/api/v1/containers/requests/my'),
+    api.get('/v1/containers/requests/my'),
 
   deleteRequest: (id) =>
-    api.delete(`/api/v1/containers/requests/${id}`),
+    api.delete(`/v1/containers/requests/${id}`),
 
   updateRequest: (id, data) =>
-    api.put(`/api/v1/containers/requests/${id}`, data),
+    api.put(`/v1/containers/requests/${id}`, data),
 
   triggerMatchmaking: (id) =>
-    api.post(`/api/v1/containers/requests/${id}/match`),
+    api.post(`/v1/containers/requests/${id}/match`),
 
   // Matches
   getMyMatches: () =>
-    api.get('/api/v1/containers/matches/my'),
+    api.get('/v1/containers/matches/my'),
 
   confirmMatch: (id) =>
-    api.post(`/api/v1/containers/matches/${id}/confirm`),
+    api.post(`/v1/containers/matches/${id}/confirm`),
 
   rejectMatch: (id) =>
-    api.post(`/api/v1/containers/matches/${id}/reject`),
+    api.post(`/v1/containers/matches/${id}/reject`),
 
   // Transactions
   getMyTransactions: () =>
-    api.get('/api/v1/containers/transactions/my'),
+    api.get('/v1/containers/transactions/my'),
 
   updateWorkflow: (id, status) =>
-    api.patch(`/api/v1/containers/transactions/${id}/workflow?status=${status}`),
+    api.patch(`/v1/containers/transactions/${id}/workflow?status=${status}`),
 
   // EIR Document Upload
   uploadEir: (transactionId, file) => {
     const formData = new FormData();
     formData.append('file', file);
-    return api.post(`/api/v1/containers/transactions/${transactionId}/eir`, formData, {
+    return api.post(`/v1/containers/transactions/${transactionId}/eir`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
   },
 
   // EIR Documents
-  getMyEirDocuments: () => api.get('/api/v1/eir/my-documents'),
+  getMyEirDocuments: () => api.get('/v1/eir/my-documents'),
   downloadEir: (transactionId) => `/api/v1/eir/download/${transactionId}`,
   uploadEirDocument: (transactionId, file) => {
     const formData = new FormData();
     formData.append('file', file);
-    return api.post(`/api/v1/eir/upload/${transactionId}`, formData, {
+    return api.post(`/v1/eir/upload/${transactionId}`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
   },
-  deleteEirDocument: (transactionId) => api.delete(`/api/v1/eir/${transactionId}`),
+  deleteEirDocument: (transactionId) => api.delete(`/v1/eir/${transactionId}`),
 
   // Dashboard
   getDashboard: () =>

@@ -257,14 +257,8 @@ public class ContainerTransactionService {
     }
 
     public List<ContainerTransactionDTO> getMyTransactions(Long userId) {
-        List<ContainerTransaction> transactions = transactionRepository
-                .findByMatchOfferProviderIdOrMatchRequestSeekerId(userId, userId);
-        
-        // If the automatic query doesn't work, fallback to manual query
-        if (transactions.isEmpty()) {
-            log.warn("Automatic query returned empty for user {}, trying manual JPQL", userId);
-            transactions = transactionRepository.findMyTransactionsManual(userId);
-        }
+        // Forcer l'utilisation de la requête manuelle avec JOIN FETCH
+        List<ContainerTransaction> transactions = transactionRepository.findMyTransactionsManual(userId);
         
         return transactions
                 .stream()
@@ -363,6 +357,19 @@ public class ContainerTransactionService {
         dto.setWorkflowStatus(tx.getWorkflowStatus());
         dto.setCreatedAt(tx.getCreatedAt());
         dto.setUpdatedAt(tx.getUpdatedAt());
+        
+        // Populate missing fields from match data
+        if (tx.getMatch() != null) {
+            if (tx.getMatch().getOffer() != null) {
+                dto.setContainerType(tx.getMatch().getOffer().getContainerType() != null 
+                    ? tx.getMatch().getOffer().getContainerType().toString() : null);
+                dto.setOfferLocation(tx.getMatch().getOffer().getLocation());
+            }
+            if (tx.getMatch().getRequest() != null) {
+                dto.setRequestLocation(tx.getMatch().getRequest().getLoadingLocation());
+            }
+        }
+        
         return dto;
     }
 

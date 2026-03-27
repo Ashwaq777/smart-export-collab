@@ -91,6 +91,20 @@ const CreateRequestModal = ({ isOpen, onClose, onSuccess }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    // Validation des champs
+    if (!formData.loadingLocation || !formData.requiredDate) {
+      alert('Veuillez remplir tous les champs obligatoires')
+      return
+    }
+    
+    // Validation du format de la date
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/
+    if (!dateRegex.test(formData.requiredDate)) {
+      alert('Format de date invalide. Veuillez utiliser le sélecteur de date.')
+      return
+    }
+    
     setLoading(true)
 
     try {
@@ -128,7 +142,7 @@ const CreateRequestModal = ({ isOpen, onClose, onSuccess }) => {
       setPorts([])
     } catch (error) {
       console.error('Error creating request:', error)
-      alert('Erreur lors de la création de la demande')
+      alert('Erreur lors de la création de la demande: ' + (error.response?.data?.message || error.message))
     } finally {
       setLoading(false)
     }

@@ -20,9 +20,9 @@ public interface ContainerTransactionRepository extends JpaRepository<ContainerT
     List<ContainerTransaction> findByMatchOfferProviderIdOrMatchRequestSeekerId(Long providerId, Long seekerId);
     
     @Query("SELECT t FROM ContainerTransaction t " +
-           "JOIN t.match m " +
-           "JOIN m.offer o " +
-           "JOIN m.request r " +
+           "JOIN FETCH t.match m " +
+           "JOIN FETCH m.offer o " +
+           "JOIN FETCH m.request r " +
            "WHERE o.provider.id = :userId OR r.seeker.id = :userId")
     List<ContainerTransaction> findMyTransactionsManual(@Param("userId") Long userId);
 }

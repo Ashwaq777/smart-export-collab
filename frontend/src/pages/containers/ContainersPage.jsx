@@ -143,15 +143,32 @@ export default function ContainersPage() {
   const handleMatch = async (requestId) => {
   setMatchingId(requestId);
   try {
+    // First, trigger matchmaking (for new matches)
     const res = await containerService.triggerMatchmaking(requestId);
-    const matches = res.data?.data || [];
-    const count = Array.isArray(matches) ? matches.length : 0;
+    const newMatches = res.data?.data || [];
+    
+    // Then, get ALL existing matches for this user
+    const allMatchesRes = await containerService.getMyMatches();
+    const allMatches = allMatchesRes.data?.data || [];
+    
+    // Filter matches for this specific request
+    const requestMatches = allMatches.filter(m => m.requestId === requestId);
+    
+    // Combine new matches with existing ones (avoid duplicates)
+    const combinedMatches = [...requestMatches]; // Start with existing matches
+    newMatches.forEach(newMatch => {
+      if (!combinedMatches.some(m => m.offerId === newMatch.offerId)) {
+        combinedMatches.push(newMatch);
+      }
+    });
+    
+    const count = combinedMatches.length;
     
     if (count > 0) {
       // Store matched offer IDs and scores for highlighting
-      const offerIds = matches.map(m => m.offerId);
+      const offerIds = combinedMatches.map(m => m.offerId);
       const scoreMap = {};
-      matches.forEach(m => {
+      combinedMatches.forEach(m => {
         scoreMap[m.offerId] = m.compatibilityScore;
       });
       setMatchedOfferIds(offerIds);
@@ -159,13 +176,13 @@ export default function ContainersPage() {
       setActiveTab(0); // Switch to marketplace tab
       
       // Create detailed match info for the alert
-      const matchDetails = matches.map(m => 
+      const matchDetails = combinedMatches.map(m => 
         `• Offre à ${m.offerLocation} - ${Math.round(m.compatibilityScore)}% compatible (${Math.round(m.distanceKm)}km)`
       ).join('\n');
       
-      alert(`✅ ${count} correspondance(s) trouvée(s) !\n\n${matchDetails}\n\n📍 Les offres correspondantes sont maintenant mises en évidence en vert dans le marketplace ci-dessus avec le badge "🎯 Correspond à votre demande".\n\nVous pouvez aussi voir toutes vos correspondances dans l'onglet "🤝 Mes Correspondances" du menu.`);
+      alert(`✅ ${count} correspondance(s) trouvée(s) !\n\n${matchDetails}\n\n📍 Les offres correspondantes sont maintenant mises en évidence en vert dans le marketplace ci-dessus avec le badge "🎯 Correspond à votre demande".\n\n💡 Ces correspondances incluent vos matches existants et nouveaux.`);
     } else {
-      alert(`❌ Aucune nouvelle correspondance trouvée pour cette demande.\n\n💡 Vous avez déjà des correspondances existantes !\n\nPour voir toutes vos correspondances :\n• Allez dans l\'onglet "🤝 Mes Correspondances" du menu\n\nOu essayez de :\n• Modifier les critères (type de conteneur, cargaison)\n• Choisir une date requise plus tardive\n• Créer une nouvelle demande`);
+      alert(`❌ Aucune correspondance trouvée pour cette demande.\n\nEssayez de :\n• Modifier les critères (type de conteneur, cargaison)\n• Choisir une date requise plus tardive\n• Créer une nouvelle demande`);
     }
     await loadAll();
   } catch(err) {

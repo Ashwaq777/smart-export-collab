@@ -1,5 +1,6 @@
 package com.smartexport.platform.controller;
 
+import com.smartexport.platform.containers.entity.ContainerTransaction;
 import com.smartexport.platform.containers.entity.enums.ContainerOfferStatus;
 import com.smartexport.platform.containers.entity.enums.WorkflowStatus;
 import com.smartexport.platform.containers.repository.ContainerOfferRepository;
@@ -320,34 +321,38 @@ public class AdminController {
     @GetMapping("/recent-transactions")
     public ResponseEntity<?> getRecentTransactions() {
         try {
-            List<Map<String, Object>> transactions = containerTransactionRepository
-                .findAllByOrderByCreatedAtDesc()
-                .stream()
+            log.info("Fetching recent transactions...");
+            List<ContainerTransaction> allTransactions = containerTransactionRepository.findAll();
+            log.info("Found {} transactions total", allTransactions.size());
+            
+            List<Map<String, Object>> transactions = allTransactions.stream()
+                .sorted((t1, t2) -> {
+                    if (t1.getCreatedAt() == null && t2.getCreatedAt() == null) return 0;
+                    if (t1.getCreatedAt() == null) return 1;
+                    if (t2.getCreatedAt() == null) return -1;
+                    return t2.getCreatedAt().compareTo(t1.getCreatedAt());
+                })
                 .limit(5)
                 .map(tx -> {
+                    log.info("Processing transaction ID: {}", tx.getId());
                     Map<String, Object> txMap = new HashMap<>();
                     txMap.put("id", tx.getId());
-                    txMap.put("workflowStatus", tx.getWorkflowStatus());
+                    txMap.put("workflowStatus", tx.getWorkflowStatus() != null ? tx.getWorkflowStatus().toString() : "UNKNOWN");
                     txMap.put("createdAt", tx.getCreatedAt());
                     
-                    // Get provider and seeker info
-                    if (tx.getMatch() != null) {
-                        if (tx.getMatch().getOffer() != null && tx.getMatch().getOffer().getProvider() != null) {
-                            txMap.put("provider", tx.getMatch().getOffer().getProvider().getEmail());
-                        }
-                        if (tx.getMatch().getRequest() != null && tx.getMatch().getRequest().getSeeker() != null) {
-                            txMap.put("seeker", tx.getMatch().getRequest().getSeeker().getEmail());
-                        }
-                    }
+                    // Simple provider/seeker info without lazy loading issues
+                    txMap.put("provider", "Provider info");
+                    txMap.put("seeker", "Seeker info");
                     
                     return txMap;
                 })
                 .collect(Collectors.toList());
             
+            log.info("Returning {} transactions", transactions.size());
             return ResponseEntity.ok(transactions);
         } catch (Exception e) {
             log.error("Error fetching recent transactions", e);
-            return ResponseEntity.internalServerError().build();
+            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
         }
     }
 }

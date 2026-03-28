@@ -39,7 +39,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .cors(cors ->// Security configuration - updated for recent-transactions fix
+                cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> 
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -51,6 +52,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/forex/**").permitAll()
                 .requestMatchers("/api/countries/**").permitAll()
                 .requestMatchers("/api/admin/**").permitAll()
+                .requestMatchers("/api/admin/recent-transactions").permitAll()
                 .requestMatchers("/ws/**").permitAll()
                 .requestMatchers("/api/v1/vessels/**").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/v1/containers/offers").permitAll()

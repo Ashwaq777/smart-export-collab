@@ -138,7 +138,8 @@ function App() {
             } />
 
             {/* Route Admin */}
-            <Route path="/admin" element={
+            <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+            <Route path="/admin/dashboard" element={
               <ProtectedRoute role="ADMIN">
                 <AdminDashboard />
               </ProtectedRoute>

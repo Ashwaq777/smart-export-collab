@@ -31,7 +31,7 @@ export const Header = () => {
     ] : []),
     { path: '/support', label: '🎫 Support' },
     { path: '/about', label: 'About Us' },
-    ...(user?.role === 'ADMIN' ? [{ path: '/admin', label: 'Admin' }] : []),
+    ...(user?.role === 'ADMIN' ? [{ path: '/admin/dashboard', label: 'Admin' }] : []),
   ]
 
   const handleLogout = () => {

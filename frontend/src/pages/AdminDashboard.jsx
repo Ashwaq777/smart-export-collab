@@ -6,9 +6,13 @@ import api from '../services/api'
 const TOKEN = () => localStorage.getItem('token') || ''
 const BASE = 'http://localhost:8080/api'
 
-const NAVY = '#1B2A4A'
-const TEAL = '#0D9488'
-const GOLD = '#C9A84C'
+const NAVY = '#0B3D5C';
+const NAVY_DARK = '#1B2A4A';
+const OCEAN = '#125D86';
+const GOLD = '#C9A84C';
+const TEAL = '#0D9488';
+const BG = '#F4F7FB';
+const WHITE = '#FFFFFF';
 
 export default function AdminDashboard() {
   const { logout, user } = useAuth()
@@ -247,81 +251,196 @@ export default function AdminDashboard() {
 
   const adminEmail = user?.email || localStorage.getItem('userEmail') || 'Admin'
 
+  const sidebarItems = [
+    { key: 'overview', label: 'Vue d\'ensemble', icon: '📊' },
+    { key: 'users', label: 'Utilisateurs', icon: '👥' },
+    { key: 'containers', label: 'Conteneurs', icon: '📦' },
+    { key: 'transactions', label: 'Transactions', icon: '🚚' },
+    { key: 'claims', label: 'Réclamations', icon: '🎫' },
+    { key: 'countries', label: 'Pays & Tarifs', icon: '🌍' },
+    { key: 'ports', label: 'Ports', icon: '⚓' },
+    { key: 'rates', label: 'Taux de change', icon: '💱' }
+  ]
+
+  const getRoleColor = (role) => {
+    switch(role) {
+      case 'IMPORTATEUR': return '#3B82F6'
+      case 'EXPORTATEUR': return '#0D9488'
+      case 'ADMIN': return '#C9A84C'
+      default: return '#6B7280'
+    }
+  }
+
+  const getStatusColor = (status) => {
+    switch(status) {
+      case 'ACTIVE': return '#10B981'
+      case 'BLOCKED': return '#EF4444'
+      default: return '#6B7280'
+    }
+  }
+
+  const getWorkflowStatusColor = (status) => {
+    switch(status) {
+      case 'AT_PROVIDER': return '#F59E0B'
+      case 'IN_TRANSIT': return '#3B82F6'
+      case 'DELIVERED': return '#10B981'
+      case 'COMPLETED': return '#0D9488'
+      case 'LOADING': return '#6B7280'
+      default: return '#6B7280'
+    }
+  }
+
   return (
-    <div style={{minHeight:'100vh', background:'#F3F4F6'}}>
-
+    <div style={{ minHeight: '100vh', display: 'flex', background: '#F4F7FB' }}>
+      
+      {/* Sidebar */}
       <div style={{
-        background:NAVY, padding:'0 32px',
-        display:'flex', alignItems:'center', justifyContent:'space-between',
-        height:'64px', boxShadow:'0 2px 8px rgba(0,0,0,0.15)'
+        width: '240px',
+        background: '#0B3D5C',
+        color: 'white',
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'fixed',
+        height: '100vh',
+        left: 0,
+        top: 0,
+        zIndex: 1000
       }}>
-        <div style={{display:'flex',alignItems:'center',gap:'16px'}}>
-          <span style={{color:'white',fontWeight:'700',fontSize:'18px'}}>
-            Admin Dashboard
-          </span>
-          <span style={{color:'rgba(255,255,255,0.6)',fontSize:'14px'}}>
-            {adminEmail}
-          </span>
-        </div>
-        <button onClick={handleLogout} style={btnG}>
-          Deconnexion
-        </button>
-      </div>
-
-      <div style={{
-        display:'grid', gridTemplateColumns:'repeat(4,1fr)',
-        gap:'20px', padding:'24px 32px 0'
-      }}>
-        {[
-          {label:'Total Utilisateurs',value:stats.totalUsers,color:TEAL,icon:'👥'},
-          {label:'Actifs',value:stats.activeUsers,color:'#10B981',icon:'✅'},
-          {label:'Bloques',value:stats.blockedUsers,color:'#EF4444',icon:'🚫'},
-          {label:'Admins',value:stats.adminCount,color:GOLD,icon:'👑'}
-        ].map(s=>(
-          <div key={s.label} style={{...cardStyle,
-            borderLeft:'4px solid '+s.color}}>
-            <div style={{display:'flex',justifyContent:'space-between',
-              alignItems:'center'}}>
-              <div>
-                <p style={{margin:'0 0 8px',fontSize:'13px',
-                  color:'#6B7280',fontWeight:'500'}}>{s.label}</p>
-                <p style={{margin:0,fontSize:'32px',
-                  fontWeight:'700',color:NAVY}}>{s.value}</p>
-              </div>
-              <span style={{fontSize:'32px'}}>{s.icon}</span>
-            </div>
+        {/* Logo */}
+        <div style={{
+          padding: '1.5rem',
+          borderBottom: '1px solid rgba(255,255,255,0.1)',
+          textAlign: 'center'
+        }}>
+          <div style={{
+            fontSize: '1.25rem',
+            fontWeight: '700',
+            color: 'white',
+            marginBottom: '0.25rem'
+          }}>
+            Smart Export
           </div>
-        ))}
-      </div>
+          <div style={{
+            fontSize: '0.75rem',
+            color: 'rgba(255,255,255,0.6)'
+          }}>
+            Global Admin
+          </div>
+        </div>
 
-      <div style={{
-        background:'white', margin:'24px 32px 0',
-        borderRadius:'12px', boxShadow:'0 1px 3px rgba(0,0,0,0.1)',
-        display:'flex', overflowX:'auto',
-        borderBottom:'1px solid #E5E7EB'
-      }}>
-        {[
-          {key:'overview', label:'Vue d ensemble', icon:'📊'},
-          {key:'users', label:'Utilisateurs', icon:'👥'},
-          {key:'countries', label:'Pays & Tarifs', icon:'🌍'},
-          {key:'ports', label:'Ports', icon:'⚓'},
-          {key:'rates', label:'Taux de Change', icon:'💱'}
-        ].map(t=>(
-          <button key={t.key} style={tabSt(t.key)}
-            onClick={()=>setActiveTab(t.key)}>
-            {t.icon} {t.label}
+        {/* Navigation */}
+        <nav style={{ flex: 1, padding: '1rem 0' }}>
+          {sidebarItems.map(item => (
+            <button
+              key={item.key}
+              onClick={() => setActiveTab(item.key)}
+              style={{
+                width: '100%',
+                padding: '0.75rem 1.5rem',
+                background: activeTab === item.key ? '#C9A84C' : 'transparent',
+                color: activeTab === item.key ? '#0B3D5C' : 'rgba(255,255,255,0.8)',
+                border: 'none',
+                textAlign: 'left',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                fontWeight: activeTab === item.key ? '600' : '400',
+                transition: 'all 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem'
+              }}
+              onMouseEnter={(e) => {
+                if (activeTab !== item.key) {
+                  e.target.style.background = 'rgba(255,255,255,0.1)'
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (activeTab !== item.key) {
+                  e.target.style.background = 'transparent'
+                }
+              }}
+            >
+              <span style={{ fontSize: '1rem' }}>{item.icon}</span>
+              {item.label}
+            </button>
+          ))}
+        </nav>
+
+        {/* User Info & Logout */}
+        <div style={{
+          padding: '1rem',
+          borderTop: '1px solid rgba(255,255,255,0.1)'
+        }}>
+          <div style={{
+            fontSize: '0.75rem',
+            color: 'rgba(255,255,255,0.6)',
+            marginBottom: '0.5rem',
+            textAlign: 'center'
+          }}>
+            {adminEmail}
+          </div>
+          <button
+            onClick={handleLogout}
+            style={{
+              width: '100%',
+              padding: '0.5rem',
+              background: 'rgba(255,255,255,0.1)',
+              color: 'white',
+              border: 'none',
+              borderRadius: '0.375rem',
+              cursor: 'pointer',
+              fontSize: '0.75rem',
+              fontWeight: '500',
+              transition: 'background 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.background = 'rgba(255,255,255,0.2)'
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = 'rgba(255,255,255,0.1)'
+            }}
+          >
+            Déconnexion
           </button>
-        ))}
+        </div>
       </div>
 
-      <div style={{padding:'24px 32px'}}>
+      {/* Main Content */}
+      <div style={{ marginLeft: '240px', flex: 1, padding: '2rem' }}>
+        
+        {/* Page Header */}
+        <div style={{
+          marginBottom: '2rem',
+          paddingBottom: '1rem',
+          borderBottom: '1px solid #E2E8F0'
+        }}>
+          <h1 style={{
+            fontSize: '1.125rem',
+            fontWeight: '600',
+            color: '#1B2A4A',
+            margin: '0 0 0.25rem 0'
+          }}>
+            {sidebarItems.find(item => item.key === activeTab)?.label || 'Admin Dashboard'}
+          </h1>
+          <p style={{
+            fontSize: '0.875rem',
+            color: '#64748B',
+            margin: 0
+          }}>
+            Gestion de la plateforme Smart Export Global
+          </p>
+        </div>
 
+        {/* Messages */}
         {userMsg && (
           <div style={{
-            padding:'12px 20px', borderRadius:'8px', marginBottom:'16px',
+            padding: '0.75rem 1rem',
+            borderRadius: '0.5rem',
+            marginBottom: '1rem',
             background: userMsg.ok ? '#D1FAE5' : '#FEE2E2',
             color: userMsg.ok ? '#065F46' : '#991B1B',
-            fontWeight:'600', border:'1px solid '+(userMsg.ok?'#6EE7B7':'#FCA5A5')
+            fontWeight: '500',
+            border: `1px solid ${userMsg.ok ? '#6EE7B7' : '#FCA5A5'}`
           }}>
             {userMsg.text}
           </div>
@@ -329,147 +448,213 @@ export default function AdminDashboard() {
 
         {activeTab === 'overview' && (
           <div>
-            {/* Marketplace Stats Cards */}
+            {/* Metrics Cards */}
             <div style={{
-              display:'grid', gridTemplateColumns:'repeat(4,1fr)',
-              gap:'20px', marginBottom:'24px'
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: '1rem',
+              marginBottom: '2rem'
             }}>
               {[
-                {label:'Offres actives',value:stats.activeOffers,color:TEAL,icon:'📦'},
-                {label:'Total matches',value:stats.totalMatches,color:'#8B5CF6',icon:'🤝'},
-                {label:'Transactions en cours',value:stats.totalTransactions - stats.completedTransactions,color:GOLD,icon:'🚚'},
-                {label:'Tickets en attente',value:stats.pendingTickets,color:'#F59E0B',icon:'🎫'}
-              ].map(s=>(
-                <div key={s.label} style={{...cardStyle,
-                  borderLeft:'4px solid '+s.color}}>
-                  <div style={{display:'flex',justifyContent:'space-between',
-                    alignItems:'center'}}>
-                    <div>
-                      <p style={{margin:'0 0 8px',fontSize:'13px',
-                        color:'#6B7280',fontWeight:'500'}}>{s.label}</p>
-                      <p style={{margin:0,fontSize:'32px',
-                        fontWeight:'700',color:NAVY}}>{s.value}</p>
+                { label: 'Total utilisateurs', value: stats.totalUsers, icon: '👥', color: '#0B3D5C', bgColor: '#E6F1FB' },
+                { label: 'Utilisateurs actifs', value: stats.activeUsers, icon: '✅', color: '#0D9488', bgColor: '#E1F5EE' },
+                { label: 'Importateurs', value: users.filter(u => u.role === 'IMPORTATEUR').length, icon: '📥', color: '#125D86', bgColor: '#E6F1FB' },
+                { label: 'Exportateurs', value: users.filter(u => u.role === 'EXPORTATEUR').length, icon: '📤', color: '#C9A84C', bgColor: '#FEF9E7' },
+                { label: 'Offres actives', value: stats.activeOffers, icon: '📦', color: '#0D9488', bgColor: '#E1F5EE' },
+                { label: 'Matches total', value: stats.totalMatches, icon: '🤝', color: '#7C3AED', bgColor: '#EDE9FE' },
+                { label: 'Transactions', value: stats.totalTransactions, icon: '🚚', color: '#0B3D5C', bgColor: '#E6F1FB' },
+                { label: 'Tickets en attente', value: stats.pendingTickets, icon: '🎫', color: '#DC2626', bgColor: '#FEE2E2' }
+              ].map((metric, index) => (
+                <div key={index} style={{
+                  background: 'white',
+                  border: '1px solid #E2E8F0',
+                  borderLeft: '4px solid ' + metric.color,
+                  borderRadius: '0.75rem',
+                  padding: '1.5rem'
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: '0.75rem'
+                  }}>
+                    <div style={{
+                      width: '44px',
+                      height: '44px',
+                      borderRadius: '50%',
+                      background: metric.bgColor,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '20px'
+                    }}>
+                      {metric.icon}
                     </div>
-                    <span style={{fontSize:'32px'}}>{s.icon}</span>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.25rem',
+                      fontSize: '0.75rem',
+                      color: '#10B981',
+                      fontWeight: '500'
+                    }}>
+                      <span>↑</span>
+                      <span>12%</span>
+                    </div>
+                  </div>
+                  <div style={{
+                    fontSize: '2rem',
+                    fontWeight: '700',
+                    color: '#1B2A4A',
+                    marginBottom: '0.25rem'
+                  }}>
+                    {metric.value}
+                  </div>
+                  <div style={{
+                    fontSize: '0.8125rem',
+                    color: '#64748B',
+                    fontWeight: '500'
+                  }}>
+                    {metric.label}
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Existing Overview Content */}
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'24px'}}>
-              <div style={cardStyle}>
-                <h3 style={{color:NAVY,margin:'0 0 20px',fontSize:'18px',fontWeight:'700'}}>
-                  Repartition par Role
-                </h3>
-                {['ADMIN','EXPORTATEUR','IMPORTATEUR'].map(role => {
-                  const count = users.filter(u=>u.role===role).length
-                  const pct = users.length ? Math.round(count/users.length*100) : 0
-                  return (
-                    <div key={role} style={{marginBottom:'16px'}}>
-                      <div style={{display:'flex',justifyContent:'space-between',
-                        marginBottom:'6px'}}>
-                        <span style={{fontSize:'14px',fontWeight:'500',color:'#374151'}}>
-                          {role}
-                        </span>
-                        <span style={{fontSize:'14px',fontWeight:'600',color:NAVY}}>
-                          {count} ({pct}%)
-                        </span>
-                      </div>
-                      <div style={{background:'#F3F4F6',borderRadius:'99px',height:'8px'}}>
-                        <div style={{
-                          width:pct+'%', height:'8px', borderRadius:'99px',
-                          background: role==='ADMIN'?GOLD:role==='EXPORTATEUR'?TEAL:'#8B5CF6',
-                          transition:'width 0.5s ease'
-                        }}/>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-              <div style={cardStyle}>
-                <h3 style={{color:NAVY,margin:'0 0 20px',fontSize:'18px',fontWeight:'700'}}>
-                  Acces Rapide
-                </h3>
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
-                  {[
-                    {label:'Gerer Utilisateurs',tab:'users',icon:'👥',color:TEAL},
-                    {label:'Pays & Tarifs',tab:'countries',icon:'🌍',color:'#8B5CF6'},
-                    {label:'Ports',tab:'ports',icon:'⚓',color:NAVY},
-                    {label:'Taux de Change',tab:'rates',icon:'💱',color:GOLD}
-                  ].map(a=>(
-                    <button key={a.tab}
-                      onClick={()=>setActiveTab(a.tab)}
-                      style={{
-                        background:a.color+'15', border:'1px solid '+a.color+'30',
-                        borderRadius:'10px', padding:'16px', cursor:'pointer',
-                        textAlign:'center', transition:'all 0.2s'
-                      }}>
-                      <div style={{fontSize:'24px',marginBottom:'8px'}}>{a.icon}</div>
-                      <div style={{fontSize:'13px',fontWeight:'600',color:a.color}}>
-                        {a.label}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Recent Transactions Table */}
-            <div style={{...cardStyle, marginTop:'24px'}}>
-              <h3 style={{color:NAVY,margin:'0 0 20px',fontSize:'18px',fontWeight:'700'}}>
-                5 Dernières Transactions
+            {/* Recent Transactions */}
+            <div style={{
+              background: 'white',
+              border: '1px solid #E2E8F0',
+              borderRadius: '0.75rem',
+              padding: '1.5rem'
+            }}>
+              <h3 style={{
+                fontSize: '1rem',
+                fontWeight: '600',
+                color: '#1B2A4A',
+                margin: '0 0 1rem 0'
+              }}>
+                Transactions récentes
               </h3>
-              <div style={{overflowX:'auto'}}>
-                <table style={{width:'100%',borderCollapse:'collapse'}}>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
-                    <tr>
-                      <th style={thSt}>ID</th>
-                      <th style={thSt}>Statut Workflow</th>
-                      <th style={thSt}>Provider</th>
-                      <th style={thSt}>Seeker</th>
-                      <th style={thSt}>Date</th>
+                    <tr style={{ background: '#0B3D5C' }}>
+                      <th style={{
+                        padding: '0.75rem 1rem',
+                        textAlign: 'left',
+                        fontSize: '0.8125rem',
+                        fontWeight: '600',
+                        color: 'white',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em'
+                      }}>
+                        ID
+                      </th>
+                      <th style={{
+                        padding: '0.75rem 1rem',
+                        textAlign: 'left',
+                        fontSize: '0.8125rem',
+                        fontWeight: '600',
+                        color: 'white',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em'
+                      }}>
+                        Provider
+                      </th>
+                      <th style={{
+                        padding: '0.75rem 1rem',
+                        textAlign: 'left',
+                        fontSize: '0.8125rem',
+                        fontWeight: '600',
+                        color: 'white',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em'
+                      }}>
+                        Seeker
+                      </th>
+                      <th style={{
+                        padding: '0.75rem 1rem',
+                        textAlign: 'left',
+                        fontSize: '0.8125rem',
+                        fontWeight: '600',
+                        color: 'white',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em'
+                      }}>
+                        Statut
+                      </th>
+                      <th style={{
+                        padding: '0.75rem 1rem',
+                        textAlign: 'left',
+                        fontSize: '0.8125rem',
+                        fontWeight: '600',
+                        color: 'white',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em'
+                      }}>
+                        Date
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {recentTransactions.length > 0 ? recentTransactions.map(tx => (
-                      <tr key={tx.id}
-                        onMouseEnter={e=>e.currentTarget.style.background='#F9FAFB'}
-                        onMouseLeave={e=>e.currentTarget.style.background='white'}>
-                        <td style={tdSt}>
-                          <span style={{fontWeight:'600',color:NAVY}}>#{tx.id}</span>
+                    {recentTransactions.length > 0 ? recentTransactions.map((tx, index) => (
+                      <tr key={tx.id} style={{
+                        background: index % 2 === 0 ? 'white' : '#F8FAFC',
+                        borderBottom: '1px solid #E2E8F0'
+                      }}>
+                        <td style={{
+                          padding: '1rem',
+                          fontSize: '0.875rem',
+                          color: '#1B2A4A',
+                          fontWeight: '500'
+                        }}>
+                          #{tx.id}
                         </td>
-                        <td style={tdSt}>
+                        <td style={{
+                          padding: '1rem',
+                          fontSize: '0.875rem',
+                          color: '#374151'
+                        }}>
+                          {tx.provider || 'N/A'}
+                        </td>
+                        <td style={{
+                          padding: '1rem',
+                          fontSize: '0.875rem',
+                          color: '#374151'
+                        }}>
+                          {tx.seeker || 'N/A'}
+                        </td>
+                        <td style={{
+                          padding: '1rem'
+                        }}>
                           <span style={{
-                            padding:'3px 10px', borderRadius:'12px',
-                            fontSize:'12px', fontWeight:'600',
-                            background: tx.workflowStatus === 'COMPLETED' ? '#D1FAE5' : 
-                                       tx.workflowStatus === 'AT_PROVIDER' ? '#DBEAFE' : '#FEF3C7',
-                            color: tx.workflowStatus === 'COMPLETED' ? '#065F46' :
-                                   tx.workflowStatus === 'AT_PROVIDER' ? '#1E40AF' : '#92400E'
+                            padding: '0.25rem 0.75rem',
+                            borderRadius: '9999px',
+                            fontSize: '0.75rem',
+                            fontWeight: '600',
+                            background: `${getWorkflowStatusColor(tx.workflowStatus)}20`,
+                            color: getWorkflowStatusColor(tx.workflowStatus)
                           }}>
                             {tx.workflowStatus || 'AT_PROVIDER'}
                           </span>
                         </td>
-                        <td style={tdSt}>
-                          <div style={{fontSize:'13px',color:'#374151'}}>
-                            {tx.provider || 'N/A'}
-                          </div>
-                        </td>
-                        <td style={tdSt}>
-                          <div style={{fontSize:'13px',color:'#374151'}}>
-                            {tx.seeker || 'N/A'}
-                          </div>
-                        </td>
-                        <td style={tdSt}>
-                          <div style={{fontSize:'12px',color:'#9CA3AF'}}>
-                            {tx.createdAt ? new Date(tx.createdAt).toLocaleDateString('fr-FR') : 'N/A'}
-                          </div>
+                        <td style={{
+                          padding: '1rem',
+                          fontSize: '0.875rem',
+                          color: '#64748B'
+                        }}>
+                          {tx.createdAt ? new Date(tx.createdAt).toLocaleDateString('fr-FR') : 'N/A'}
                         </td>
                       </tr>
                     )) : (
                       <tr>
-                        <td colSpan="5" style={{...tdSt, textAlign:'center', color:'#9CA3AF'}}>
+                        <td colSpan="5" style={{
+                          padding: '2rem',
+                          textAlign: 'center',
+                          color: '#64748B',
+                          fontSize: '0.875rem'
+                        }}>
                           Aucune transaction trouvée
                         </td>
                       </tr>
@@ -483,98 +668,262 @@ export default function AdminDashboard() {
 
         {activeTab === 'users' && (
           <div>
-            <div style={{...cardStyle, padding:'16px 20px', marginBottom:'16px'}}>
-              <div style={{display:'flex',gap:'12px',alignItems:'center'}}>
-                <input style={{...inp,flex:1}}
-                  value={userSearch}
-                  onChange={e=>setUserSearch(e.target.value)}
-                  placeholder="Rechercher par email ou role..."/>
-                <button onClick={loadUsers} style={btnP}>
-                  Actualiser
-                </button>
-              </div>
+            {/* Search Bar */}
+            <div style={{
+              background: 'white',
+              border: '1px solid #E2E8F0',
+              borderRadius: '0.75rem',
+              padding: '1rem',
+              marginBottom: '1rem',
+              display: 'flex',
+              gap: '0.75rem',
+              alignItems: 'center'
+            }}>
+              <input
+                style={{
+                  flex: 1,
+                  padding: '0.5rem 0.75rem',
+                  border: '1px solid #E2E8F0',
+                  borderRadius: '0.375rem',
+                  fontSize: '0.875rem',
+                  outline: 'none'
+                }}
+                value={userSearch}
+                onChange={e => setUserSearch(e.target.value)}
+                placeholder="Rechercher par email ou rôle..."
+              />
+              <button
+                onClick={loadUsers}
+                style={{
+                  padding: '0.5rem 1rem',
+                  background: '#0B3D5C',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '0.375rem',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                  fontWeight: '500'
+                }}
+              >
+                Actualiser
+              </button>
             </div>
 
-            <div style={{...cardStyle, padding:0, overflow:'hidden'}}>
-              <div style={{overflowX:'auto'}}>
-                <table style={{width:'100%',borderCollapse:'collapse'}}>
+            {/* Users Table */}
+            <div style={{
+              background: 'white',
+              border: '1px solid #E2E8F0',
+              borderRadius: '0.75rem',
+              overflow: 'hidden'
+            }}>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
-                    <tr>
-                      <th style={thSt}>Email</th>
-                      <th style={thSt}>Téléphone</th>
-                      <th style={thSt}>Entreprise</th>
-                      <th style={thSt}>Pays</th>
-                      <th style={thSt}>Role</th>
-                      <th style={thSt}>Statut</th>
-                      <th style={thSt}>Actions</th>
+                    <tr style={{ background: '#0B3D5C' }}>
+                      <th style={{
+                        padding: '0.75rem 1rem',
+                        textAlign: 'left',
+                        fontSize: '0.8125rem',
+                        fontWeight: '600',
+                        color: 'white',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em'
+                      }}>
+                        Avatar + Nom
+                      </th>
+                      <th style={{
+                        padding: '0.75rem 1rem',
+                        textAlign: 'left',
+                        fontSize: '0.8125rem',
+                        fontWeight: '600',
+                        color: 'white',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em'
+                      }}>
+                        Email
+                      </th>
+                      <th style={{
+                        padding: '0.75rem 1rem',
+                        textAlign: 'left',
+                        fontSize: '0.8125rem',
+                        fontWeight: '600',
+                        color: 'white',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em'
+                      }}>
+                        Rôle
+                      </th>
+                      <th style={{
+                        padding: '0.75rem 1rem',
+                        textAlign: 'left',
+                        fontSize: '0.8125rem',
+                        fontWeight: '600',
+                        color: 'white',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em'
+                      }}>
+                        Statut
+                      </th>
+                      <th style={{
+                        padding: '0.75rem 1rem',
+                        textAlign: 'left',
+                        fontSize: '0.8125rem',
+                        fontWeight: '600',
+                        color: 'white',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em'
+                      }}>
+                        Entreprise
+                      </th>
+                      <th style={{
+                        padding: '0.75rem 1rem',
+                        textAlign: 'left',
+                        fontSize: '0.8125rem',
+                        fontWeight: '600',
+                        color: 'white',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em'
+                      }}>
+                        Pays
+                      </th>
+                      <th style={{
+                        padding: '0.75rem 1rem',
+                        textAlign: 'left',
+                        fontSize: '0.8125rem',
+                        fontWeight: '600',
+                        color: 'white',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em'
+                      }}>
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredUsers.map(u=>(
-                      <tr key={u.id}
-                        onMouseEnter={e=>e.currentTarget.style.background='#F9FAFB'}
-                        onMouseLeave={e=>e.currentTarget.style.background='white'}>
-                        <td style={tdSt}>
-                          <div style={{fontWeight:'500',color:'#111827'}}>{u.email}</div>
-                          <div style={{fontSize:'12px',color:'#9CA3AF'}}>ID: {u.id}</div>
-                        </td>
-                        <td style={tdSt}>
-                          <div style={{fontSize:'13px',color:'#374151'}}>
-                            {u.phone || 'Non renseigné'}
-                          </div>
-                        </td>
-                        <td style={tdSt}>
-                          <div style={{fontSize:'13px',color:'#374151'}}>
-                            {u.companyName || 'Non renseigné'}
-                          </div>
-                        </td>
-                        <td style={tdSt}>
-                          <div style={{fontSize:'13px',color:'#374151'}}>
-                            {u.country || 'Non renseigné'}
-                          </div>
-                        </td>
-                        <td style={tdSt}>
-                          <select
-                            value={u.role}
-                            onChange={e=>updateUserRole(u.id,e.target.value)}
-                            style={{...inp,padding:'6px 10px',fontSize:'13px'}}>
-                            <option value="ADMIN">ADMIN</option>
-                            <option value="EXPORTATEUR">EXPORTATEUR</option>
-                            <option value="IMPORTATEUR">IMPORTATEUR</option>
-                          </select>
-                        </td>
-                        <td style={tdSt}>
-                          <span style={{
-                            display:'inline-flex', alignItems:'center', gap:'6px',
-                            padding:'4px 12px', borderRadius:'20px',
-                            fontSize:'12px', fontWeight:'600',
-                            background:u.status==='ACTIVE'?'#D1FAE5':'#FEE2E2',
-                            color:u.status==='ACTIVE'?'#065F46':'#991B1B'
+                    {filteredUsers.map((user, index) => (
+                      <tr key={user.id} style={{
+                        background: index % 2 === 0 ? 'white' : '#F8FAFC',
+                        borderBottom: '1px solid #E2E8F0'
+                      }}>
+                        <td style={{
+                          padding: '1rem'
+                        }}>
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.75rem'
                           }}>
-                            <span style={{
-                              width:'6px', height:'6px', borderRadius:'50%',
-                              background:u.status==='ACTIVE'?'#10B981':'#EF4444'
-                            }}/>
-                            {u.status}
+                            <div style={{
+                              width: '32px',
+                              height: '32px',
+                              borderRadius: '50%',
+                              background: '#125D86',
+                              color: 'white',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '0.875rem',
+                              fontWeight: '600'
+                            }}>
+                              {(user.firstName?.[0] || user.email?.[0] || '?').toUpperCase()}
+                            </div>
+                            <div>
+                              <div style={{
+                                fontSize: '0.875rem',
+                                fontWeight: '500',
+                                color: '#1B2A4A'
+                              }}>
+                                {user.firstName && user.lastName 
+                                  ? `${user.firstName} ${user.lastName}` 
+                                  : user.email}
+                              </div>
+                              <div style={{
+                                fontSize: '0.75rem',
+                                color: '#64748B'
+                              }}>
+                                ID: {user.id}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td style={{
+                          padding: '1rem',
+                          fontSize: '0.875rem',
+                          color: '#374151'
+                        }}>
+                          {user.email}
+                        </td>
+                        <td style={{
+                          padding: '1rem'
+                        }}>
+                          <span style={{
+                            padding: '0.25rem 0.75rem',
+                            borderRadius: '9999px',
+                            fontSize: '0.75rem',
+                            fontWeight: '600',
+                            background: `${getRoleColor(user.role)}20`,
+                            color: getRoleColor(user.role)
+                          }}>
+                            {user.role}
                           </span>
                         </td>
-                        <td style={tdSt}>
-                          <div style={{display:'flex',gap:'8px',flexWrap:'wrap'}}>
+                        <td style={{
+                          padding: '1rem'
+                        }}>
+                          <span style={{
+                            padding: '0.25rem 0.75rem',
+                            borderRadius: '9999px',
+                            fontSize: '0.75rem',
+                            fontWeight: '600',
+                            background: `${getStatusColor(user.status)}20`,
+                            color: getStatusColor(user.status)
+                          }}>
+                            {user.status}
+                          </span>
+                        </td>
+                        <td style={{
+                          padding: '1rem',
+                          fontSize: '0.875rem',
+                          color: '#374151'
+                        }}>
+                          {user.companyName || 'Non renseigné'}
+                        </td>
+                        <td style={{
+                          padding: '1rem',
+                          fontSize: '0.875rem',
+                          color: '#374151'
+                        }}>
+                          {user.country || 'Non renseigné'}
+                        </td>
+                        <td style={{
+                          padding: '1rem'
+                        }}>
+                          <div style={{
+                            display: 'flex',
+                            gap: '0.5rem'
+                          }}>
                             <button
-                              onClick={()=>openUserDetail(u)}
-                              style={{...btnB,background:TEAL,color:'white'}}>
+                              onClick={() => openUserDetail(user)}
+                              style={{
+                                padding: '0.375rem 0.75rem',
+                                background: 'transparent',
+                                color: '#0B3D5C',
+                                border: '1px solid #0B3D5C',
+                                borderRadius: '0.375rem',
+                                cursor: 'pointer',
+                                fontSize: '0.75rem',
+                                fontWeight: '500'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.target.style.background = '#0B3D5C'
+                                e.target.style.color = 'white'
+                              }}
+                              onMouseLeave={(e) => {
+                                e.target.style.background = 'transparent'
+                                e.target.style.color = '#0B3D5C'
+                              }}
+                            >
                               Détail
-                            </button>
-                            <button
-                              onClick={()=>blockUser(u.id,u.status)}
-                              style={u.status==='BLOCKED'?
-                                {...btnB}:{...btnB,background:'#6B7280'}}>
-                              {u.status==='BLOCKED'?'Debloquer':'Bloquer'}
-                            </button>
-                            <button
-                              onClick={()=>deleteUser(u.id,u.email)}
-                              style={btnR}>
-                              Supprimer
                             </button>
                           </div>
                         </td>
@@ -583,9 +932,14 @@ export default function AdminDashboard() {
                   </tbody>
                 </table>
               </div>
-              <div style={{padding:'14px 20px',background:'#F9FAFB',
-                borderTop:'1px solid #E5E7EB',fontSize:'13px',color:'#6B7280'}}>
-                {filteredUsers.length} utilisateur(s) affiche(s) sur {users.length}
+              <div style={{
+                padding: '0.875rem 1rem',
+                background: '#F8FAFC',
+                borderTop: '1px solid #E2E8F0',
+                fontSize: '0.8125rem',
+                color: '#64748B'
+              }}>
+                {filteredUsers.length} utilisateur(s) affiché(s) sur {users.length}
               </div>
             </div>
           </div>
@@ -593,93 +947,176 @@ export default function AdminDashboard() {
 
         {activeTab === 'countries' && (
           <div>
-            <div style={{...cardStyle,padding:'16px 20px',marginBottom:'16px'}}>
-              <div style={{display:'flex',gap:'12px',alignItems:'center',marginBottom:'16px'}}>
-                <input style={{...inp,flex:1}}
-                  value={countrySearch}
-                  onChange={e=>setCountrySearch(e.target.value)}
-                  placeholder="Rechercher un pays..."/>
-                <button onClick={loadCountries} style={btnP}>
-                  Actualiser
-                </button>
-              </div>
-              <div style={{display:'flex',gap:'12px',alignItems:'center'}}>
-                <label style={{fontWeight:'600',color:NAVY}}>Afficher les frais en:</label>
-                <select
-                  value={selectedCurrency}
-                  onChange={e=>setSelectedCurrency(e.target.value)}
-                  style={{...inp,width:'200px'}}>
-                  {rates.map(r=>(
-                    <option key={r.code} value={r.code}>
-                      {r.code} — {r.currency}
-                    </option>
-                  ))}
-                </select>
-                <button onClick={async()=>{
-                  await fetch('http://localhost:8080/api/admin/countries/sync',
-                    {headers:{'Authorization':'Bearer '+TOKEN()}})
-                  loadCountries()
-                }} style={btnP}>
-                  Sync API
-                </button>
-              </div>
+            {/* Search and Controls */}
+            <div style={{
+              background: 'white',
+              border: '1px solid #E2E8F0',
+              borderRadius: '0.75rem',
+              padding: '1rem',
+              marginBottom: '1rem',
+              display: 'flex',
+              gap: '0.75rem',
+              alignItems: 'center',
+              flexWrap: 'wrap'
+            }}>
+              <input
+                style={{
+                  flex: 1,
+                  minWidth: '200px',
+                  padding: '0.5rem 0.75rem',
+                  border: '1px solid #E2E8F0',
+                  borderRadius: '0.375rem',
+                  fontSize: '0.875rem',
+                  outline: 'none'
+                }}
+                value={countrySearch}
+                onChange={e => setCountrySearch(e.target.value)}
+                placeholder="Rechercher un pays..."
+              />
+              <select
+                value={selectedCurrency}
+                onChange={e => setSelectedCurrency(e.target.value)}
+                style={{
+                  padding: '0.5rem 0.75rem',
+                  border: '1px solid #E2E8F0',
+                  borderRadius: '0.375rem',
+                  fontSize: '0.875rem',
+                  background: 'white'
+                }}
+              >
+                {rates.map(r => (
+                  <option key={r.code} value={r.code}>
+                    {r.code} — {r.currency}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={loadCountries}
+                style={{
+                  padding: '0.5rem 1rem',
+                  background: '#0B3D5C',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '0.375rem',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                  fontWeight: '500'
+                }}
+              >
+                Actualiser
+              </button>
             </div>
-            <div style={{...cardStyle,padding:0,overflow:'hidden'}}>
-              <div style={{overflowX:'auto'}}>
-                <table style={{width:'100%',borderCollapse:'collapse'}}>
+
+            {/* Countries Table */}
+            <div style={{
+              background: 'white',
+              border: '1px solid #E2E8F0',
+              borderRadius: '0.75rem',
+              overflow: 'hidden'
+            }}>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
-                    <tr>
-                      {['Drapeau','Code','Pays','Région','Devise','Douane %','TVA %',
-                        'Parafiscal %','Frais Portuaires ('+selectedCurrency+')','Actions'].map(h=>(
-                        <th key={h} style={thSt}>{h}</th>
+                    <tr style={{ background: '#0B3D5C' }}>
+                      {['Drapeau', 'Code', 'Pays', 'Région', 'Devise', 'Douane %', 'TVA %', 'Parafiscal %', `Frais (${selectedCurrency})`, 'Actions'].map(header => (
+                        <th key={header} style={{
+                          padding: '0.75rem 1rem',
+                          textAlign: 'left',
+                          fontSize: '0.8125rem',
+                          fontWeight: '600',
+                          color: 'white',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em'
+                        }}>
+                          {header}
+                        </th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredCountries.map((c,i)=>(
-                      <tr key={c.id||i}
-                        onMouseEnter={e=>e.currentTarget.style.background='#F9FAFB'}
-                        onMouseLeave={e=>e.currentTarget.style.background='white'}>
-                        <td style={tdSt}>
-                          {c.flagUrl && (
-                            <img src={c.flagUrl} alt={c.code}
-                              style={{width:'32px',height:'20px',objectFit:'cover',
-                                borderRadius:'3px'}}
-                              onError={e=>e.target.style.display='none'}/>
+                    {filteredCountries.map((country, index) => (
+                      <tr key={country.id || index} style={{
+                        background: index % 2 === 0 ? 'white' : '#F8FAFC',
+                        borderBottom: '1px solid #E2E8F0'
+                      }}>
+                        <td style={{ padding: '1rem' }}>
+                          {country.flagUrl && (
+                            <img 
+                              src={country.flagUrl} 
+                              alt={country.code}
+                              style={{
+                                width: '32px',
+                                height: '20px',
+                                objectFit: 'cover',
+                                borderRadius: '0.25rem'
+                              }}
+                              onError={e => e.target.style.display = 'none'}
+                            />
                           )}
                         </td>
-                        <td style={{...tdSt,fontFamily:'monospace',fontWeight:'600',
-                          color:NAVY}}>
-                          {c.code||c.countryCode||'—'}
+                        <td style={{
+                          padding: '1rem',
+                          fontFamily: 'monospace',
+                          fontWeight: '600',
+                          color: '#1B2A4A'
+                        }}>
+                          {country.code || country.countryCode || '—'}
                         </td>
-                        <td style={{...tdSt,fontWeight:'500',color:'#111827'}}>
-                          {c.name||c.countryName||'—'}
+                        <td style={{
+                          padding: '1rem',
+                          fontWeight: '500',
+                          color: '#1B2A4A'
+                        }}>
+                          {country.name || country.countryName || '—'}
                         </td>
-                        <td style={tdSt}>
-                          <span style={{background:'#F3F4F6',padding:'4px 8px',
-                            borderRadius:'6px',fontSize:'12px',fontWeight:'500'}}>
-                            {c.region||'—'}
+                        <td style={{ padding: '1rem' }}>
+                          <span style={{
+                            padding: '0.25rem 0.5rem',
+                            background: '#F1F5F9',
+                            borderRadius: '0.25rem',
+                            fontSize: '0.75rem',
+                            fontWeight: '500'
+                          }}>
+                            {country.region || '—'}
                           </span>
                         </td>
-                        <td style={tdSt}>
-                          {c.currency||'—'}
+                        <td style={{ padding: '1rem' }}>
+                          {country.currency || '—'}
                         </td>
-                        <td style={tdSt}>
-                          {c.customsDutyRate||c.dutyRate||'0'}%
+                        <td style={{ padding: '1rem' }}>
+                          {country.customsDutyRate || country.dutyRate || '0'}%
                         </td>
-                        <td style={tdSt}>
-                          {c.vatRate||c.tva||'0'}%
+                        <td style={{ padding: '1rem' }}>
+                          {country.vatRate || country.tva || '0'}%
                         </td>
-                        <td style={tdSt}>
-                          {c.parafiscalRate||c.parafiscal||'0'}%
+                        <td style={{ padding: '1rem' }}>
+                          {country.parafiscalRate || country.parafiscal || '0'}%
                         </td>
-                        <td style={tdSt}>
-                          {convertFees(c.portFees||c.fraisPortuaires||0, selectedCurrency)} {selectedCurrency}
+                        <td style={{ padding: '1rem' }}>
+                          {convertFees(country.portFees || country.fraisPortuaires || 0, selectedCurrency)} {selectedCurrency}
                         </td>
-                        <td style={tdSt}>
+                        <td style={{ padding: '1rem' }}>
                           <button
-                            onClick={()=>setEditCountry(c)}
-                            style={btnS}>
+                            onClick={() => setEditCountry(country)}
+                            style={{
+                              padding: '0.375rem 0.75rem',
+                              background: 'transparent',
+                              color: '#0B3D5C',
+                              border: '1px solid #0B3D5C',
+                              borderRadius: '0.375rem',
+                              cursor: 'pointer',
+                              fontSize: '0.75rem',
+                              fontWeight: '500'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.target.style.background = '#0B3D5C'
+                              e.target.style.color = 'white'
+                            }}
+                            onMouseLeave={(e) => {
+                              e.target.style.background = 'transparent'
+                              e.target.style.color = '#0B3D5C'
+                            }}
+                          >
                             Modifier
                           </button>
                         </td>
@@ -688,133 +1125,149 @@ export default function AdminDashboard() {
                   </tbody>
                 </table>
               </div>
-              <div style={{padding:'14px 20px',background:'#F9FAFB',
-                borderTop:'1px solid #E5E7EB',fontSize:'13px',color:'#6B7280'}}>
-                {filteredCountries.length} pays affiche(s)
-              </div>
             </div>
-
-            {editCountry && (
-              <div style={{
-                position:'fixed',top:0,left:0,right:0,bottom:0,
-                background:'rgba(0,0,0,0.5)',display:'flex',
-                alignItems:'center',justifyContent:'center',zIndex:1000
-              }}>
-                <div style={{background:'white',borderRadius:'12px',
-                  padding:'32px',width:'480px',maxWidth:'90vw'}}>
-                  <h3 style={{color:NAVY,margin:'0 0 24px'}}>
-                    Modifier: {editCountry.name||editCountry.countryName}
-                  </h3>
-                  {[
-                    {label:'Droits Douane %',key:'customsDutyRate'},
-                    {label:'TVA %',key:'vatRate'},
-                    {label:'Taxe Parafiscale %',key:'parafiscalRate'},
-                    {label:'Frais Portuaires',key:'portFees'}
-                  ].map(f=>(
-                    <div key={f.key} style={{marginBottom:'16px'}}>
-                      <label style={{display:'block',marginBottom:'6px',
-                        fontWeight:'600',color:'#374151',fontSize:'14px'}}>
-                        {f.label}
-                      </label>
-                      <input style={{...inp,width:'100%',boxSizing:'border-box'}}
-                        type="number" step="0.01"
-                        value={editCountry[f.key]||0}
-                        onChange={e=>setEditCountry(p=>({
-                          ...p,[f.key]:e.target.value
-                        }))}/>
-                    </div>
-                  ))}
-                  <div style={{display:'flex',gap:'12px',marginTop:'24px'}}>
-                    <button onClick={async ()=>{
-                      try {
-                        await api.put('/admin/countries/'+editCountry.id, editCountry)
-                        showMsg('Pays mis a jour')
-                        setEditCountry(null)
-                        loadCountries()
-                      } catch(e) { showMsg('Erreur: '+e.message,false) }
-                    }} style={btnP}>
-                      Enregistrer
-                    </button>
-                    <button onClick={()=>setEditCountry(null)}
-                      style={{...btnP,background:'#6B7280'}}>
-                      Annuler
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         )}
 
         {activeTab === 'ports' && (
           <div>
-            <div style={{...cardStyle,padding:'16px 20px',marginBottom:'16px'}}>
-              <div style={{display:'flex',gap:'12px',alignItems:'center',marginBottom:'16px'}}>
-                <span style={{color:TEAL,fontWeight:'700',fontSize:'18px'}}>
-                  {ports.length} ports
-                </span>
-                <button onClick={async () => {
-                  await fetch('http://localhost:8080/api/admin/ports/sync-osm',
-                    {headers:{'Authorization':'Bearer '+TOKEN()}})
-                  alert('Sync OSM démarré! Les ports arrivent dans 2-3 min...')
-                  // Poll every 10s
-                  const interval = setInterval(async () => {
-                    await loadPorts()
-                  }, 10000)
-                  setTimeout(() => clearInterval(interval), 300000)
-                }} style={{...btnP, background:TEAL}}>
-                  🗺️ Sync OpenStreetMap
-                </button>
-                <input
-                  placeholder="Rechercher port ou pays..."
-                  value={portSearch || ''}
-                  onChange={e => setPortSearch(e.target.value)}
-                  style={{...inp, width:'250px'}}
-                />
-                <button onClick={loadPorts} style={btnP}>🔍 Chercher</button>
-              </div>
+            {/* Search and Controls */}
+            <div style={{
+              background: 'white',
+              border: '1px solid #E2E8F0',
+              borderRadius: '0.75rem',
+              padding: '1rem',
+              marginBottom: '1rem',
+              display: 'flex',
+              gap: '0.75rem',
+              alignItems: 'center',
+              flexWrap: 'wrap'
+            }}>
+              <span style={{
+                color: '#0D9488',
+                fontWeight: '600',
+                fontSize: '1.125rem'
+              }}>
+                {ports.length} ports
+              </span>
+              <input
+                style={{
+                  flex: 1,
+                  minWidth: '200px',
+                  padding: '0.5rem 0.75rem',
+                  border: '1px solid #E2E8F0',
+                  borderRadius: '0.375rem',
+                  fontSize: '0.875rem',
+                  outline: 'none'
+                }}
+                value={portSearch || ''}
+                onChange={e => setPortSearch(e.target.value)}
+                placeholder="Rechercher port ou pays..."
+              />
+              <button
+                onClick={loadPorts}
+                style={{
+                  padding: '0.5rem 1rem',
+                  background: '#0B3D5C',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '0.375rem',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                  fontWeight: '500'
+                }}
+              >
+                Actualiser
+              </button>
             </div>
-            <div style={{...cardStyle,padding:0,overflow:'hidden'}}>
-              <div style={{overflowX:'auto'}}>
-                <table style={{width:'100%',borderCollapse:'collapse'}}>
+
+            {/* Ports Table */}
+            <div style={{
+              background: 'white',
+              border: '1px solid #E2E8F0',
+              borderRadius: '0.75rem',
+              overflow: 'hidden'
+            }}>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
-                    <tr>
-                      {['Nom','Pays','Code','Frais','Type','Actions'].map(h=>(
-                        <th key={h} style={thSt}>{h}</th>
+                    <tr style={{ background: '#0B3D5C' }}>
+                      {['Nom', 'Pays', 'Code', 'Frais', 'Type', 'Actions'].map(header => (
+                        <th key={header} style={{
+                          padding: '0.75rem 1rem',
+                          textAlign: 'left',
+                          fontSize: '0.8125rem',
+                          fontWeight: '600',
+                          color: 'white',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em'
+                        }}>
+                          {header}
+                        </th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredPorts.map((p,i)=>(
-                      <tr key={p.id||i}
-                        onMouseEnter={e=>e.currentTarget.style.background='#F9FAFB'}
-                        onMouseLeave={e=>e.currentTarget.style.background='white'}>
-                        <td style={{...tdSt,fontWeight:'500',color:'#111827'}}>
-                          {p.nomPort||p.name||'—'}
+                    {filteredPorts.map((port, index) => (
+                      <tr key={port.id || index} style={{
+                        background: index % 2 === 0 ? 'white' : '#F8FAFC',
+                        borderBottom: '1px solid #E2E8F0'
+                      }}>
+                        <td style={{
+                          padding: '1rem',
+                          fontWeight: '500',
+                          color: '#1B2A4A'
+                        }}>
+                          {port.nomPort || port.name || '—'}
                         </td>
-                        <td style={tdSt}>
-                          {p.pays||p.country||'—'}
+                        <td style={{ padding: '1rem' }}>
+                          {port.pays || port.country || '—'}
                         </td>
-                        <td style={{...tdSt,fontFamily:'monospace',color:NAVY,
-                          fontWeight:'600'}}>
-                          {p.unlocode||p.code||'—'}
+                        <td style={{
+                          padding: '1rem',
+                          fontFamily: 'monospace',
+                          color: '#1B2A4A',
+                          fontWeight: '600'
+                        }}>
+                          {port.unlocode || port.code || '—'}
                         </td>
-                        <td style={tdSt}>
-                          {p.fraisPortuaires||p.cost||'0'} EUR
+                        <td style={{ padding: '1rem' }}>
+                          {port.fraisPortuaires || port.cost || '0'} EUR
                         </td>
-                        <td style={tdSt}>
+                        <td style={{ padding: '1rem' }}>
                           <span style={{
-                            padding:'3px 10px', borderRadius:'12px',
-                            fontSize:'12px', fontWeight:'600',
-                            background:'#EFF6FF', color:'#1E40AF'
+                            padding: '0.25rem 0.75rem',
+                            borderRadius: '9999px',
+                            fontSize: '0.75rem',
+                            fontWeight: '600',
+                            background: '#EFF6FF',
+                            color: '#1E40AF'
                           }}>
-                            {p.typePort||p.type||'Maritime'}
+                            {port.typePort || port.type || 'Maritime'}
                           </span>
                         </td>
-                        <td style={tdSt}>
+                        <td style={{ padding: '1rem' }}>
                           <button
-                            onClick={()=>setEditPort(p)}
-                            style={btnS}>
+                            onClick={() => setEditPort(port)}
+                            style={{
+                              padding: '0.375rem 0.75rem',
+                              background: 'transparent',
+                              color: '#0B3D5C',
+                              border: '1px solid #0B3D5C',
+                              borderRadius: '0.375rem',
+                              cursor: 'pointer',
+                              fontSize: '0.75rem',
+                              fontWeight: '500'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.target.style.background = '#0B3D5C'
+                              e.target.style.color = 'white'
+                            }}
+                            onMouseLeave={(e) => {
+                              e.target.style.background = 'transparent'
+                              e.target.style.color = '#0B3D5C'
+                            }}
+                          >
                             Modifier
                           </button>
                         </td>
@@ -823,267 +1276,721 @@ export default function AdminDashboard() {
                   </tbody>
                 </table>
               </div>
-              <div style={{padding:'14px 20px',background:'#F9FAFB',
-                borderTop:'1px solid #E5E7EB',fontSize:'13px',color:'#6B7280'}}>
-                {filteredPorts.length} port(s) affiche(s)
-              </div>
             </div>
-
-            {editPort && (
-              <div style={{
-                position:'fixed',top:0,left:0,right:0,bottom:0,
-                background:'rgba(0,0,0,0.5)',display:'flex',
-                alignItems:'center',justifyContent:'center',zIndex:1000
-              }}>
-                <div style={{background:'white',borderRadius:'12px',
-                  padding:'32px',width:'480px',maxWidth:'90vw'}}>
-                  <h3 style={{color:NAVY,margin:'0 0 24px'}}>
-                    Modifier Port: {editPort.nomPort||editPort.name}
-                  </h3>
-                  {[
-                    {label:'Nom du port',key:'nomPort'},
-                    {label:'Code port',key:'unlocode'},
-                    {label:'Frais EUR',key:'fraisPortuaires'},
-                    {label:'Type',key:'typePort'}
-                  ].map(f=>(
-                    <div key={f.key} style={{marginBottom:'16px'}}>
-                      <label style={{display:'block',marginBottom:'6px',
-                        fontWeight:'600',color:'#374151',fontSize:'14px'}}>
-                        {f.label}
-                      </label>
-                      <input
-                        style={{...inp,width:'100%',boxSizing:'border-box'}}
-                        value={editPort[f.key]||''}
-                        onChange={e=>setEditPort(p=>({
-                          ...p,[f.key]:e.target.value
-                        }))}/>
-                    </div>
-                  ))}
-                  <div style={{display:'flex',gap:'12px',marginTop:'24px'}}>
-                    <button onClick={async ()=>{
-                      try {
-                        await api.put('/ports/'+editPort.id, editPort)
-                        showMsg('Port mis a jour')
-                        setEditPort(null)
-                        loadPorts()
-                      } catch(e) { showMsg('Erreur: '+e.message,false) }
-                    }} style={btnP}>
-                      Enregistrer
-                    </button>
-                    <button onClick={()=>setEditPort(null)}
-                      style={{...btnP,background:'#6B7280'}}>
-                      Annuler
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         )}
 
         {activeTab === 'rates' && (
           <div>
-            <div style={{...cardStyle,padding:'16px 20px',marginBottom:'16px'}}>
-              <div style={{display:'flex',gap:'12px',alignItems:'center'}}>
-                <input style={{...inp,flex:1}}
-                  value={rateSearch}
-                  onChange={e=>setRateSearch(e.target.value)}
-                  placeholder="Rechercher une devise..."/>
-                <button onClick={loadRates} style={btnP}>
-                  Actualiser
-                </button>
-              </div>
+            {/* Search Bar */}
+            <div style={{
+              background: 'white',
+              border: '1px solid #E2E8F0',
+              borderRadius: '0.75rem',
+              padding: '1rem',
+              marginBottom: '1rem',
+              display: 'flex',
+              gap: '0.75rem',
+              alignItems: 'center'
+            }}>
+              <input
+                style={{
+                  flex: 1,
+                  padding: '0.5rem 0.75rem',
+                  border: '1px solid #E2E8F0',
+                  borderRadius: '0.375rem',
+                  fontSize: '0.875rem',
+                  outline: 'none'
+                }}
+                value={rateSearch}
+                onChange={e => setRateSearch(e.target.value)}
+                placeholder="Rechercher une devise..."
+              />
+              <button
+                onClick={loadRates}
+                style={{
+                  padding: '0.5rem 1rem',
+                  background: '#0B3D5C',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '0.375rem',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                  fontWeight: '500'
+                }}
+              >
+                Actualiser
+              </button>
             </div>
-            <div style={{...cardStyle,padding:0,overflow:'hidden'}}>
-              <div style={{overflowX:'auto'}}>
-                <table style={{width:'100%',borderCollapse:'collapse'}}>
+
+            {/* Rates Table */}
+            <div style={{
+              background: 'white',
+              border: '1px solid #E2E8F0',
+              borderRadius: '0.75rem',
+              overflow: 'hidden'
+            }}>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
-                    <tr>
-                      {['Devise','Code','Taux vs USD',
-                        'Symbole','Mise a jour','Actions'].map(h=>(
-                        <th key={h} style={thSt}>{h}</th>
+                    <tr style={{ background: '#0B3D5C' }}>
+                      {['Devise', 'Code', 'Taux vs USD', 'Symbole', 'Mise à jour', 'Actions'].map(header => (
+                        <th key={header} style={{
+                          padding: '0.75rem 1rem',
+                          textAlign: 'left',
+                          fontSize: '0.8125rem',
+                          fontWeight: '600',
+                          color: 'white',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em'
+                        }}>
+                          {header}
+                        </th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {rates
-                      .filter(r=>
-                        r.currency?.toLowerCase().includes(rateSearch.toLowerCase())||
-                        r.code?.toLowerCase().includes(rateSearch.toLowerCase()))
-                      .map((r,i)=>(
-                      <tr key={r.id||i}
-                        onMouseEnter={e=>e.currentTarget.style.background='#F9FAFB'}
-                        onMouseLeave={e=>e.currentTarget.style.background='white'}>
-                        <td style={{...tdSt,fontWeight:'500',color:'#111827'}}>
-                          {r.currency||r.name||'—'}
-                        </td>
-                        <td style={{...tdSt,fontFamily:'monospace',
-                          fontWeight:'700',color:TEAL}}>
-                          {r.code||r.currencyCode||'—'}
-                        </td>
-                        <td style={{...tdSt,fontWeight:'600',color:NAVY}}>
-                          {r.rate||r.exchangeRate||'—'}
-                        </td>
-                        <td style={tdSt}>
-                          {r.symbol||'—'}
-                        </td>
-                        <td style={{...tdSt,fontSize:'12px',color:'#9CA3AF'}}>
-                          {r.updatedAt ?
-                            new Date(r.updatedAt).toLocaleDateString('fr-FR') :
-                            'N/A'}
-                        </td>
-                        <td style={tdSt}>
-                          <button style={btnS}
-                            onClick={()=>showMsg('Modifier taux: '+r.code)}>
-                            Modifier
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                      .filter(rate =>
+                        rate.currency?.toLowerCase().includes(rateSearch.toLowerCase()) ||
+                        rate.code?.toLowerCase().includes(rateSearch.toLowerCase())
+                      )
+                      .map((rate, index) => (
+                        <tr key={rate.id || index} style={{
+                          background: index % 2 === 0 ? 'white' : '#F8FAFC',
+                          borderBottom: '1px solid #E2E8F0'
+                        }}>
+                          <td style={{
+                            padding: '1rem',
+                            fontWeight: '500',
+                            color: '#1B2A4A'
+                          }}>
+                            {rate.currency || rate.name || '—'}
+                          </td>
+                          <td style={{
+                            padding: '1rem',
+                            fontFamily: 'monospace',
+                            fontWeight: '600',
+                            color: '#0D9488'
+                          }}>
+                            {rate.code || rate.currencyCode || '—'}
+                          </td>
+                          <td style={{
+                            padding: '1rem',
+                            fontWeight: '600',
+                            color: '#1B2A4A'
+                          }}>
+                            {rate.rate || rate.exchangeRate || '—'}
+                          </td>
+                          <td style={{ padding: '1rem' }}>
+                            {rate.symbol || '—'}
+                          </td>
+                          <td style={{
+                            padding: '1rem',
+                            fontSize: '0.875rem',
+                            color: '#64748B'
+                          }}>
+                            {rate.updatedAt 
+                              ? new Date(rate.updatedAt).toLocaleDateString('fr-FR')
+                              : 'N/A'
+                            }
+                          </td>
+                          <td style={{ padding: '1rem' }}>
+                            <button
+                              onClick={() => showMsg('Modifier taux: ' + rate.code)}
+                              style={{
+                                padding: '0.375rem 0.75rem',
+                                background: 'transparent',
+                                color: '#0B3D5C',
+                                border: '1px solid #0B3D5C',
+                                borderRadius: '0.375rem',
+                                cursor: 'pointer',
+                                fontSize: '0.75rem',
+                                fontWeight: '500'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.target.style.background = '#0B3D5C'
+                                e.target.style.color = 'white'
+                              }}
+                              onMouseLeave={(e) => {
+                                e.target.style.background = 'transparent'
+                                e.target.style.color = '#0B3D5C'
+                              }}
+                            >
+                              Modifier
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
                   </tbody>
                 </table>
-              </div>
-              <div style={{padding:'14px 20px',background:'#F9FAFB',
-                borderTop:'1px solid #E5E7EB',fontSize:'13px',color:'#6B7280'}}>
-                {rates.length} devise(s) disponible(s)
               </div>
             </div>
           </div>
         )}
 
-      {/* User Detail Modal */}
-      {showUserDetail && selectedUser && (
-        <div style={{
-          position:'fixed', top:0, left:0, right:0, bottom:0,
-          background:'rgba(0,0,0,0.5)', display:'flex',
-          alignItems:'center', justifyContent:'center', zIndex:1000
-        }}>
+      {/* Placeholder Tabs */}
+        {['containers', 'transactions', 'claims'].includes(activeTab) && (
           <div style={{
-            background:'white', borderRadius:'12px', padding:'24px',
-            maxWidth:'500px', width:'90%', maxHeight:'80vh', overflowY:'auto'
+            background: 'white',
+            border: '1px solid #E2E8F0',
+            borderRadius: '0.75rem',
+            padding: '3rem',
+            textAlign: 'center'
           }}>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'20px'}}>
-              <h3 style={{margin:0,color:NAVY,fontSize:'18px',fontWeight:'700'}}>
-                Détails de l'utilisateur
-              </h3>
-              <button
-                onClick={()=>setShowUserDetail(false)}
-                style={{background:'none',border:'none',fontSize:'24px',cursor:'pointer',color:'#9CA3AF'}}>
-                ×
-              </button>
+            <div style={{
+              fontSize: '3rem',
+              marginBottom: '1rem'
+            }}>
+              {activeTab === 'containers' ? '📦' : activeTab === 'transactions' ? '🚚' : '🎫'}
             </div>
-            
-            <div style={{display:'grid',gap:'16px'}}>
-              <div>
-                <label style={{display:'block',fontSize:'12px',fontWeight:'600',color:'#6B7280',marginBottom:'4px'}}>
-                  Nom complet
-                </label>
-                <div style={{padding:'8px 12px',background:'#F9FAFB',borderRadius:'6px',fontSize:'14px',color:'#111827'}}>
-                  {selectedUser.firstName && selectedUser.lastName 
-                    ? `${selectedUser.firstName} ${selectedUser.lastName}` 
-                    : 'Non renseigné'}
-                </div>
+            <h3 style={{
+              fontSize: '1.25rem',
+              fontWeight: '600',
+              color: '#1B2A4A',
+              margin: '0 0 0.5rem 0'
+            }}>
+              {activeTab === 'containers' ? 'Gestion des Conteneurs' : 
+               activeTab === 'transactions' ? 'Gestion des Transactions' : 
+               'Gestion des Réclamations'}
+            </h3>
+            <p style={{
+              fontSize: '0.875rem',
+              color: '#64748B',
+              margin: 0
+            }}>
+              Cette section sera bientôt disponible
+            </p>
+          </div>
+        )}
+
+        {/* User Detail Modal */}
+        {showUserDetail && selectedUser && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
+          }}>
+            <div style={{
+              background: 'white',
+              borderRadius: '0.75rem',
+              padding: '2rem',
+              width: '90%',
+              maxWidth: '500px',
+              maxHeight: '80vh',
+              overflowY: 'auto'
+            }}>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '1.5rem',
+                paddingBottom: '1rem',
+                borderBottom: '1px solid #E2E8F0'
+              }}>
+                <h3 style={{
+                  margin: 0,
+                  color: '#1B2A4A',
+                  fontSize: '1.125rem',
+                  fontWeight: '600'
+                }}>
+                  Détails de l'utilisateur
+                </h3>
+                <button
+                  onClick={() => setShowUserDetail(false)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    fontSize: '1.5rem',
+                    cursor: 'pointer',
+                    color: '#64748B',
+                    padding: '0',
+                    width: '2rem',
+                    height: '2rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  ×
+                </button>
               </div>
               
-              <div>
-                <label style={{display:'block',fontSize:'12px',fontWeight:'600',color:'#6B7280',marginBottom:'4px'}}>
-                  Email
-                </label>
-                <div style={{padding:'8px 12px',background:'#F9FAFB',borderRadius:'6px',fontSize:'14px',color:'#111827'}}>
-                  {selectedUser.email}
+              <div style={{ display: 'grid', gap: '1rem' }}>
+                <div>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '0.75rem',
+                    fontWeight: '600',
+                    color: '#64748B',
+                    marginBottom: '0.25rem'
+                  }}>
+                    Nom complet
+                  </label>
+                  <div style={{
+                    padding: '0.5rem 0.75rem',
+                    background: '#F8FAFC',
+                    borderRadius: '0.375rem',
+                    fontSize: '0.875rem',
+                    color: '#1B2A4A'
+                  }}>
+                    {selectedUser.firstName && selectedUser.lastName 
+                      ? `${selectedUser.firstName} ${selectedUser.lastName}` 
+                      : 'Non renseigné'}
+                  </div>
                 </div>
-              </div>
-              
-              <div>
-                <label style={{display:'block',fontSize:'12px',fontWeight:'600',color:'#6B7280',marginBottom:'4px'}}>
-                  Téléphone
-                </label>
-                <div style={{padding:'8px 12px',background:'#F9FAFB',borderRadius:'6px',fontSize:'14px',color:'#111827'}}>
-                  {selectedUser.phone || 'Non renseigné'}
+                
+                <div>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '0.75rem',
+                    fontWeight: '600',
+                    color: '#64748B',
+                    marginBottom: '0.25rem'
+                  }}>
+                    Email
+                  </label>
+                  <div style={{
+                    padding: '0.5rem 0.75rem',
+                    background: '#F8FAFC',
+                    borderRadius: '0.375rem',
+                    fontSize: '0.875rem',
+                    color: '#1B2A4A'
+                  }}>
+                    {selectedUser.email}
+                  </div>
                 </div>
-              </div>
-              
-              <div>
-                <label style={{display:'block',fontSize:'12px',fontWeight:'600',color:'#6B7280',marginBottom:'4px'}}>
-                  Entreprise
-                </label>
-                <div style={{padding:'8px 12px',background:'#F9FAFB',borderRadius:'6px',fontSize:'14px',color:'#111827'}}>
-                  {selectedUser.companyName || 'Non renseigné'}
+                
+                <div>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '0.75rem',
+                    fontWeight: '600',
+                    color: '#64748B',
+                    marginBottom: '0.25rem'
+                  }}>
+                    Téléphone
+                  </label>
+                  <div style={{
+                    padding: '0.5rem 0.75rem',
+                    background: '#F8FAFC',
+                    borderRadius: '0.375rem',
+                    fontSize: '0.875rem',
+                    color: '#1B2A4A'
+                  }}>
+                    {selectedUser.phone || 'Non renseigné'}
+                  </div>
                 </div>
-              </div>
-              
-              <div>
-                <label style={{display:'block',fontSize:'12px',fontWeight:'600',color:'#6B7280',marginBottom:'4px'}}>
-                  Pays
-                </label>
-                <div style={{padding:'8px 12px',background:'#F9FAFB',borderRadius:'6px',fontSize:'14px',color:'#111827'}}>
-                  {selectedUser.country || 'Non renseigné'}
+                
+                <div>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '0.75rem',
+                    fontWeight: '600',
+                    color: '#64748B',
+                    marginBottom: '0.25rem'
+                  }}>
+                    Entreprise
+                  </label>
+                  <div style={{
+                    padding: '0.5rem 0.75rem',
+                    background: '#F8FAFC',
+                    borderRadius: '0.375rem',
+                    fontSize: '0.875rem',
+                    color: '#1B2A4A'
+                  }}>
+                    {selectedUser.companyName || 'Non renseigné'}
+                  </div>
                 </div>
-              </div>
-              
-              <div>
-                <label style={{display:'block',fontSize:'12px',fontWeight:'600',color:'#6B7280',marginBottom:'4px'}}>
-                  Rôle
-                </label>
-                <div style={{padding:'8px 12px',background:'#F9FAFB',borderRadius:'6px',fontSize:'14px',color:'#111827'}}>
-                  {selectedUser.role}
+                
+                <div>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '0.75rem',
+                    fontWeight: '600',
+                    color: '#64748B',
+                    marginBottom: '0.25rem'
+                  }}>
+                    Pays
+                  </label>
+                  <div style={{
+                    padding: '0.5rem 0.75rem',
+                    background: '#F8FAFC',
+                    borderRadius: '0.375rem',
+                    fontSize: '0.875rem',
+                    color: '#1B2A4A'
+                  }}>
+                    {selectedUser.country || 'Non renseigné'}
+                  </div>
                 </div>
-              </div>
-              
-              <div>
-                <label style={{display:'block',fontSize:'12px',fontWeight:'600',color:'#6B7280',marginBottom:'4px'}}>
-                  Statut du compte
-                </label>
-                <div style={{padding:'8px 12px',background:'#F9FAFB',borderRadius:'6px',fontSize:'14px',color:'#111827'}}>
-                  <span style={{
-                    display:'inline-flex', alignItems:'center', gap:'6px',
-                    padding:'4px 12px', borderRadius:'20px',
-                    fontSize:'12px', fontWeight:'600',
-                    background:selectedUser.status==='ACTIVE'?'#D1FAE5':'#FEE2E2',
-                    color:selectedUser.status==='ACTIVE'?'#065F46':'#991B1B'
+                
+                <div>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '0.75rem',
+                    fontWeight: '600',
+                    color: '#64748B',
+                    marginBottom: '0.25rem'
+                  }}>
+                    Rôle
+                  </label>
+                  <div style={{
+                    padding: '0.5rem 0.75rem',
+                    background: '#F8FAFC',
+                    borderRadius: '0.375rem',
+                    fontSize: '0.875rem',
+                    color: '#1B2A4A'
                   }}>
                     <span style={{
-                      width:'6px', height:'6px', borderRadius:'50%',
-                      background:selectedUser.status==='ACTIVE'?'#10B981':'#EF4444'
-                    }}/>
-                    {selectedUser.status}
-                  </span>
+                      padding: '0.25rem 0.75rem',
+                      borderRadius: '9999px',
+                      fontSize: '0.75rem',
+                      fontWeight: '600',
+                      background: `${getRoleColor(selectedUser.role)}20`,
+                      color: getRoleColor(selectedUser.role)
+                    }}>
+                      {selectedUser.role}
+                    </span>
+                  </div>
                 </div>
+                
+                <div>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '0.75rem',
+                    fontWeight: '600',
+                    color: '#64748B',
+                    marginBottom: '0.25rem'
+                  }}>
+                    Statut du compte
+                  </label>
+                  <div style={{
+                    padding: '0.5rem 0.75rem',
+                    background: '#F8FAFC',
+                    borderRadius: '0.375rem',
+                    fontSize: '0.875rem',
+                    color: '#1B2A4A'
+                  }}>
+                    <span style={{
+                      padding: '0.25rem 0.75rem',
+                      borderRadius: '9999px',
+                      fontSize: '0.75rem',
+                      fontWeight: '600',
+                      background: `${getStatusColor(selectedUser.status)}20`,
+                      color: getStatusColor(selectedUser.status)
+                    }}>
+                      {selectedUser.status}
+                    </span>
+                  </div>
+                </div>
+                
+                {selectedUser.createdAt && (
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      fontSize: '0.75rem',
+                      fontWeight: '600',
+                      color: '#64748B',
+                      marginBottom: '0.25rem'
+                    }}>
+                      Date de création
+                    </label>
+                    <div style={{
+                      padding: '0.5rem 0.75rem',
+                      background: '#F8FAFC',
+                      borderRadius: '0.375rem',
+                      fontSize: '0.875rem',
+                      color: '#1B2A4A'
+                    }}>
+                      {new Date(selectedUser.createdAt).toLocaleDateString('fr-FR')}
+                    </div>
+                  </div>
+                )}
+                
+                {selectedUser.lastLogin && (
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      fontSize: '0.75rem',
+                      fontWeight: '600',
+                      color: '#64748B',
+                      marginBottom: '0.25rem'
+                    }}>
+                      Dernière connexion
+                    </label>
+                    <div style={{
+                      padding: '0.5rem 0.75rem',
+                      background: '#F8FAFC',
+                      borderRadius: '0.375rem',
+                      fontSize: '0.875rem',
+                      color: '#1B2A4A'
+                    }}>
+                      {new Date(selectedUser.lastLogin).toLocaleDateString('fr-FR')} à {new Date(selectedUser.lastLogin).toLocaleTimeString('fr-FR')}
+                    </div>
+                  </div>
+                )}
               </div>
               
-              {selectedUser.createdAt && (
-                <div>
-                  <label style={{display:'block',fontSize:'12px',fontWeight:'600',color:'#6B7280',marginBottom:'4px'}}>
-                    Date de création
-                  </label>
-                  <div style={{padding:'8px 12px',background:'#F9FAFB',borderRadius:'6px',fontSize:'14px',color:'#111827'}}>
-                    {new Date(selectedUser.createdAt).toLocaleDateString('fr-FR')}
-                  </div>
-                </div>
-              )}
-              
-              {selectedUser.lastLogin && (
-                <div>
-                  <label style={{display:'block',fontSize:'12px',fontWeight:'600',color:'#6B7280',marginBottom:'4px'}}>
-                    Dernière connexion
-                  </label>
-                  <div style={{padding:'8px 12px',background:'#F9FAFB',borderRadius:'6px',fontSize:'14px',color:'#111827'}}>
-                    {new Date(selectedUser.lastLogin).toLocaleDateString('fr-FR')} à {new Date(selectedUser.lastLogin).toLocaleTimeString('fr-FR')}
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            <div style={{display:'flex',justifyContent:'flex-end',marginTop:'20px'}}>
-              <button
-                onClick={()=>setShowUserDetail(false)}
-                style={{...btnB,background:NAVY,color:'white'}}>
-                Fermer
-              </button>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                marginTop: '1.5rem',
+                paddingTop: '1rem',
+                borderTop: '1px solid #E2E8F0'
+              }}>
+                <button
+                  onClick={() => setShowUserDetail(false)}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    background: '#0B3D5C',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '0.375rem',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                    fontWeight: '500'
+                  }}
+                >
+                  Fermer
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Edit Country Modal */}
+        {editCountry && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
+          }}>
+            <div style={{
+              background: 'white',
+              borderRadius: '0.75rem',
+              padding: '2rem',
+              width: '90%',
+              maxWidth: '480px'
+            }}>
+              <h3 style={{
+                color: '#1B2A4A',
+                margin: '0 0 1.5rem',
+                fontSize: '1.125rem',
+                fontWeight: '600'
+              }}>
+                Modifier: {editCountry.name || editCountry.countryName}
+              </h3>
+              {[
+                { label: 'Droits Douane %', key: 'customsDutyRate' },
+                { label: 'TVA %', key: 'vatRate' },
+                { label: 'Taxe Parafiscale %', key: 'parafiscalRate' },
+                { label: 'Frais Portuaires', key: 'portFees' }
+              ].map(field => (
+                <div key={field.key} style={{ marginBottom: '1rem' }}>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '0.25rem',
+                    fontWeight: '600',
+                    color: '#374151',
+                    fontSize: '0.875rem'
+                  }}>
+                    {field.label}
+                  </label>
+                  <input
+                    style={{
+                      width: '100%',
+                      padding: '0.5rem 0.75rem',
+                      border: '1px solid #E2E8F0',
+                      borderRadius: '0.375rem',
+                      fontSize: '0.875rem',
+                      boxSizing: 'border-box',
+                      outline: 'none'
+                    }}
+                    type="number"
+                    step="0.01"
+                    value={editCountry[field.key] || 0}
+                    onChange={e => setEditCountry(prev => ({
+                      ...prev,
+                      [field.key]: e.target.value
+                    }))}
+                  />
+                </div>
+              ))}
+              <div style={{
+                display: 'flex',
+                gap: '0.75rem',
+                marginTop: '1.5rem'
+              }}>
+                <button
+                  onClick={async () => {
+                    try {
+                      await api.put('/admin/countries/' + editCountry.id, editCountry)
+                      showMsg('Pays mis à jour')
+                      setEditCountry(null)
+                      loadCountries()
+                    } catch(e) { 
+                      showMsg('Erreur: ' + e.message, false)
+                    }
+                  }}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    background: '#0B3D5C',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '0.375rem',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                    fontWeight: '500'
+                  }}
+                >
+                  Enregistrer
+                </button>
+                <button
+                  onClick={() => setEditCountry(null)}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    background: '#6B7280',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '0.375rem',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                    fontWeight: '500'
+                  }}
+                >
+                  Annuler
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Port Modal */}
+        {editPort && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
+          }}>
+            <div style={{
+              background: 'white',
+              borderRadius: '0.75rem',
+              padding: '2rem',
+              width: '90%',
+              maxWidth: '480px'
+            }}>
+              <h3 style={{
+                color: '#1B2A4A',
+                margin: '0 0 1.5rem',
+                fontSize: '1.125rem',
+                fontWeight: '600'
+              }}>
+                Modifier Port: {editPort.nomPort || editPort.name}
+              </h3>
+              {[
+                { label: 'Nom du port', key: 'nomPort' },
+                { label: 'Code port', key: 'unlocode' },
+                { label: 'Frais EUR', key: 'fraisPortuaires' },
+                { label: 'Type', key: 'typePort' }
+              ].map(field => (
+                <div key={field.key} style={{ marginBottom: '1rem' }}>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '0.25rem',
+                    fontWeight: '600',
+                    color: '#374151',
+                    fontSize: '0.875rem'
+                  }}>
+                    {field.label}
+                  </label>
+                  <input
+                    style={{
+                      width: '100%',
+                      padding: '0.5rem 0.75rem',
+                      border: '1px solid #E2E8F0',
+                      borderRadius: '0.375rem',
+                      fontSize: '0.875rem',
+                      boxSizing: 'border-box',
+                      outline: 'none'
+                    }}
+                    value={editPort[field.key] || ''}
+                    onChange={e => setEditPort(prev => ({
+                      ...prev,
+                      [field.key]: e.target.value
+                    }))}
+                  />
+                </div>
+              ))}
+              <div style={{
+                display: 'flex',
+                gap: '0.75rem',
+                marginTop: '1.5rem'
+              }}>
+                <button
+                  onClick={async () => {
+                    try {
+                      await api.put('/ports/' + editPort.id, editPort)
+                      showMsg('Port mis à jour')
+                      setEditPort(null)
+                      loadPorts()
+                    } catch(e) { 
+                      showMsg('Erreur: ' + e.message, false)
+                    }
+                  }}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    background: '#0B3D5C',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '0.375rem',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                    fontWeight: '500'
+                  }}
+                >
+                  Enregistrer
+                </button>
+                <button
+                  onClick={() => setEditPort(null)}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    background: '#6B7280',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '0.375rem',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                    fontWeight: '500'
+                  }}
+                >
+                  Annuler
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   )

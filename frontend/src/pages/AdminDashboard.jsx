@@ -34,8 +34,12 @@ export default function AdminDashboard() {
   const [rateSearch, setRateSearch] = useState('')
 
   const [stats, setStats] = useState({
-    totalUsers:0, activeUsers:0, blockedUsers:0, adminCount:0
+    totalUsers:0, activeUsers:0, blockedUsers:0, adminCount:0,
+    totalOffers:0, activeOffers:0, totalMatches:0, 
+    totalTransactions:0, completedTransactions:0, pendingTickets:0
   })
+
+  const [recentTransactions, setRecentTransactions] = useState([])
 
   const showMsg = (text, ok=true) => {
     setUserMsg({text,ok})
@@ -48,17 +52,37 @@ export default function AdminDashboard() {
       const r = await api.get('/admin/users')
       const list = r.data || []
       setUsers(list)
+      
+      // Charger les stats complètes du marketplace
+      const statsRes = await api.get('/admin/stats')
+      const statsData = statsRes.data || {}
       setStats({
-        totalUsers: list.length,
-        activeUsers: list.filter(u=>u.status==='ACTIVE').length,
-        blockedUsers: list.filter(u=>u.status==='BLOCKED').length,
-        adminCount: list.filter(u=>u.role==='ADMIN').length
+        totalUsers: statsData.totalUsers || list.length,
+        activeUsers: statsData.activeUsers || list.filter(u=>u.status==='ACTIVE').length,
+        blockedUsers: statsData.blockedUsers || list.filter(u=>u.status==='BLOCKED').length,
+        adminCount: statsData.adminCount || list.filter(u=>u.role==='ADMIN').length,
+        totalOffers: statsData.totalOffers || 0,
+        activeOffers: statsData.activeOffers || 0,
+        totalMatches: statsData.totalMatches || 0,
+        totalTransactions: statsData.totalTransactions || 0,
+        completedTransactions: statsData.completedTransactions || 0,
+        pendingTickets: statsData.pendingTickets || 0
       })
     } catch(e) { 
       showMsg('Erreur chargement users: '+e.message, false)
       setUsers([])
     }
     setUserLoading(false)
+  }
+
+  const loadRecentTransactions = async () => {
+    try {
+      const r = await api.get('/admin/recent-transactions')
+      setRecentTransactions(r.data || [])
+    } catch(e) {
+      console.error('Error loading recent transactions:', e)
+      setRecentTransactions([])
+    }
   }
 
   const loadCountries = async () => {
@@ -122,6 +146,9 @@ export default function AdminDashboard() {
     }
     if(activeTab==='ports') loadPorts()
     if(activeTab==='rates') loadRates()
+    if(activeTab==='overview') {
+      loadRecentTransactions()
+    }
   },[activeTab])
 
   const updateUserRole = async (userId, role) => {
@@ -294,60 +321,154 @@ export default function AdminDashboard() {
         )}
 
         {activeTab === 'overview' && (
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'24px'}}>
-            <div style={cardStyle}>
-              <h3 style={{color:NAVY,margin:'0 0 20px',fontSize:'18px',fontWeight:'700'}}>
-                Repartition par Role
-              </h3>
-              {['ADMIN','EXPORTATEUR','IMPORTATEUR'].map(role => {
-                const count = users.filter(u=>u.role===role).length
-                const pct = users.length ? Math.round(count/users.length*100) : 0
-                return (
-                  <div key={role} style={{marginBottom:'16px'}}>
-                    <div style={{display:'flex',justifyContent:'space-between',
-                      marginBottom:'6px'}}>
-                      <span style={{fontSize:'14px',fontWeight:'500',color:'#374151'}}>
-                        {role}
-                      </span>
-                      <span style={{fontSize:'14px',fontWeight:'600',color:NAVY}}>
-                        {count} ({pct}%)
-                      </span>
+          <div>
+            {/* Marketplace Stats Cards */}
+            <div style={{
+              display:'grid', gridTemplateColumns:'repeat(4,1fr)',
+              gap:'20px', marginBottom:'24px'
+            }}>
+              {[
+                {label:'Offres actives',value:stats.activeOffers,color:TEAL,icon:'📦'},
+                {label:'Total matches',value:stats.totalMatches,color:'#8B5CF6',icon:'🤝'},
+                {label:'Transactions en cours',value:stats.totalTransactions - stats.completedTransactions,color:GOLD,icon:'🚚'},
+                {label:'Tickets en attente',value:stats.pendingTickets,color:'#F59E0B',icon:'🎫'}
+              ].map(s=>(
+                <div key={s.label} style={{...cardStyle,
+                  borderLeft:'4px solid '+s.color}}>
+                  <div style={{display:'flex',justifyContent:'space-between',
+                    alignItems:'center'}}>
+                    <div>
+                      <p style={{margin:'0 0 8px',fontSize:'13px',
+                        color:'#6B7280',fontWeight:'500'}}>{s.label}</p>
+                      <p style={{margin:0,fontSize:'32px',
+                        fontWeight:'700',color:NAVY}}>{s.value}</p>
                     </div>
-                    <div style={{background:'#F3F4F6',borderRadius:'99px',height:'8px'}}>
-                      <div style={{
-                        width:pct+'%', height:'8px', borderRadius:'99px',
-                        background: role==='ADMIN'?GOLD:role==='EXPORTATEUR'?TEAL:'#8B5CF6',
-                        transition:'width 0.5s ease'
-                      }}/>
-                    </div>
+                    <span style={{fontSize:'32px'}}>{s.icon}</span>
                   </div>
-                )
-              })}
+                </div>
+              ))}
             </div>
-            <div style={cardStyle}>
-              <h3 style={{color:NAVY,margin:'0 0 20px',fontSize:'18px',fontWeight:'700'}}>
-                Acces Rapide
-              </h3>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
-                {[
-                  {label:'Gerer Utilisateurs',tab:'users',icon:'👥',color:TEAL},
-                  {label:'Pays & Tarifs',tab:'countries',icon:'🌍',color:'#8B5CF6'},
-                  {label:'Ports',tab:'ports',icon:'⚓',color:NAVY},
-                  {label:'Taux de Change',tab:'rates',icon:'💱',color:GOLD}
-                ].map(a=>(
-                  <button key={a.tab}
-                    onClick={()=>setActiveTab(a.tab)}
-                    style={{
-                      background:a.color+'15', border:'1px solid '+a.color+'30',
-                      borderRadius:'10px', padding:'16px', cursor:'pointer',
-                      textAlign:'center', transition:'all 0.2s'
-                    }}>
-                    <div style={{fontSize:'24px',marginBottom:'8px'}}>{a.icon}</div>
-                    <div style={{fontSize:'13px',fontWeight:'600',color:a.color}}>
-                      {a.label}
+
+            {/* Existing Overview Content */}
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'24px'}}>
+              <div style={cardStyle}>
+                <h3 style={{color:NAVY,margin:'0 0 20px',fontSize:'18px',fontWeight:'700'}}>
+                  Repartition par Role
+                </h3>
+                {['ADMIN','EXPORTATEUR','IMPORTATEUR'].map(role => {
+                  const count = users.filter(u=>u.role===role).length
+                  const pct = users.length ? Math.round(count/users.length*100) : 0
+                  return (
+                    <div key={role} style={{marginBottom:'16px'}}>
+                      <div style={{display:'flex',justifyContent:'space-between',
+                        marginBottom:'6px'}}>
+                        <span style={{fontSize:'14px',fontWeight:'500',color:'#374151'}}>
+                          {role}
+                        </span>
+                        <span style={{fontSize:'14px',fontWeight:'600',color:NAVY}}>
+                          {count} ({pct}%)
+                        </span>
+                      </div>
+                      <div style={{background:'#F3F4F6',borderRadius:'99px',height:'8px'}}>
+                        <div style={{
+                          width:pct+'%', height:'8px', borderRadius:'99px',
+                          background: role==='ADMIN'?GOLD:role==='EXPORTATEUR'?TEAL:'#8B5CF6',
+                          transition:'width 0.5s ease'
+                        }}/>
+                      </div>
                     </div>
-                  </button>
-                ))}
+                  )
+                })}
+              </div>
+              <div style={cardStyle}>
+                <h3 style={{color:NAVY,margin:'0 0 20px',fontSize:'18px',fontWeight:'700'}}>
+                  Acces Rapide
+                </h3>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
+                  {[
+                    {label:'Gerer Utilisateurs',tab:'users',icon:'👥',color:TEAL},
+                    {label:'Pays & Tarifs',tab:'countries',icon:'🌍',color:'#8B5CF6'},
+                    {label:'Ports',tab:'ports',icon:'⚓',color:NAVY},
+                    {label:'Taux de Change',tab:'rates',icon:'💱',color:GOLD}
+                  ].map(a=>(
+                    <button key={a.tab}
+                      onClick={()=>setActiveTab(a.tab)}
+                      style={{
+                        background:a.color+'15', border:'1px solid '+a.color+'30',
+                        borderRadius:'10px', padding:'16px', cursor:'pointer',
+                        textAlign:'center', transition:'all 0.2s'
+                      }}>
+                      <div style={{fontSize:'24px',marginBottom:'8px'}}>{a.icon}</div>
+                      <div style={{fontSize:'13px',fontWeight:'600',color:a.color}}>
+                        {a.label}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Recent Transactions Table */}
+            <div style={{...cardStyle, marginTop:'24px'}}>
+              <h3 style={{color:NAVY,margin:'0 0 20px',fontSize:'18px',fontWeight:'700'}}>
+                5 Dernières Transactions
+              </h3>
+              <div style={{overflowX:'auto'}}>
+                <table style={{width:'100%',borderCollapse:'collapse'}}>
+                  <thead>
+                    <tr>
+                      <th style={thSt}>ID</th>
+                      <th style={thSt}>Statut Workflow</th>
+                      <th style={thSt}>Provider</th>
+                      <th style={thSt}>Seeker</th>
+                      <th style={thSt}>Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recentTransactions.length > 0 ? recentTransactions.map(tx => (
+                      <tr key={tx.id}
+                        onMouseEnter={e=>e.currentTarget.style.background='#F9FAFB'}
+                        onMouseLeave={e=>e.currentTarget.style.background='white'}>
+                        <td style={tdSt}>
+                          <span style={{fontWeight:'600',color:NAVY}}>#{tx.id}</span>
+                        </td>
+                        <td style={tdSt}>
+                          <span style={{
+                            padding:'3px 10px', borderRadius:'12px',
+                            fontSize:'12px', fontWeight:'600',
+                            background: tx.workflowStatus === 'COMPLETED' ? '#D1FAE5' : 
+                                       tx.workflowStatus === 'AT_PROVIDER' ? '#DBEAFE' : '#FEF3C7',
+                            color: tx.workflowStatus === 'COMPLETED' ? '#065F46' :
+                                   tx.workflowStatus === 'AT_PROVIDER' ? '#1E40AF' : '#92400E'
+                          }}>
+                            {tx.workflowStatus || 'AT_PROVIDER'}
+                          </span>
+                        </td>
+                        <td style={tdSt}>
+                          <div style={{fontSize:'13px',color:'#374151'}}>
+                            {tx.provider || 'N/A'}
+                          </div>
+                        </td>
+                        <td style={tdSt}>
+                          <div style={{fontSize:'13px',color:'#374151'}}>
+                            {tx.seeker || 'N/A'}
+                          </div>
+                        </td>
+                        <td style={tdSt}>
+                          <div style={{fontSize:'12px',color:'#9CA3AF'}}>
+                            {tx.createdAt ? new Date(tx.createdAt).toLocaleDateString('fr-FR') : 'N/A'}
+                          </div>
+                        </td>
+                      </tr>
+                    )) : (
+                      <tr>
+                        <td colSpan="5" style={{...tdSt, textAlign:'center', color:'#9CA3AF'}}>
+                          Aucune transaction trouvée
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>

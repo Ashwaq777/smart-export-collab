@@ -1,5 +1,10 @@
 package com.smartexport.platform.controller;
 
+import com.smartexport.platform.containers.entity.enums.ContainerOfferStatus;
+import com.smartexport.platform.containers.entity.enums.WorkflowStatus;
+import com.smartexport.platform.containers.repository.ContainerOfferRepository;
+import com.smartexport.platform.containers.repository.ContainerMatchRepository;
+import com.smartexport.platform.containers.repository.ContainerTransactionRepository;
 import com.smartexport.platform.entity.Country;
 import com.smartexport.platform.entity.Port;
 import com.smartexport.platform.entity.Role;
@@ -10,6 +15,7 @@ import com.smartexport.platform.service.CountryService;
 import com.smartexport.platform.service.ExchangeRateService;
 import com.smartexport.platform.service.OverpassPortService;
 import com.smartexport.platform.service.UserAdminService;
+import com.smartexport.platform.support.repository.SupportTicketRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,13 +35,21 @@ public class AdminController {
     private final ExchangeRateService exchangeRateService;
     private final OverpassPortService overpassPortService;
     private final PortRepository portRepository;
+    private final ContainerOfferRepository containerOfferRepository;
+    private final ContainerMatchRepository containerMatchRepository;
+    private final ContainerTransactionRepository containerTransactionRepository;
+    private final SupportTicketRepository supportTicketRepository;
 
-    public AdminController(UserAdminService userAdminService, CountryService countryService, ExchangeRateService exchangeRateService, OverpassPortService overpassPortService, PortRepository portRepository) {
+    public AdminController(UserAdminService userAdminService, CountryService countryService, ExchangeRateService exchangeRateService, OverpassPortService overpassPortService, PortRepository portRepository, ContainerOfferRepository containerOfferRepository, ContainerMatchRepository containerMatchRepository, ContainerTransactionRepository containerTransactionRepository, SupportTicketRepository supportTicketRepository) {
         this.userAdminService = userAdminService;
         this.countryService = countryService;
         this.exchangeRateService = exchangeRateService;
         this.overpassPortService = overpassPortService;
         this.portRepository = portRepository;
+        this.containerOfferRepository = containerOfferRepository;
+        this.containerMatchRepository = containerMatchRepository;
+        this.containerTransactionRepository = containerTransactionRepository;
+        this.supportTicketRepository = supportTicketRepository;
     }
 
     @GetMapping("/stats")
@@ -47,13 +61,71 @@ public class AdminController {
                 .filter(user -> user.getStatus() == UserStatus.ACTIVE)
                 .count();
             
-            // For now, return placeholder data for simulations
-            Map<String, Object> stats = new HashMap<>();
-            stats.put("totalUsers", totalUsers);
-            stats.put("totalSimulations", 1247L); // Placeholder
-            stats.put("simulationsToday", 23L); // Placeholder
-            stats.put("activeUsers", activeUsers);
+            // Marketplace stats
+            long totalOffers = 0;
+            long activeOffers = 0;
+            long totalMatches = 0;
+            long totalTransactions = 0;
+            long completedTransactions = 0;
+            long pendingTickets = 0;
             
+            try {
+                totalOffers = containerOfferRepository.count();
+                log.info("Total offers: {}", totalOffers);
+            } catch (Exception e) {
+                log.error("Error counting offers", e);
+            }
+            
+            try {
+                activeOffers = containerOfferRepository.findByStatus(ContainerOfferStatus.AVAILABLE).size();
+                log.info("Active offers: {}", activeOffers);
+            } catch (Exception e) {
+                log.error("Error counting active offers", e);
+            }
+            
+            try {
+                totalMatches = containerMatchRepository.count();
+                log.info("Total matches: {}", totalMatches);
+            } catch (Exception e) {
+                log.error("Error counting matches", e);
+            }
+            
+            try {
+                totalTransactions = containerTransactionRepository.count();
+                log.info("Total transactions: {}", totalTransactions);
+            } catch (Exception e) {
+                log.error("Error counting transactions", e);
+            }
+            
+            try {
+                completedTransactions = containerTransactionRepository.findByWorkflowStatus(WorkflowStatus.COMPLETED).size();
+                log.info("Completed transactions: {}", completedTransactions);
+            } catch (Exception e) {
+                log.error("Error counting completed transactions", e);
+            }
+            
+            pendingTickets = 0; // Placeholder - SupportTicketStatus not implemented yet
+            
+            Map<String, Object> stats = new HashMap<>();
+            // User stats
+            stats.put("totalUsers", totalUsers);
+            stats.put("activeUsers", activeUsers);
+            stats.put("blockedUsers", allUsers.stream().filter(u -> u.getStatus() == UserStatus.BLOCKED).count());
+            stats.put("adminCount", allUsers.stream().filter(u -> u.getRole() == Role.ADMIN).count());
+            
+            // Marketplace stats
+            stats.put("totalOffers", totalOffers);
+            stats.put("activeOffers", activeOffers);
+            stats.put("totalMatches", totalMatches);
+            stats.put("totalTransactions", totalTransactions);
+            stats.put("completedTransactions", completedTransactions);
+            stats.put("pendingTickets", pendingTickets);
+            
+            // Legacy stats for compatibility
+            stats.put("totalSimulations", 1247L);
+            stats.put("simulationsToday", 23L);
+            
+            log.info("Stats response: {}", stats.keySet());
             return ResponseEntity.ok(stats);
         } catch (Exception e) {
             log.error("Error fetching stats", e);
@@ -243,5 +315,39 @@ public class AdminController {
             all = portRepository.findAll();
         }
         return ResponseEntity.ok(all);
+    }
+
+    @GetMapping("/recent-transactions")
+    public ResponseEntity<?> getRecentTransactions() {
+        try {
+            List<Map<String, Object>> transactions = containerTransactionRepository
+                .findAllByOrderByCreatedAtDesc()
+                .stream()
+                .limit(5)
+                .map(tx -> {
+                    Map<String, Object> txMap = new HashMap<>();
+                    txMap.put("id", tx.getId());
+                    txMap.put("workflowStatus", tx.getWorkflowStatus());
+                    txMap.put("createdAt", tx.getCreatedAt());
+                    
+                    // Get provider and seeker info
+                    if (tx.getMatch() != null) {
+                        if (tx.getMatch().getOffer() != null && tx.getMatch().getOffer().getProvider() != null) {
+                            txMap.put("provider", tx.getMatch().getOffer().getProvider().getEmail());
+                        }
+                        if (tx.getMatch().getRequest() != null && tx.getMatch().getRequest().getSeeker() != null) {
+                            txMap.put("seeker", tx.getMatch().getRequest().getSeeker().getEmail());
+                        }
+                    }
+                    
+                    return txMap;
+                })
+                .collect(Collectors.toList());
+            
+            return ResponseEntity.ok(transactions);
+        } catch (Exception e) {
+            log.error("Error fetching recent transactions", e);
+            return ResponseEntity.internalServerError().build();
+        }
     }
 }

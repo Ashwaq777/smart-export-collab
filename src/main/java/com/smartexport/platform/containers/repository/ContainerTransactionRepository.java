@@ -2,6 +2,7 @@ package com.smartexport.platform.containers.repository;
 
 import com.smartexport.platform.containers.entity.ContainerMatch;
 import com.smartexport.platform.containers.entity.ContainerTransaction;
+import com.smartexport.platform.containers.entity.enums.WorkflowStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -18,6 +19,10 @@ public interface ContainerTransactionRepository extends JpaRepository<ContainerT
     Optional<ContainerTransaction> findByMatchId(Long matchId);
 
     List<ContainerTransaction> findByMatchOfferProviderIdOrMatchRequestSeekerId(Long providerId, Long seekerId);
+    
+    List<ContainerTransaction> findByWorkflowStatus(WorkflowStatus workflowStatus);
+    
+    List<ContainerTransaction> findAllByOrderByCreatedAtDesc();
     
     @Query("SELECT t FROM ContainerTransaction t " +
            "JOIN FETCH t.match m " +

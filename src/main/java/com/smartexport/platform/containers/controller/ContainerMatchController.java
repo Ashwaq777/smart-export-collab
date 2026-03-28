@@ -41,7 +41,8 @@ public class ContainerMatchController {
     @Operation(summary = "Confirm a match - works for both provider and seeker")
     public ResponseEntity<ContainerApiResponse<Void>>
             confirmMatch(@PathVariable Long id) {
-        Long userId = ContainerSecurityUtils.getCurrentUserId(userRepository);
+        String email = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        Long userId = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found")).getId();
         ContainerMatchDTO match = matchmakingService.getMatchById(id);
 
         // Determine role and confirm accordingly
@@ -66,7 +67,8 @@ public class ContainerMatchController {
     @Operation(summary = "Reject a match")
     public ResponseEntity<ContainerApiResponse<Void>>
             rejectMatch(@PathVariable Long id) {
-        Long userId = ContainerSecurityUtils.getCurrentUserId(userRepository);
+        String email = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        Long userId = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found")).getId();
         ContainerMatchDTO match = matchmakingService.getMatchById(id);
         if (!match.getOfferProviderId().equals(userId) &&
             !match.getRequestSeekerId().equals(userId)) {
@@ -84,7 +86,8 @@ public class ContainerMatchController {
     @Operation(summary = "Get all matches involving current user")
     public ResponseEntity<ContainerApiResponse<List<ContainerMatchDTO>>>
             getMyMatches() {
-        Long userId = ContainerSecurityUtils.getCurrentUserId(userRepository);
+        String email = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        Long userId = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found")).getId();
         return ResponseEntity.ok(
             ContainerApiResponse.success(
                 matchmakingService.getMatchesByUserId(userId)));

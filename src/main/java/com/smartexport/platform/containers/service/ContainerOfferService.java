@@ -2,13 +2,17 @@ package com.smartexport.platform.containers.service;
 
 import com.smartexport.platform.containers.dto.ContainerOfferDTO;
 import com.smartexport.platform.containers.entity.ContainerOffer;
+import jakarta.transaction.Transactional;
 import com.smartexport.platform.containers.entity.ContainerOfferImage;
+import com.smartexport.platform.containers.entity.ContainerMatch;
 import com.smartexport.platform.containers.entity.enums.ContainerOfferStatus;
 import com.smartexport.platform.containers.exception.ContainerNotFoundException;
 import com.smartexport.platform.containers.exception.UnauthorizedContainerAccessException;
 import com.smartexport.platform.containers.repository.ContainerMatchRepository;
 import com.smartexport.platform.containers.repository.ContainerOfferRepository;
 import com.smartexport.platform.containers.repository.ContainerOfferImageRepository;
+import com.smartexport.platform.containers.repository.ContainerDirectRequestRepository;
+import com.smartexport.platform.containers.repository.ContainerTransactionRepository;
 import com.smartexport.platform.entity.User;
 import com.smartexport.platform.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +31,8 @@ public class ContainerOfferService {
     private final ContainerOfferRepository offerRepository;
     private final ContainerMatchRepository matchRepository;
     private final ContainerOfferImageRepository imageRepository;
+    private final ContainerDirectRequestRepository directRequestRepository;
+    private final ContainerTransactionRepository transactionRepository;
     private final UserRepository userRepository;
     private final GeocodingService geocodingService;
     private final PortService portService;
@@ -34,12 +40,16 @@ public class ContainerOfferService {
     public ContainerOfferService(ContainerOfferRepository offerRepository,
                                   ContainerMatchRepository matchRepository,
                                   ContainerOfferImageRepository imageRepository,
+                                  ContainerDirectRequestRepository directRequestRepository,
+                                  ContainerTransactionRepository transactionRepository,
                                   UserRepository userRepository,
                                   GeocodingService geocodingService,
                                   @Qualifier("containerPortService") PortService portService) {
         this.offerRepository = offerRepository;
         this.matchRepository = matchRepository;
         this.imageRepository = imageRepository;
+        this.directRequestRepository = directRequestRepository;
+        this.transactionRepository = transactionRepository;
         this.userRepository = userRepository;
         this.geocodingService = geocodingService;
         this.portService = portService;
@@ -141,28 +151,36 @@ public class ContainerOfferService {
         offerRepository.save(offer);
     }
 
+    @Transactional
     public void deleteOffer(Long offerId, Long userId) {
-        ContainerOffer offer = offerRepository.findById(offerId)
-                .orElseThrow(() -> new ContainerNotFoundException(
-                        "Offer not found: " + offerId));
-        
-        log.warn("DELETE OFFER: offerId={} userId={} providerId={}",
-            offerId, userId, 
-            offer.getProvider().getId());
-        
-        if (!offer.getProvider().getId().equals(userId)) {
-            throw new UnauthorizedContainerAccessException(
-                    "Not authorized to delete offer: " + offerId);
+        Long providerIdFromDB = offerRepository.findProviderIdById(offerId);
+        if (providerIdFromDB == null) throw new ContainerNotFoundException("Offer not found: " + offerId);
+        if (providerIdFromDB.longValue() != userId.longValue()) {
+            throw new UnauthorizedContainerAccessException("Not authorized");
         }
         
-        // Delete related matches first to avoid foreign key constraint violation
-        var matches = matchRepository.findByOfferId(offerId);
-        if (!matches.isEmpty()) {
-            log.info("Deleting {} related matches for offer {}", matches.size(), offerId);
-            matchRepository.deleteAll(matches);
+        // 1. Get all matches for this offer
+        List<ContainerMatch> matches = matchRepository.findByOfferId(offerId);
+        
+        // 2. Delete transactions for each match
+        for (ContainerMatch match : matches) {
+            transactionRepository.deleteByMatchId(match.getId());
         }
         
-        offerRepository.delete(offer);
+        // 3. Delete direct requests
+        if (directRequestRepository != null) {
+            directRequestRepository.deleteByOfferId(offerId);
+        }
+        
+        // 4. Delete images
+        imageRepository.deleteByOfferId(offerId);
+        
+        // 5. Delete matches
+        matchRepository.deleteAll(matches);
+        
+        // 6. Delete offer
+        offerRepository.deleteById(offerId);
+        
         log.info("Offer {} deleted successfully", offerId);
     }
 
@@ -254,7 +272,7 @@ public class ContainerOfferService {
         dto.setProviderName(offer.getProvider().getFirstName()
                 + " " + offer.getProvider().getLastName());
         dto.setContainerType(offer.getContainerType());
-        dto.setCargoType(offer.getCargoType());
+        dto.setCargoType(dto.getCargoType());
         dto.setSize(offer.getSize());
         dto.setTechnicalDetails(offer.getTechnicalDetails());
         dto.setLocation(offer.getLocation());

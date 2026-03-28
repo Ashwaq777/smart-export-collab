@@ -60,7 +60,11 @@ public class ContainerTransactionService {
         if (Boolean.TRUE.equals(tx.getConfirmedBySeeker())) {
             match.setStatus(ContainerMatchStatus.CONFIRMED);
             matchRepository.save(match);
+            if (tx.getWorkflowStatus() == null) {
+                tx.setWorkflowStatus(WorkflowStatus.AT_PROVIDER);
+            }
             transactionRepository.save(tx);
+            log.info("Transaction created/updated for confirmed match {}", match.getId());
             
             // Send confirmation email when both parties have confirmed
             try {
@@ -96,7 +100,11 @@ public class ContainerTransactionService {
         if (Boolean.TRUE.equals(tx.getConfirmedByProvider())) {
             match.setStatus(ContainerMatchStatus.CONFIRMED);
             matchRepository.save(match);
+            if (tx.getWorkflowStatus() == null) {
+                tx.setWorkflowStatus(WorkflowStatus.AT_PROVIDER);
+            }
             transactionRepository.save(tx);
+            log.info("Transaction created/updated for confirmed match {}", match.getId());
             
             // Send confirmation email when both parties have confirmed
             try {

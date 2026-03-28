@@ -43,6 +43,7 @@ export default function ContainersPage() {
   const [allOffers, setAllOffers] = useState([]);
   const [receivedRequests, setReceivedRequests] = useState([]);
   const [sentRequests, setSentRequests] = useState([]);
+  const [myMatches, setMyMatches] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // UI states
@@ -62,9 +63,10 @@ export default function ContainersPage() {
   const loadAll = async () => {
     try {
       setLoading(true);
-      const [dashRes, allOffersRes] = await Promise.all([
+      const [dashRes, allOffersRes, matchesRes] = await Promise.all([
         containerService.getDashboard(),
         containerService.getAllOffers(),
+        containerService.getMyMatches(),
       ]);
 
       const dash = dashRes.data?.data || dashRes.data || {};
@@ -74,6 +76,9 @@ export default function ContainersPage() {
 
       const all = allOffersRes.data?.data || allOffersRes.data || [];
       setAllOffers(Array.isArray(all) ? all.filter(o => o.status === 'AVAILABLE') : []);
+
+      const matches = matchesRes.data?.data || matchesRes.data || [];
+      setMyMatches(Array.isArray(matches) ? matches : []);
 
       // Load direct requests
       try {
@@ -125,6 +130,7 @@ export default function ContainersPage() {
 
   // Delete handlers
   const handleDeleteOffer = async (id) => {
+    console.log('Deleting offer ID:', id);
     if (!window.confirm('Supprimer cette offre ?')) return;
     try {
       await containerService.deleteOffer(id);
@@ -193,6 +199,16 @@ export default function ContainersPage() {
   }
 };
 
+  const handleConfirmMatch = async (matchId) => {
+    try {
+      await containerService.confirmMatch(matchId);
+      alert('✅ Match confirmé ! La transaction a été créée.');
+      loadAll(); // Reload to update match status
+    } catch (e) {
+      alert('Erreur: ' + (e.response?.data?.message || e.message));
+    }
+  };
+
   const handleRespondDirectRequest = async (reqId, accepted) => {
     const response = accepted
       ? prompt('Message d\'acceptation (optionnel):')
@@ -211,8 +227,8 @@ export default function ContainersPage() {
   };
 
   // Tabs definition per role
-  const importateurTabs = ['📦 Mes Offres', '📬 Demandes reçues', '🗺️ Carte'];
-  const exportateurTabs = ['🏪 Marketplace', '🔍 Mes Demandes', '📬 Mes Requêtes', '🗺️ Carte'];
+  const importateurTabs = ['📦 Mes Offres', '📬 Demandes reçues', '🤝 Mes Correspondances', '🗺️ Carte'];
+  const exportateurTabs = ['🏪 Marketplace', '🔍 Mes Demandes', '📬 Mes Requêtes', '🤝 Mes Correspondances', '🗺️ Carte'];
   const tabs = isImportateur ? importateurTabs : exportateurTabs;
 
   const statCards = [
@@ -441,8 +457,66 @@ export default function ContainersPage() {
         </div>
       )}
 
-      {/* IMPORTATEUR Tab 2: Carte */}
+      {/* IMPORTATEUR Tab 2: Mes Correspondances */}
       {isImportateur && activeTab === 2 && (
+        <div>
+          {myMatches.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '3rem', background: 'white', borderRadius: '12px', border: '1px dashed #d1d5db' }}>
+              <div style={{ fontSize: '48px' }}>🤝</div>
+              <h3>Aucune correspondance</h3>
+              <p style={{ color: '#6b7280' }}>Les correspondances apparaissent ici quand des exportateurs trouvent vos offres</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {myMatches.map(match => (
+                <div key={match.id} style={{
+                  background: 'white', borderRadius: '12px', padding: '1.5rem',
+                  border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                    <div>
+                      <div style={{ fontWeight: '600', fontSize: '15px', marginBottom: '4px' }}>
+                        🤝 Match #{match.id}
+                      </div>
+                      <div style={{ fontSize: '13px', color: '#6b7280' }}>
+                        Offre: {match.offerContainerType} à {match.offerLocation}<br />
+                        Demande: {match.requestContainerType} à {match.requestLocation}
+                      </div>
+                    </div>
+                    <span style={{
+                      fontSize: '12px', padding: '4px 10px', borderRadius: '99px',
+                      background: match.status === 'CONFIRMED' ? '#d1fae5' : '#fef3c7',
+                      color: match.status === 'CONFIRMED' ? '#065f46' : '#92400e'
+                    }}>
+                      {match.status === 'CONFIRMED' ? '✅ Confirmé' : 
+                       match.status === 'ACCEPTED_BY_PROVIDER' ? '✅ Accepté par vous' :
+                       match.status === 'ACCEPTED_BY_SEEKER' ? '✅ Accepté par seeker' : '⏳ En attente'}
+                    </span>
+                  </div>
+                  <div style={{ padding: '12px', background: '#f8f9fa', borderRadius: '8px', fontSize: '13px', marginBottom: '1rem' }}>
+                    <b>Compatibilité:</b> {Math.round(match.compatibilityScore || 0)}% | 
+                    <b>Distance:</b> {Math.round(match.distanceKm || 0)}km
+                  </div>
+                  {match.status !== 'CONFIRMED' && (
+                    <button
+                      onClick={() => handleConfirmMatch(match.id)}
+                      style={{
+                        padding: '8px 16px', background: '#16a34a', color: 'white',
+                        border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: '500'
+                      }}
+                    >
+                      ✅ Confirmer ce match
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* IMPORTATEUR Tab 3: Carte */}
+      {isImportateur && activeTab === 3 && (
         <div style={{ height: '500px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e5e7eb' }}>
           <MapContainer center={[20, 0]} zoom={2} style={{ height: '100%', width: '100%' }} scrollWheelZoom={true}>
             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap' />
@@ -698,8 +772,66 @@ export default function ContainersPage() {
         </div>
       )}
 
-      {/* EXPORTATEUR Tab 3: Carte */}
+      {/* EXPORTATEUR Tab 3: Mes Correspondances */}
       {isExportateur && activeTab === 3 && (
+        <div>
+          {myMatches.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '3rem', background: 'white', borderRadius: '12px', border: '1px dashed #d1d5db' }}>
+              <div style={{ fontSize: '48px' }}>🤝</div>
+              <h3>Aucune correspondance</h3>
+              <p style={{ color: '#6b7280' }}>Les correspondances apparaissent ici quand vous trouvez des offres via le matchmaking</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {myMatches.map(match => (
+                <div key={match.id} style={{
+                  background: 'white', borderRadius: '12px', padding: '1.5rem',
+                  border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                    <div>
+                      <div style={{ fontWeight: '600', fontSize: '15px', marginBottom: '4px' }}>
+                        🤝 Match #{match.id}
+                      </div>
+                      <div style={{ fontSize: '13px', color: '#6b7280' }}>
+                        Offre: {match.offerContainerType} à {match.offerLocation}<br />
+                        Demande: {match.requestContainerType} à {match.requestLocation}
+                      </div>
+                    </div>
+                    <span style={{
+                      fontSize: '12px', padding: '4px 10px', borderRadius: '99px',
+                      background: match.status === 'CONFIRMED' ? '#d1fae5' : '#fef3c7',
+                      color: match.status === 'CONFIRMED' ? '#065f46' : '#92400e'
+                    }}>
+                      {match.status === 'CONFIRMED' ? '✅ Confirmé' : 
+                       match.status === 'ACCEPTED_BY_SEEKER' ? '✅ Accepté par vous' :
+                       match.status === 'ACCEPTED_BY_PROVIDER' ? '✅ Accepté par provider' : '⏳ En attente'}
+                    </span>
+                  </div>
+                  <div style={{ padding: '12px', background: '#f8f9fa', borderRadius: '8px', fontSize: '13px', marginBottom: '1rem' }}>
+                    <b>Compatibilité:</b> {Math.round(match.compatibilityScore || 0)}% | 
+                    <b>Distance:</b> {Math.round(match.distanceKm || 0)}km
+                  </div>
+                  {match.status !== 'CONFIRMED' && (
+                    <button
+                      onClick={() => handleConfirmMatch(match.id)}
+                      style={{
+                        padding: '8px 16px', background: '#16a34a', color: 'white',
+                        border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: '500'
+                      }}
+                    >
+                      ✅ Confirmer ce match
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* EXPORTATEUR Tab 4: Carte */}
+      {isExportateur && activeTab === 4 && (
         <div style={{ height: '500px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e5e7eb' }}>
           <MapContainer center={[20, 0]} zoom={2} style={{ height: '100%', width: '100%' }} scrollWheelZoom={true}>
             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap' />

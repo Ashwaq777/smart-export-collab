@@ -3,6 +3,8 @@ package com.smartexport.platform.containers.repository;
 import com.smartexport.platform.containers.entity.ContainerOffer;
 import com.smartexport.platform.containers.entity.enums.ContainerOfferStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -15,4 +17,7 @@ public interface ContainerOfferRepository extends JpaRepository<ContainerOffer, 
     List<ContainerOffer> findByProviderId(Long providerId);
 
     List<ContainerOffer> findByProviderIdAndStatus(Long providerId, ContainerOfferStatus status);
+
+    @Query("SELECT o.provider.id FROM ContainerOffer o WHERE o.id = :id")
+    Long findProviderIdById(@Param("id") Long id);
 }

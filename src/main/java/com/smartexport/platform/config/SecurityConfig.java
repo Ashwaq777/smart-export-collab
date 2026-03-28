@@ -53,6 +53,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/countries/**").permitAll()
                 .requestMatchers("/api/admin/**").permitAll()
                 .requestMatchers("/api/admin/recent-transactions").permitAll()
+                .requestMatchers("/api/users/me/**").authenticated()
                 .requestMatchers("/ws/**").permitAll()
                 .requestMatchers("/api/v1/vessels/**").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/v1/containers/offers").permitAll()
@@ -68,6 +69,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PUT, "/api/v1/containers/**").authenticated()
                 .requestMatchers(HttpMethod.DELETE, "/api/v1/containers/**").authenticated()
                 .requestMatchers(HttpMethod.PATCH, "/api/v1/containers/**").authenticated()
+                .requestMatchers("/api/users/me").authenticated()
+                .requestMatchers("/api/users/me/**").authenticated()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, 

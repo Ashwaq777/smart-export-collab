@@ -40,6 +40,8 @@ export default function AdminDashboard() {
   })
 
   const [recentTransactions, setRecentTransactions] = useState([])
+  const [selectedUser, setSelectedUser] = useState(null)
+  const [showUserDetail, setShowUserDetail] = useState(false)
 
   const showMsg = (text, ok=true) => {
     setUserMsg({text,ok})
@@ -83,6 +85,11 @@ export default function AdminDashboard() {
       console.error('Error loading recent transactions:', e)
       setRecentTransactions([])
     }
+  }
+
+  const openUserDetail = (user) => {
+    setSelectedUser(user)
+    setShowUserDetail(true)
   }
 
   const loadCountries = async () => {
@@ -494,6 +501,9 @@ export default function AdminDashboard() {
                   <thead>
                     <tr>
                       <th style={thSt}>Email</th>
+                      <th style={thSt}>Téléphone</th>
+                      <th style={thSt}>Entreprise</th>
+                      <th style={thSt}>Pays</th>
                       <th style={thSt}>Role</th>
                       <th style={thSt}>Statut</th>
                       <th style={thSt}>Actions</th>
@@ -507,6 +517,21 @@ export default function AdminDashboard() {
                         <td style={tdSt}>
                           <div style={{fontWeight:'500',color:'#111827'}}>{u.email}</div>
                           <div style={{fontSize:'12px',color:'#9CA3AF'}}>ID: {u.id}</div>
+                        </td>
+                        <td style={tdSt}>
+                          <div style={{fontSize:'13px',color:'#374151'}}>
+                            {u.phone || 'Non renseigné'}
+                          </div>
+                        </td>
+                        <td style={tdSt}>
+                          <div style={{fontSize:'13px',color:'#374151'}}>
+                            {u.companyName || 'Non renseigné'}
+                          </div>
+                        </td>
+                        <td style={tdSt}>
+                          <div style={{fontSize:'13px',color:'#374151'}}>
+                            {u.country || 'Non renseigné'}
+                          </div>
                         </td>
                         <td style={tdSt}>
                           <select
@@ -535,6 +560,11 @@ export default function AdminDashboard() {
                         </td>
                         <td style={tdSt}>
                           <div style={{display:'flex',gap:'8px',flexWrap:'wrap'}}>
+                            <button
+                              onClick={()=>openUserDetail(u)}
+                              style={{...btnB,background:TEAL,color:'white'}}>
+                              Détail
+                            </button>
                             <button
                               onClick={()=>blockUser(u.id,u.status)}
                               style={u.status==='BLOCKED'?
@@ -921,6 +951,139 @@ export default function AdminDashboard() {
           </div>
         )}
 
+      {/* User Detail Modal */}
+      {showUserDetail && selectedUser && (
+        <div style={{
+          position:'fixed', top:0, left:0, right:0, bottom:0,
+          background:'rgba(0,0,0,0.5)', display:'flex',
+          alignItems:'center', justifyContent:'center', zIndex:1000
+        }}>
+          <div style={{
+            background:'white', borderRadius:'12px', padding:'24px',
+            maxWidth:'500px', width:'90%', maxHeight:'80vh', overflowY:'auto'
+          }}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'20px'}}>
+              <h3 style={{margin:0,color:NAVY,fontSize:'18px',fontWeight:'700'}}>
+                Détails de l'utilisateur
+              </h3>
+              <button
+                onClick={()=>setShowUserDetail(false)}
+                style={{background:'none',border:'none',fontSize:'24px',cursor:'pointer',color:'#9CA3AF'}}>
+                ×
+              </button>
+            </div>
+            
+            <div style={{display:'grid',gap:'16px'}}>
+              <div>
+                <label style={{display:'block',fontSize:'12px',fontWeight:'600',color:'#6B7280',marginBottom:'4px'}}>
+                  Nom complet
+                </label>
+                <div style={{padding:'8px 12px',background:'#F9FAFB',borderRadius:'6px',fontSize:'14px',color:'#111827'}}>
+                  {selectedUser.firstName && selectedUser.lastName 
+                    ? `${selectedUser.firstName} ${selectedUser.lastName}` 
+                    : 'Non renseigné'}
+                </div>
+              </div>
+              
+              <div>
+                <label style={{display:'block',fontSize:'12px',fontWeight:'600',color:'#6B7280',marginBottom:'4px'}}>
+                  Email
+                </label>
+                <div style={{padding:'8px 12px',background:'#F9FAFB',borderRadius:'6px',fontSize:'14px',color:'#111827'}}>
+                  {selectedUser.email}
+                </div>
+              </div>
+              
+              <div>
+                <label style={{display:'block',fontSize:'12px',fontWeight:'600',color:'#6B7280',marginBottom:'4px'}}>
+                  Téléphone
+                </label>
+                <div style={{padding:'8px 12px',background:'#F9FAFB',borderRadius:'6px',fontSize:'14px',color:'#111827'}}>
+                  {selectedUser.phone || 'Non renseigné'}
+                </div>
+              </div>
+              
+              <div>
+                <label style={{display:'block',fontSize:'12px',fontWeight:'600',color:'#6B7280',marginBottom:'4px'}}>
+                  Entreprise
+                </label>
+                <div style={{padding:'8px 12px',background:'#F9FAFB',borderRadius:'6px',fontSize:'14px',color:'#111827'}}>
+                  {selectedUser.companyName || 'Non renseigné'}
+                </div>
+              </div>
+              
+              <div>
+                <label style={{display:'block',fontSize:'12px',fontWeight:'600',color:'#6B7280',marginBottom:'4px'}}>
+                  Pays
+                </label>
+                <div style={{padding:'8px 12px',background:'#F9FAFB',borderRadius:'6px',fontSize:'14px',color:'#111827'}}>
+                  {selectedUser.country || 'Non renseigné'}
+                </div>
+              </div>
+              
+              <div>
+                <label style={{display:'block',fontSize:'12px',fontWeight:'600',color:'#6B7280',marginBottom:'4px'}}>
+                  Rôle
+                </label>
+                <div style={{padding:'8px 12px',background:'#F9FAFB',borderRadius:'6px',fontSize:'14px',color:'#111827'}}>
+                  {selectedUser.role}
+                </div>
+              </div>
+              
+              <div>
+                <label style={{display:'block',fontSize:'12px',fontWeight:'600',color:'#6B7280',marginBottom:'4px'}}>
+                  Statut du compte
+                </label>
+                <div style={{padding:'8px 12px',background:'#F9FAFB',borderRadius:'6px',fontSize:'14px',color:'#111827'}}>
+                  <span style={{
+                    display:'inline-flex', alignItems:'center', gap:'6px',
+                    padding:'4px 12px', borderRadius:'20px',
+                    fontSize:'12px', fontWeight:'600',
+                    background:selectedUser.status==='ACTIVE'?'#D1FAE5':'#FEE2E2',
+                    color:selectedUser.status==='ACTIVE'?'#065F46':'#991B1B'
+                  }}>
+                    <span style={{
+                      width:'6px', height:'6px', borderRadius:'50%',
+                      background:selectedUser.status==='ACTIVE'?'#10B981':'#EF4444'
+                    }}/>
+                    {selectedUser.status}
+                  </span>
+                </div>
+              </div>
+              
+              {selectedUser.createdAt && (
+                <div>
+                  <label style={{display:'block',fontSize:'12px',fontWeight:'600',color:'#6B7280',marginBottom:'4px'}}>
+                    Date de création
+                  </label>
+                  <div style={{padding:'8px 12px',background:'#F9FAFB',borderRadius:'6px',fontSize:'14px',color:'#111827'}}>
+                    {new Date(selectedUser.createdAt).toLocaleDateString('fr-FR')}
+                  </div>
+                </div>
+              )}
+              
+              {selectedUser.lastLogin && (
+                <div>
+                  <label style={{display:'block',fontSize:'12px',fontWeight:'600',color:'#6B7280',marginBottom:'4px'}}>
+                    Dernière connexion
+                  </label>
+                  <div style={{padding:'8px 12px',background:'#F9FAFB',borderRadius:'6px',fontSize:'14px',color:'#111827'}}>
+                    {new Date(selectedUser.lastLogin).toLocaleDateString('fr-FR')} à {new Date(selectedUser.lastLogin).toLocaleTimeString('fr-FR')}
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div style={{display:'flex',justifyContent:'flex-end',marginTop:'20px'}}>
+              <button
+                onClick={()=>setShowUserDetail(false)}
+                style={{...btnB,background:NAVY,color:'white'}}>
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       </div>
     </div>
   )

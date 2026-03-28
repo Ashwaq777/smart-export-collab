@@ -142,10 +142,16 @@ public class AdminController {
                 .map(user -> {
                     Map<String, Object> userDTO = new HashMap<>();
                     userDTO.put("id", user.getId());
-                    userDTO.put("name", user.getEmail());
+                    userDTO.put("firstName", user.getFirstName());
+                    userDTO.put("lastName", user.getLastName());
                     userDTO.put("email", user.getEmail());
+                    userDTO.put("phone", user.getPhone());
+                    userDTO.put("companyName", user.getCompanyName());
+                    userDTO.put("country", user.getCountry());
                     userDTO.put("role", user.getRole() != null ? user.getRole().toString() : "USER");
                     userDTO.put("status", user.getStatus() != null ? user.getStatus().toString() : "ACTIVE");
+                    userDTO.put("createdAt", user.getCreatedAt());
+                    userDTO.put("lastLogin", user.getLastLogin());
                     return userDTO;
                 })
                 .toList();

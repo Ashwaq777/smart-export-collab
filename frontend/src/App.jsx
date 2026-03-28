@@ -14,6 +14,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
+import { ProfilePage } from './pages/ProfilePage'
 import ContainerDashboard from './pages/containers/ContainerDashboard'
 import ContainersPage from './pages/containers/ContainersPage'
 import MatchesPage from './pages/containers/MatchesPage'
@@ -63,6 +64,13 @@ function App() {
               <ProtectedRoute>
                 <MainLayout>
                   <About />
+                </MainLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <ProfilePage />
                 </MainLayout>
               </ProtectedRoute>
             } />

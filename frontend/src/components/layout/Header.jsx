@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Ship, Anchor, Menu, X, UserCircle, LogOut } from 'lucide-react'
+import { Ship, Anchor, Menu, X, UserCircle, LogOut, ChevronDown } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import NotificationBell from '../notifications/NotificationBell'
 
 export const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const location = useLocation()
   const { user, logout } = useAuth()
 
@@ -36,6 +37,17 @@ export const Header = () => {
   const handleLogout = () => {
     logout()
     setIsMobileMenuOpen(false)
+    setIsUserMenuOpen(false)
+  }
+
+  const getUserInitials = () => {
+    if (user?.firstName && user?.lastName) {
+      return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
+    }
+    if (user?.email) {
+      return user.email.substring(0, 2).toUpperCase()
+    }
+    return 'U'
   }
 
   return (
@@ -98,16 +110,41 @@ export const Header = () => {
             {user && <NotificationBell />}
 
             {user ? (
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-gray-200 text-gray-700 hover:text-maritime-navy hover:border-accent-500 transition-colors"
-                title="Logout"
-              >
-                <UserCircle className="w-5 h-5" />
-                <span className="text-sm font-semibold">{user.role}</span>
-                <LogOut className="w-4 h-4" />
-              </button>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-gray-200 text-gray-700 hover:text-maritime-navy hover:border-accent-500 transition-colors"
+                  title="Menu utilisateur"
+                >
+                  <div className="w-8 h-8 bg-accent-500 text-white rounded-full flex items-center justify-center text-sm font-semibold">
+                    {getUserInitials()}
+                  </div>
+                  <ChevronDown className={`w-4 h-4 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {/* Dropdown Menu */}
+                {isUserMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                    <Link
+                      to="/profile"
+                      onClick={() => setIsUserMenuOpen(false)}
+                      className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-accent-500 transition-colors"
+                    >
+                      <UserCircle className="w-4 h-4" />
+                      Mon Profil
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-red-600 transition-colors text-left"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Déconnexion
+                    </button>
+                  </div>
+                )}
+              </div>
             ) : (
               <Link
                 to="/login"

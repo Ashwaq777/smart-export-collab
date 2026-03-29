@@ -271,7 +271,9 @@ export default function ContainersPage() {
               letterSpacing: '-0.5px'
             }}>Marketplace</h1>
             <p style={{ fontSize: '16px', color: 'rgba(255,255,255,0.75)', margin: '4px 0 0' }}>
-              Trouvez le conteneur idéal pour votre expédition
+              {isImportateur 
+                ? "Gérez vos conteneurs disponibles et suivez vos offres"
+                : "Trouvez le conteneur idéal pour votre expédition"}
             </p>
           </div>
         </div>
@@ -302,7 +304,7 @@ export default function ContainersPage() {
                   border: 'none',
                   background: 'rgba(255,255,255,0.15)',
                   color: 'white', 
-                  fontSize: '14px',
+                  fontSize: '12px',
                   backdropFilter: 'blur(10px)',
                   outline: 'none'
                 }}
@@ -407,7 +409,7 @@ export default function ContainersPage() {
               <p style={{ color: '#6b7280' }}>Publiez votre premier conteneur vide</p>
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
               {myOffers.map(offer => (
                 <div key={offer.id} style={{
                   background: 'white', 
@@ -428,7 +430,7 @@ export default function ContainersPage() {
                 }}>
                   {/* Image */}
                   <div style={{
-                    height: '160px', 
+                    height: '130px', 
                     background: offer.imageUrls?.length > 0 ? 'transparent' : 'linear-gradient(135deg, #0B1F3A, #1CA7C7)',
                     display: 'flex',
                     alignItems: 'center', 
@@ -446,7 +448,7 @@ export default function ContainersPage() {
                       color: '#0B1F3A',
                       padding: '4px 10px',
                       borderRadius: '6px',
-                      fontSize: '11px',
+                      fontSize: '10px',
                       fontWeight: '600',
                       zIndex: 1
                     }}>
@@ -463,7 +465,7 @@ export default function ContainersPage() {
                         color: 'white',
                         padding: '4px 10px',
                         borderRadius: '6px',
-                        fontSize: '11px',
+                        fontSize: '10px',
                         fontWeight: '600',
                         zIndex: 1
                       }}>
@@ -483,7 +485,7 @@ export default function ContainersPage() {
                   </div>
                   
                   {/* Content */}
-                  <div style={{ padding: '16px' }}>
+                  <div style={{ padding: '12px' }}>
                     {/* Title and status */}
                     <div style={{ 
                       display: 'flex',
@@ -492,7 +494,7 @@ export default function ContainersPage() {
                       marginBottom: '8px'
                     }}>
                       <div style={{ 
-                        fontSize: '15px', 
+                        fontSize: '13px', 
                         fontWeight: '600', 
                         color: '#0B1F3A'
                       }}>
@@ -501,7 +503,7 @@ export default function ContainersPage() {
                       <span style={{
                         padding: '2px 8px',
                         borderRadius: '9999px',
-                        fontSize: '11px',
+                        fontSize: '10px',
                         fontWeight: '600',
                         background: '#DCFCE7',
                         color: '#15803D'
@@ -515,11 +517,11 @@ export default function ContainersPage() {
                       display: 'flex', 
                       alignItems: 'center', 
                       gap: '6px',
-                      fontSize: '14px', 
+                      fontSize: '12px', 
                       color: '#64748B',
                       marginBottom: '4px'
                     }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
                         <circle cx="12" cy="10" r="3"/>
                       </svg>
@@ -531,11 +533,11 @@ export default function ContainersPage() {
                       display: 'flex', 
                       alignItems: 'center', 
                       gap: '6px',
-                      fontSize: '14px', 
+                      fontSize: '12px', 
                       color: '#64748B',
                       marginBottom: '12px'
                     }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                         <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
                         <line x1="16" y1="2" x2="16" y2="6"/>
                         <line x1="8" y1="2" x2="8" y2="6"/>
@@ -561,7 +563,7 @@ export default function ContainersPage() {
                                 background: '#16A34A'
                               }} />
                             </div>
-                            <div style={{ fontSize: '11px', color: '#64748B', marginTop: '2px' }}>
+                            <div style={{ fontSize: '10px', color: '#64748B', marginTop: '2px' }}>
                               {Math.round(matchScores[offer.id])}% compatible
                             </div>
                           </div>
@@ -582,13 +584,13 @@ export default function ContainersPage() {
                         onClick={() => navigate(`/containers/marketplace/${offer.id}`)}
                         style={{
                           flex: 1, 
-                          padding: '10px', 
+                          padding: '8px', 
                           background: '#0B1F3A', 
                           color: 'white',
                           border: 'none', 
                           borderRadius: '10px', 
                           cursor: 'pointer', 
-                          fontSize: '14px',
+                          fontSize: '12px',
                           fontWeight: '500',
                           transition: 'background 0.2s'
                         }}
@@ -604,13 +606,13 @@ export default function ContainersPage() {
                       <button
                         onClick={() => handleDeleteOffer(offer.id)}
                         style={{
-                          padding: '10px', 
+                          padding: '8px', 
                           background: 'white', 
                           color: '#DC2626',
                           border: '1px solid #FEE2E2', 
                           borderRadius: '10px', 
                           cursor: 'pointer', 
-                          fontSize: '14px',
+                          fontSize: '12px',
                           fontWeight: '500'
                         }}
                       >
@@ -643,7 +645,7 @@ export default function ContainersPage() {
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
                     <div>
-                      <div style={{ fontWeight: '600', fontSize: '15px', marginBottom: '4px' }}>
+                      <div style={{ fontWeight: '600', fontSize: '13px', marginBottom: '4px' }}>
                         📩 Demande de {req.seekerName}
                       </div>
                       <div style={{ fontSize: '13px', color: '#6b7280' }}>
@@ -708,7 +710,7 @@ export default function ContainersPage() {
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
                     <div>
-                      <div style={{ fontWeight: '600', fontSize: '15px', marginBottom: '4px' }}>
+                      <div style={{ fontWeight: '600', fontSize: '13px', marginBottom: '4px' }}>
                         🤝 Match #{match.id}
                       </div>
                       <div style={{ fontSize: '13px', color: '#6b7280' }}>
@@ -779,7 +781,7 @@ export default function ContainersPage() {
               <h3>Aucun conteneur disponible</h3>
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
               {filteredOffers.map(offer => {
                 const isMatched = matchedOfferIds.includes(offer.id);
                 const matchScore = matchScores[offer.id];
@@ -806,7 +808,7 @@ export default function ContainersPage() {
                     }}
                   >
                     <div style={{
-                      height: '160px', 
+                      height: '130px', 
                       background: offer.imageUrls?.length > 0 ? 'transparent' : 'linear-gradient(135deg, #0B1F3A, #1CA7C7)', 
                       display: 'flex',
                       alignItems: 'center', 
@@ -823,7 +825,7 @@ export default function ContainersPage() {
                         color: '#0B1F3A',
                         padding: '4px 10px',
                         borderRadius: '6px',
-                        fontSize: '11px',
+                        fontSize: '10px',
                         fontWeight: '600',
                         zIndex: 1
                       }}>
@@ -840,7 +842,7 @@ export default function ContainersPage() {
                           color: 'white',
                           padding: '4px 10px',
                           borderRadius: '6px',
-                          fontSize: '11px',
+                          fontSize: '10px',
                           fontWeight: '600',
                           zIndex: 1
                         }}>
@@ -860,7 +862,7 @@ export default function ContainersPage() {
                     </div>
                     
                     {/* Content */}
-                    <div style={{ padding: '16px' }}>
+                    <div style={{ padding: '12px' }}>
                       {/* Title and status */}
                       <div style={{ 
                         display: 'flex',
@@ -869,7 +871,7 @@ export default function ContainersPage() {
                         marginBottom: '8px'
                       }}>
                         <div style={{ 
-                          fontSize: '15px', 
+                          fontSize: '13px', 
                           fontWeight: '600', 
                           color: '#0B1F3A'
                         }}>
@@ -878,7 +880,7 @@ export default function ContainersPage() {
                         <span style={{
                           padding: '2px 8px',
                           borderRadius: '9999px',
-                          fontSize: '11px',
+                          fontSize: '10px',
                           fontWeight: '600',
                           background: '#DCFCE7',
                           color: '#15803D'
@@ -892,11 +894,11 @@ export default function ContainersPage() {
                         display: 'flex', 
                         alignItems: 'center', 
                         gap: '6px',
-                        fontSize: '14px', 
+                        fontSize: '12px', 
                         color: '#64748B',
                         marginBottom: '4px'
                       }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                           <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
                           <circle cx="12" cy="10" r="3"/>
                         </svg>
@@ -908,11 +910,11 @@ export default function ContainersPage() {
                         display: 'flex', 
                         alignItems: 'center', 
                         gap: '6px',
-                        fontSize: '14px', 
+                        fontSize: '12px', 
                         color: '#64748B',
                         marginBottom: '12px'
                       }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                           <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
                           <line x1="16" y1="2" x2="16" y2="6"/>
                           <line x1="8" y1="2" x2="8" y2="6"/>
@@ -938,7 +940,7 @@ export default function ContainersPage() {
                                   background: '#16A34A'
                                 }} />
                               </div>
-                              <div style={{ fontSize: '11px', color: '#64748B', marginTop: '2px' }}>
+                              <div style={{ fontSize: '10px', color: '#64748B', marginTop: '2px' }}>
                                 {Math.round(matchScore)}% compatible
                               </div>
                             </div>
@@ -961,13 +963,13 @@ export default function ContainersPage() {
                         }}
                         style={{
                           width: '100%',
-                          padding: '10px', 
+                          padding: '8px', 
                           background: '#0B1F3A', 
                           color: 'white',
                           border: 'none', 
                           borderRadius: '10px', 
                           cursor: 'pointer', 
-                          fontSize: '14px',
+                          fontSize: '12px',
                           fontWeight: '500',
                           transition: 'background 0.2s'
                         }}
@@ -1032,21 +1034,21 @@ export default function ContainersPage() {
                       {r.containerType?.replace(/_/g, ' ')}
                     </div>
                     <div style={{ 
-                      fontSize: '14px', 
+                      fontSize: '12px', 
                       color: '#64748B',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '16px'
                     }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                           <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
                           <circle cx="12" cy="10" r="3"/>
                         </svg>
                         {r.loadingLocation}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                           <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
                           <line x1="16" y1="2" x2="16" y2="6"/>
                           <line x1="8" y1="2" x2="8" y2="6"/>
@@ -1067,7 +1069,7 @@ export default function ContainersPage() {
                         border: 'none', 
                         borderRadius: '10px', 
                         cursor: matchingId === r.id ? 'not-allowed' : 'pointer', 
-                        fontSize: '14px',
+                        fontSize: '12px',
                         fontWeight: '500',
                         transition: 'background 0.2s'
                       }}
@@ -1087,13 +1089,13 @@ export default function ContainersPage() {
                     <button
                       onClick={() => { setSelectedRequest(r); setShowEditModal(true); }}
                       style={{
-                        padding: '10px', 
+                        padding: '8px', 
                         background: 'white', 
                         color: '#1D4ED8',
                         border: '1px solid #DBEAFE', 
                         borderRadius: '10px', 
                         cursor: 'pointer', 
-                        fontSize: '14px',
+                        fontSize: '12px',
                         fontWeight: '500'
                       }}
                     >
@@ -1102,13 +1104,13 @@ export default function ContainersPage() {
                     <button
                       onClick={() => handleDeleteRequest(r.id)}
                       style={{
-                        padding: '10px', 
+                        padding: '8px', 
                         background: 'white', 
                         color: '#DC2626',
                         border: '1px solid #FEE2E2', 
                         borderRadius: '10px', 
                         cursor: 'pointer', 
-                        fontSize: '14px',
+                        fontSize: '12px',
                         fontWeight: '500'
                       }}
                     >
@@ -1149,7 +1151,7 @@ export default function ContainersPage() {
                   </div>
                   <div style={{ fontSize: '13px', color: '#6b7280' }}>{req.message}</div>
                   {req.providerResponse && (
-                    <div style={{ marginTop: '8px', padding: '10px', background: '#f0fdf4', borderRadius: '8px', fontSize: '13px' }}>
+                    <div style={{ marginTop: '8px', padding: '8px', background: '#f0fdf4', borderRadius: '8px', fontSize: '13px' }}>
                       <b>Réponse du provider:</b> {req.providerResponse}
                     </div>
                   )}
@@ -1178,7 +1180,7 @@ export default function ContainersPage() {
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
                     <div>
-                      <div style={{ fontWeight: '600', fontSize: '15px', marginBottom: '4px' }}>
+                      <div style={{ fontWeight: '600', fontSize: '13px', marginBottom: '4px' }}>
                         🤝 Match #{match.id}
                       </div>
                       <div style={{ fontSize: '13px', color: '#6b7280' }}>
@@ -1263,7 +1265,7 @@ export default function ContainersPage() {
           style={{
             position: 'fixed', bottom: '2rem', right: '2rem', padding: '14px 20px',
             background: '#1d4ed8', color: 'white', border: 'none', borderRadius: '99px',
-            cursor: 'pointer', fontWeight: '600', fontSize: '14px', zIndex: 100,
+            cursor: 'pointer', fontWeight: '600', fontSize: '12px', zIndex: 100,
             boxShadow: '0 4px 12px rgba(29,78,216,0.4)'
           }}
         >
@@ -1276,7 +1278,7 @@ export default function ContainersPage() {
           style={{
             position: 'fixed', bottom: '2rem', right: '2rem', padding: '14px 20px',
             background: '#16a34a', color: 'white', border: 'none', borderRadius: '99px',
-            cursor: 'pointer', fontWeight: '600', fontSize: '14px', zIndex: 100,
+            cursor: 'pointer', fontWeight: '600', fontSize: '12px', zIndex: 100,
             boxShadow: '0 4px 12px rgba(22,163,74,0.4)'
           }}
         >

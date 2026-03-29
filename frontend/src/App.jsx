@@ -2,7 +2,7 @@ import React from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { ToastProvider } from './components/ui/Toast'
 import { MainLayout } from './components/layout/MainLayout'
-import { AuthProvider } from './context/AuthContext'
+import { AuthProvider, useAuth } from './context/AuthContext'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import Home from './pages/Home'
 import About from './pages/About'
@@ -26,6 +26,22 @@ import SendDirectRequestPage from './pages/containers/SendDirectRequestPage'
 import SupportPage from './pages/support/SupportPage'
 import VesselTrackingPage from './pages/vessels/VesselTrackingPage'
 
+function HomeRedirect() {
+  const { user } = useAuth();
+  
+  if (user?.role === 'ADMIN') {
+    return <Navigate to="/admin/dashboard" replace />;
+  } else if (user?.role === 'IMPORTATEUR' || user?.role === 'EXPORTATEUR') {
+    return <Navigate to="/containers/marketplace" replace />;
+  } else {
+    return (
+      <MainLayout>
+        <Home />
+      </MainLayout>
+    );
+  }
+}
+
 function App() {
   return (
     <Router>
@@ -38,14 +54,14 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
 
-            {/* Routes protégées */}
+            {/* Route racine avec redirection selon rôle */}
             <Route path="/" element={
               <ProtectedRoute>
-                <MainLayout>
-                  <Home />
-                </MainLayout>
+                <HomeRedirect />
               </ProtectedRoute>
             } />
+
+            {/* Routes protégées */}
             <Route path="/calculator" element={
               <ProtectedRoute excludeRole="ADMIN">
                 <MainLayout>

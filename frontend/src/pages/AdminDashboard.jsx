@@ -1,18 +1,16 @@
 import { useState, useEffect } from "react"
 import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
+import { Ship, Anchor, Users, CreditCard, MapPin, Package, BarChart2, Globe, DollarSign, MessageSquare } from "lucide-react"
 import api from '../services/api'
 
 const TOKEN = () => localStorage.getItem('token') || ''
-const BASE = 'http://localhost:8080/api'
-
-const NAVY = '#0B3D5C';
-const NAVY_DARK = '#1B2A4A';
-const OCEAN = '#125D86';
-const GOLD = '#C9A84C';
+const NAVY = '#0B1F3A';
+const OCEAN = '#1CA7C7';
 const TEAL = '#0D9488';
+const GOLD = '#C9A84C';
 const BG = '#F4F7FB';
-const WHITE = '#FFFFFF';
+const BASE = 'http://localhost:8080/api'
 
 export default function AdminDashboard() {
   const { logout, user } = useAuth()
@@ -39,8 +37,8 @@ export default function AdminDashboard() {
 
   const [stats, setStats] = useState({
     totalUsers:0, activeUsers:0, blockedUsers:0, adminCount:0,
-    totalOffers:0, activeOffers:0, totalMatches:0, 
-    totalTransactions:0, completedTransactions:0, pendingTickets:0
+    activeOffers:0, totalMatches:0, totalTransactions:0, completedTransactions:0,
+    pendingTickets:0
   })
 
   const [recentTransactions, setRecentTransactions] = useState([])
@@ -252,51 +250,106 @@ export default function AdminDashboard() {
   const adminEmail = user?.email || localStorage.getItem('userEmail') || 'Admin'
 
   const sidebarItems = [
-    { key: 'overview', label: 'Vue d\'ensemble', icon: '📊' },
-    { key: 'users', label: 'Utilisateurs', icon: '👥' },
-    { key: 'containers', label: 'Conteneurs', icon: '📦' },
-    { key: 'transactions', label: 'Transactions', icon: '🚚' },
-    { key: 'claims', label: 'Réclamations', icon: '🎫' },
-    { key: 'countries', label: 'Pays & Tarifs', icon: '🌍' },
-    { key: 'ports', label: 'Ports', icon: '⚓' },
-    { key: 'rates', label: 'Taux de change', icon: '💱' }
+    { 
+      key: 'overview', 
+      label: 'Tableau de bord', 
+      icon: () => (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <rect x="3" y="3" width="7" height="7"/>
+          <rect x="14" y="3" width="7" height="7"/>
+          <rect x="14" y="14" width="7" height="7"/>
+          <rect x="3" y="14" width="7" height="7"/>
+        </svg>
+      )
+    },
+    { key: 'users', label: 'Utilisateurs', icon: Users },
+    { 
+      key: 'containers', 
+      label: 'Conteneurs', 
+      icon: () => (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+          <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+          <line x1="12" y1="22.08" x2="12" y2="12"/>
+        </svg>
+      )
+    },
+    { key: 'transactions', label: 'Transactions', icon: CreditCard },
+    { 
+      key: 'claims', 
+      label: 'Réclamations', 
+      icon: () => (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+      )
+    },
+    { 
+      key: 'countries', 
+      label: 'Pays & Tarifs', 
+      icon: () => (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="2" y1="12" x2="22" y2="12"/>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+        </svg>
+      )
+    },
+    { key: 'ports', label: 'Ports', icon: MapPin },
+    { 
+      key: 'rates', 
+      label: 'Taux de change', 
+      icon: () => (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <line x1="12" y1="1" x2="12" y2="23"/>
+          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+        </svg>
+      )
+    }
   ]
 
   const getRoleColor = (role) => {
     switch(role) {
-      case 'IMPORTATEUR': return '#3B82F6'
-      case 'EXPORTATEUR': return '#0D9488'
-      case 'ADMIN': return '#C9A84C'
-      default: return '#6B7280'
+      case 'IMPORTATEUR': return { bg: '#EFF6FF', text: '#1D4ED8' }
+      case 'EXPORTATEUR': return { bg: '#F0FDFA', text: '#0F766E' }
+      case 'ADMIN': return { bg: '#FEF9C3', text: '#854D0E' }
+      default: return { bg: '#F3F4F6', text: '#6B7280' }
     }
   }
 
   const getStatusColor = (status) => {
     switch(status) {
-      case 'ACTIVE': return '#10B981'
-      case 'BLOCKED': return '#EF4444'
-      default: return '#6B7280'
+      case 'ACTIVE': return { bg: '#DCFCE7', text: '#15803D' }
+      case 'BLOCKED': return { bg: '#FEE2E2', text: '#DC2626' }
+      default: return { bg: '#F3F4F6', text: '#6B7280' }
     }
   }
 
   const getWorkflowStatusColor = (status) => {
     switch(status) {
-      case 'AT_PROVIDER': return '#F59E0B'
-      case 'IN_TRANSIT': return '#3B82F6'
-      case 'DELIVERED': return '#10B981'
-      case 'COMPLETED': return '#0D9488'
-      case 'LOADING': return '#6B7280'
-      default: return '#6B7280'
+      case 'AT_PROVIDER': return { bg: '#FEF3C7', text: '#92400E' }
+      case 'IN_TRANSIT': return { bg: '#DBEAFE', text: '#1E40AF' }
+      case 'DELIVERED': return { bg: '#D1FAE5', text: '#065F46' }
+      case 'COMPLETED': return { bg: '#E0F2FE', text: '#0369A1' }
+      case 'LOADING': return { bg: '#F3F4F6', text: '#6B7280' }
+      default: return { bg: '#F3F4F6', text: '#6B7280' }
     }
   }
 
+  const currentDate = new Date().toLocaleDateString('fr-FR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  })
+
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', background: '#F4F7FB' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', background: '#F4F7FA' }}>
       
       {/* Sidebar */}
       <div style={{
         width: '240px',
-        background: '#0B3D5C',
+        background: '#0B1F3A',
         color: 'white',
         display: 'flex',
         flexDirection: 'column',
@@ -313,57 +366,115 @@ export default function AdminDashboard() {
           textAlign: 'center'
         }}>
           <div style={{
-            fontSize: '1.25rem',
-            fontWeight: '700',
-            color: 'white',
-            marginBottom: '0.25rem'
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.75rem',
+            marginBottom: '0.5rem'
           }}>
-            Smart Export
-          </div>
-          <div style={{
-            fontSize: '0.75rem',
-            color: 'rgba(255,255,255,0.6)'
-          }}>
-            Global Admin
+            <div style={{
+              position: 'relative',
+              width: '32px',
+              height: '32px'
+            }}>
+              <div style={{
+                width: '32px',
+                height: '32px',
+                background: 'linear-gradient(135deg, #0B1F3A, #0E3A5D, #1CA7C7)',
+                borderRadius: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                border: '1px solid rgba(28, 167, 199, 0.2)'
+              }}>
+                <Ship size={16} color="white" />
+              </div>
+              <div style={{
+                position: 'absolute',
+                bottom: '-3px',
+                right: '-3px',
+                width: '14px',
+                height: '14px',
+                background: 'linear-gradient(135deg, #1CA7C7, #16869F)',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                border: '1px solid white'
+              }}>
+                <Anchor size={7} color="white" />
+              </div>
+            </div>
+            <div style={{ textAlign: 'left' }}>
+              <div style={{
+                fontSize: '1rem',
+                fontWeight: '700',
+                color: 'white',
+                lineHeight: '1.2'
+              }}>
+                Smart Export
+              </div>
+              <div style={{
+                fontSize: '0.75rem',
+                color: '#1CA7C7',
+                fontWeight: '500',
+                lineHeight: '1.2'
+              }}>
+                Administration
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Navigation */}
         <nav style={{ flex: 1, padding: '1rem 0' }}>
-          {sidebarItems.map(item => (
-            <button
-              key={item.key}
-              onClick={() => setActiveTab(item.key)}
-              style={{
-                width: '100%',
-                padding: '0.75rem 1.5rem',
-                background: activeTab === item.key ? '#C9A84C' : 'transparent',
-                color: activeTab === item.key ? '#0B3D5C' : 'rgba(255,255,255,0.8)',
-                border: 'none',
-                textAlign: 'left',
-                cursor: 'pointer',
-                fontSize: '0.875rem',
-                fontWeight: activeTab === item.key ? '600' : '400',
-                transition: 'all 0.2s',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem'
-              }}
-              onMouseEnter={(e) => {
-                if (activeTab !== item.key) {
-                  e.target.style.background = 'rgba(255,255,255,0.1)'
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (activeTab !== item.key) {
-                  e.target.style.background = 'transparent'
-                }
-              }}
-            >
-              <span style={{ fontSize: '1rem' }}>{item.icon}</span>
-              {item.label}
-            </button>
-          ))}
+          {sidebarItems.map(item => {
+            const IconComponent = item.icon
+            return (
+              <button
+                key={item.key}
+                onClick={() => setActiveTab(item.key)}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 1.25rem',
+                  background: activeTab === item.key ? '#1CA7C7' : 'transparent',
+                  color: activeTab === item.key ? 'white' : 'rgba(255,255,255,0.75)',
+                  border: 'none',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                  fontWeight: activeTab === item.key ? '500' : '400',
+                  transition: 'all 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  borderRadius: '8px',
+                  margin: '0 0.75rem'
+                }}
+                onMouseEnter={(e) => {
+                  if (activeTab !== item.key) {
+                    e.target.style.background = 'rgba(255,255,255,0.08)'
+                    e.target.style.color = 'white'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (activeTab !== item.key) {
+                    e.target.style.background = 'transparent'
+                    e.target.style.color = 'rgba(255,255,255,0.75)'
+                  }
+                }}
+              >
+                {typeof IconComponent === 'function' ? (
+                  <IconComponent />
+                ) : (
+                  <IconComponent size={16} />
+                )}
+                {item.label}
+              </button>
+            )
+          })}
         </nav>
 
         {/* User Info & Logout */}
@@ -372,22 +483,44 @@ export default function AdminDashboard() {
           borderTop: '1px solid rgba(255,255,255,0.1)'
         }}>
           <div style={{
-            fontSize: '0.75rem',
-            color: 'rgba(255,255,255,0.6)',
-            marginBottom: '0.5rem',
-            textAlign: 'center'
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            marginBottom: '0.75rem'
           }}>
-            {adminEmail}
+            <div style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              background: '#1CA7C7',
+              color: 'white',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '0.875rem',
+              fontWeight: '600'
+            }}>
+              {(adminEmail[0] || 'A').toUpperCase()}
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{
+                fontSize: '0.75rem',
+                color: 'rgba(255,255,255,0.9)',
+                fontWeight: '500'
+              }}>
+                {adminEmail}
+              </div>
+            </div>
           </div>
           <button
-            onClick={handleLogout}
+            onClick={logout}
             style={{
               width: '100%',
               padding: '0.5rem',
               background: 'rgba(255,255,255,0.1)',
               color: 'white',
               border: 'none',
-              borderRadius: '0.375rem',
+              borderRadius: '6px',
               cursor: 'pointer',
               fontSize: '0.75rem',
               fontWeight: '500',
@@ -406,29 +539,41 @@ export default function AdminDashboard() {
       </div>
 
       {/* Main Content */}
-      <div style={{ marginLeft: '240px', flex: 1, padding: '2rem' }}>
+      <div style={{ marginLeft: '240px', flex: 1 }}>
         
         {/* Page Header */}
         <div style={{
-          marginBottom: '2rem',
-          paddingBottom: '1rem',
-          borderBottom: '1px solid #E2E8F0'
+          background: 'white',
+          padding: '1.5rem 2rem',
+          borderBottom: '1px solid #E2E8F0',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
         }}>
-          <h1 style={{
-            fontSize: '1.125rem',
-            fontWeight: '600',
-            color: '#1B2A4A',
-            margin: '0 0 0.25rem 0'
-          }}>
-            {sidebarItems.find(item => item.key === activeTab)?.label || 'Admin Dashboard'}
-          </h1>
-          <p style={{
-            fontSize: '0.875rem',
+          <div>
+            <h1 style={{
+              fontSize: '1.25rem',
+              fontWeight: '600',
+              color: '#0B1F3A',
+              margin: '0 0 0.25rem 0'
+            }}>
+              {sidebarItems.find(item => item.key === activeTab)?.label || 'Admin Dashboard'}
+            </h1>
+            <p style={{
+              fontSize: '0.8125rem',
+              color: '#64748B',
+              margin: 0
+            }}>
+              Gestion de la plateforme Smart Export Global
+            </p>
+          </div>
+          <div style={{
+            fontSize: '0.8125rem',
             color: '#64748B',
-            margin: 0
+            fontWeight: '500'
           }}>
-            Gestion de la plateforme Smart Export Global
-          </p>
+            {currentDate}
+          </div>
         </div>
 
         {/* Messages */}
@@ -436,7 +581,7 @@ export default function AdminDashboard() {
           <div style={{
             padding: '0.75rem 1rem',
             borderRadius: '0.5rem',
-            marginBottom: '1rem',
+            margin: '1rem 2rem',
             background: userMsg.ok ? '#D1FAE5' : '#FEE2E2',
             color: userMsg.ok ? '#065F46' : '#991B1B',
             fontWeight: '500',
@@ -446,6 +591,9 @@ export default function AdminDashboard() {
           </div>
         )}
 
+        {/* Content Area */}
+        <div style={{ padding: '2rem' }}>
+        
         {activeTab === 'overview' && (
           <div>
             {/* Metrics Cards */}
@@ -456,209 +604,164 @@ export default function AdminDashboard() {
               marginBottom: '2rem'
             }}>
               {[
-                { label: 'Total utilisateurs', value: stats.totalUsers, icon: '👥', color: '#0B3D5C', bgColor: '#E6F1FB' },
-                { label: 'Utilisateurs actifs', value: stats.activeUsers, icon: '✅', color: '#0D9488', bgColor: '#E1F5EE' },
-                { label: 'Importateurs', value: users.filter(u => u.role === 'IMPORTATEUR').length, icon: '📥', color: '#125D86', bgColor: '#E6F1FB' },
-                { label: 'Exportateurs', value: users.filter(u => u.role === 'EXPORTATEUR').length, icon: '📤', color: '#C9A84C', bgColor: '#FEF9E7' },
-                { label: 'Offres actives', value: stats.activeOffers, icon: '📦', color: '#0D9488', bgColor: '#E1F5EE' },
-                { label: 'Matches total', value: stats.totalMatches, icon: '🤝', color: '#7C3AED', bgColor: '#EDE9FE' },
-                { label: 'Transactions', value: stats.totalTransactions, icon: '🚚', color: '#0B3D5C', bgColor: '#E6F1FB' },
-                { label: 'Tickets en attente', value: stats.pendingTickets, icon: '🎫', color: '#DC2626', bgColor: '#FEE2E2' }
-              ].map((metric, index) => (
-                <div key={index} style={{
-                  background: 'white',
-                  border: '1px solid #E2E8F0',
-                  borderLeft: '4px solid ' + metric.color,
-                  borderRadius: '0.75rem',
-                  padding: '1.5rem'
-                }}>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    marginBottom: '0.75rem'
+                { label: 'Total utilisateurs', value: stats.totalUsers, color: '#0B1F3A', bgColor: '#EFF6FF', icon: Users },
+                { label: 'Utilisateurs actifs', value: stats.activeUsers, color: '#0B1F3A', bgColor: '#DCFCE7', icon: Users },
+                { label: 'Importateurs', value: users.filter(u => u.role === 'IMPORTATEUR').length, color: '#0B1F3A', bgColor: '#EFF6FF', icon: Package },
+                { label: 'Exportateurs', value: users.filter(u => u.role === 'EXPORTATEUR').length, color: '#0B1F3A', bgColor: '#F0FDFA', icon: Package },
+                { label: 'Offres actives', value: stats.activeOffers, color: '#0B1F3A', bgColor: '#DCFCE7', icon: Package },
+                { label: 'Matches total', value: stats.totalMatches, color: '#0B1F3A', bgColor: '#EDE9FE', icon: Users },
+                { label: 'Transactions', value: stats.totalTransactions, color: '#0B1F3A', bgColor: '#EFF6FF', icon: CreditCard },
+                { label: 'Tickets en attente', value: stats.pendingTickets, color: '#0B1F3A', bgColor: '#FEE2E2', icon: MessageSquare }
+              ].map((metric, index) => {
+                const Icon = metric.icon
+                return (
+                  <div key={index} style={{
+                    background: 'white',
+                    border: '1px solid #E2E8F0',
+                    borderRadius: '12px',
+                    padding: '1.5rem',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
                   }}>
                     <div style={{
-                      width: '44px',
-                      height: '44px',
-                      borderRadius: '50%',
-                      background: metric.bgColor,
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '20px'
+                      justifyContent: 'space-between',
+                      marginBottom: '1rem'
                     }}>
-                      {metric.icon}
+                      <div style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '12px',
+                        background: metric.bgColor,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <Icon size={24} color={metric.color} />
+                      </div>
+                      <div style={{
+                        padding: '0.25rem 0.5rem',
+                        background: '#F0FDF4',
+                        color: '#16A34A',
+                        borderRadius: '9999px',
+                        fontSize: '0.75rem',
+                        fontWeight: '500'
+                      }}>
+                        ↑ actif
+                      </div>
                     </div>
                     <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.25rem',
-                      fontSize: '0.75rem',
-                      color: '#10B981',
+                      fontSize: '1.75rem',
+                      fontWeight: '700',
+                      color: '#0B1F3A',
+                      marginBottom: '0.25rem'
+                    }}>
+                      {metric.value}
+                    </div>
+                    <div style={{
+                      fontSize: '0.8125rem',
+                      color: '#64748B',
                       fontWeight: '500'
                     }}>
-                      <span>↑</span>
-                      <span>12%</span>
+                      {metric.label}
                     </div>
                   </div>
-                  <div style={{
-                    fontSize: '2rem',
-                    fontWeight: '700',
-                    color: '#1B2A4A',
-                    marginBottom: '0.25rem'
-                  }}>
-                    {metric.value}
-                  </div>
-                  <div style={{
-                    fontSize: '0.8125rem',
-                    color: '#64748B',
-                    fontWeight: '500'
-                  }}>
-                    {metric.label}
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
 
             {/* Recent Transactions */}
             <div style={{
               background: 'white',
               border: '1px solid #E2E8F0',
-              borderRadius: '0.75rem',
-              padding: '1.5rem'
+              borderRadius: '12px',
+              padding: '1.5rem',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
             }}>
-              <h3 style={{
+              <h2 style={{
                 fontSize: '1rem',
                 fontWeight: '600',
-                color: '#1B2A4A',
+                color: '#0B1F3A',
                 margin: '0 0 1rem 0'
               }}>
                 Transactions récentes
-              </h3>
+              </h2>
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
-                    <tr style={{ background: '#0B3D5C' }}>
-                      <th style={{
-                        padding: '0.75rem 1rem',
-                        textAlign: 'left',
-                        fontSize: '0.8125rem',
-                        fontWeight: '600',
-                        color: 'white',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.05em'
-                      }}>
-                        ID
-                      </th>
-                      <th style={{
-                        padding: '0.75rem 1rem',
-                        textAlign: 'left',
-                        fontSize: '0.8125rem',
-                        fontWeight: '600',
-                        color: 'white',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.05em'
-                      }}>
-                        Provider
-                      </th>
-                      <th style={{
-                        padding: '0.75rem 1rem',
-                        textAlign: 'left',
-                        fontSize: '0.8125rem',
-                        fontWeight: '600',
-                        color: 'white',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.05em'
-                      }}>
-                        Seeker
-                      </th>
-                      <th style={{
-                        padding: '0.75rem 1rem',
-                        textAlign: 'left',
-                        fontSize: '0.8125rem',
-                        fontWeight: '600',
-                        color: 'white',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.05em'
-                      }}>
-                        Statut
-                      </th>
-                      <th style={{
-                        padding: '0.75rem 1rem',
-                        textAlign: 'left',
-                        fontSize: '0.8125rem',
-                        fontWeight: '600',
-                        color: 'white',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.05em'
-                      }}>
-                        Date
-                      </th>
+                    <tr style={{ background: '#0B1F3A' }}>
+                      {['ID', 'Client', 'Type', 'Montant', 'Statut', 'Date'].map(header => (
+                        <th key={header} style={{
+                          padding: '0.75rem 1rem',
+                          textAlign: 'left',
+                          fontSize: '0.75rem',
+                          fontWeight: '600',
+                          color: 'white',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em'
+                        }}>
+                          {header}
+                        </th>
+                      ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {recentTransactions.length > 0 ? recentTransactions.map((tx, index) => (
-                      <tr key={tx.id} style={{
+                    {recentTransactions.map((tx, index) => (
+                      <tr key={tx.id || index} style={{
                         background: index % 2 === 0 ? 'white' : '#F8FAFC',
                         borderBottom: '1px solid #E2E8F0'
                       }}>
                         <td style={{
-                          padding: '1rem',
+                          padding: '0.75rem 1rem',
                           fontSize: '0.875rem',
-                          color: '#1B2A4A',
+                          color: '#1E293B',
                           fontWeight: '500'
                         }}>
-                          #{tx.id}
+                          #{tx.id || index + 1}
                         </td>
                         <td style={{
-                          padding: '1rem',
+                          padding: '0.75rem 1rem',
                           fontSize: '0.875rem',
-                          color: '#374151'
+                          color: '#1E293B'
                         }}>
-                          {tx.provider || 'N/A'}
+                          {tx.client || 'Client anonyme'}
                         </td>
                         <td style={{
-                          padding: '1rem',
+                          padding: '0.75rem 1rem',
                           fontSize: '0.875rem',
-                          color: '#374151'
+                          color: '#1E293B'
                         }}>
-                          {tx.seeker || 'N/A'}
+                          {tx.type || 'Standard'}
                         </td>
                         <td style={{
-                          padding: '1rem'
+                          padding: '0.75rem 1rem',
+                          fontSize: '0.875rem',
+                          color: '#1E293B',
+                          fontWeight: '500'
                         }}>
+                          {tx.amount || '0'} €
+                        </td>
+                        <td style={{ padding: '0.75rem 1rem' }}>
                           <span style={{
                             padding: '0.25rem 0.75rem',
                             borderRadius: '9999px',
-                            fontSize: '0.75rem',
+                            fontSize: '0.6875rem',
                             fontWeight: '600',
-                            background: `${getWorkflowStatusColor(tx.workflowStatus)}20`,
-                            color: getWorkflowStatusColor(tx.workflowStatus)
+                            background: '#DCFCE7',
+                            color: '#15803D'
                           }}>
-                            {tx.workflowStatus || 'AT_PROVIDER'}
+                            {tx.status || 'COMPLETED'}
                           </span>
                         </td>
                         <td style={{
-                          padding: '1rem',
+                          padding: '0.75rem 1rem',
                           fontSize: '0.875rem',
                           color: '#64748B'
                         }}>
-                          {tx.createdAt ? new Date(tx.createdAt).toLocaleDateString('fr-FR') : 'N/A'}
+                          {tx.date ? new Date(tx.date).toLocaleDateString('fr-FR') : 'N/A'}
                         </td>
                       </tr>
-                    )) : (
-                      <tr>
-                        <td colSpan="5" style={{
-                          padding: '2rem',
-                          textAlign: 'center',
-                          color: '#64748B',
-                          fontSize: '0.875rem'
-                        }}>
-                          Aucune transaction trouvée
-                        </td>
-                      </tr>
-                    )}
+                    ))}
                   </tbody>
                 </table>
               </div>
@@ -1990,7 +2093,7 @@ export default function AdminDashboard() {
             </div>
           </div>
         )}
-
+        </div>
       </div>
     </div>
   )

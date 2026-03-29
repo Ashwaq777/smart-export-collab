@@ -8,7 +8,7 @@ export const ProtectedRoute = ({ children, requiredRole, excludeRole }) => {
   
   // Check if user role should be excluded
   if (excludeRole && user?.role === excludeRole) {
-    return <Navigate to="/admin" replace />;
+    return <Navigate to="/admin/dashboard" replace />;
   }
   
   // Check if user has required role

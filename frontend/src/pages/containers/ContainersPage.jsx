@@ -247,97 +247,123 @@ export default function ContainersPage() {
   return (
     <div style={{ background: '#F8FAFC', minHeight: '100vh' }}>
       {/* Header */}
-      <div style={{ 
-        background: 'white', 
-        padding: '20px 32px', 
-        borderBottom: '1px solid #E2E8F0' 
+      <div style={{
+        background: 'linear-gradient(135deg, #0B1F3A 0%, #0E3A5D 50%, #1CA7C7 100%)',
+        padding: '48px 32px',
+        marginBottom: '32px'
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+          <div style={{
+            width: '56px', height: '56px', borderRadius: '16px',
+            background: 'rgba(255,255,255,0.15)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+          }}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+              <rect x="1" y="3" width="15" height="13"/>
+              <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+              <circle cx="5.5" cy="18.5" r="2.5"/>
+              <circle cx="18.5" cy="18.5" r="2.5"/>
+            </svg>
+          </div>
           <div>
-            <h1 style={{ 
-              fontSize: '22px', 
-              fontWeight: '700', 
-              color: '#0B1F3A', 
-              margin: '0 0 4px 0' 
-            }}>
-              Marketplace de conteneurs
-            </h1>
-            <p style={{ 
-              fontSize: '14px', 
-              color: '#64748B', 
-              margin: 0 
-            }}>
-              {isImportateur
-                ? `${myOffers.length} offre(s) publiée(s)`
-                : `${filteredOffers.length} conteneur(s) disponible(s) dans le monde`}
+            <h1 style={{
+              fontSize: '32px', fontWeight: '800', color: 'white', margin: 0,
+              letterSpacing: '-0.5px'
+            }}>Marketplace</h1>
+            <p style={{ fontSize: '16px', color: 'rgba(255,255,255,0.75)', margin: '4px 0 0' }}>
+              Trouvez le conteneur idéal pour votre expédition
             </p>
           </div>
-          
-          {isExportateur && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        </div>
+        
+        {/* Barre recherche + filtres */}
+        {isExportateur && (
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginTop: '24px' }}>
+            <div style={{ position: 'relative', flex: 1, maxWidth: '400px' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5" style={{
+                position: 'absolute',
+                left: '16px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                zIndex: 1
+              }}>
+                <circle cx="11" cy="11" r="8"/>
+                <path d="m21 21-4.35-4.35"/>
+              </svg>
               <input
                 type="text"
-                placeholder="Rechercher par type, port, destination..."
+                placeholder="Rechercher par type, port..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                style={{ 
-                  width: '400px',
-                  padding: '10px 16px', 
-                  border: '1px solid #E2E8F0', 
-                  borderRadius: '8px', 
+                style={{
+                  width: '100%', 
+                  padding: '12px 16px 12px 44px',
+                  borderRadius: '12px', 
+                  border: 'none',
+                  background: 'rgba(255,255,255,0.15)',
+                  color: 'white', 
                   fontSize: '14px',
+                  backdropFilter: 'blur(10px)',
                   outline: 'none'
                 }}
               />
-              
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                {['Tous', 'Standard 20', 'Standard 40', 'High Cube', 'Reefer'].map(filter => {
-                  const isActive = filter === 'Tous' ? filterType === 'ALL' : 
-                    filterType === filter.toUpperCase().replace(' ', '_');
-                  return (
-                    <button
-                      key={filter}
-                      onClick={() => setFilterType(filter === 'Tous' ? 'ALL' : 
-                        filter.toUpperCase().replace(' ', '_'))}
-                      style={{
-                        padding: '8px 16px',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        fontWeight: '500',
-                        border: 'none',
-                        cursor: 'pointer',
-                        background: isActive ? '#0B1F3A' : 'white',
-                        color: isActive ? 'white' : '#64748B',
-                        ...(isActive ? {} : { border: '1px solid #E2E8F0' })
-                      }}
-                    >
-                      {filter}
-                    </button>
-                  );
-                })}
-              </div>
             </div>
-          )}
-        </div>
+            {['Tous', '20 STD', '40 STD', 'High Cube', 'Reefer'].map(f => {
+              const isActive = f === 'Tous' ? filterType === 'ALL' : 
+                filterType === f.toUpperCase().replace(' ', '_').replace('\'', '');
+              return (
+                <button
+                  key={f}
+                  onClick={() => setFilterType(f === 'Tous' ? 'ALL' : 
+                    f.toUpperCase().replace(' ', '_').replace('\'', ''))}
+                  style={{
+                    padding: '8px 18px', 
+                    borderRadius: '20px', 
+                    fontSize: '13px',
+                    border: '1px solid rgba(255,255,255,0.3)',
+                    background: isActive ? 'white' : 'transparent',
+                    color: isActive ? '#0B1F3A' : 'white',
+                    cursor: 'pointer', 
+                    fontWeight: isActive ? '600' : '400',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  {f}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      <div style={{ padding: '24px' }}>
+      <div style={{ padding: '0 32px' }}>
 
       {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '20px' }}>
         {statCards.map(s => (
           <div key={s.label} style={{
-            background: 'white', borderRadius: '12px', padding: '1rem',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.08)', display: 'flex', alignItems: 'center', gap: '12px'
+            background: 'white', 
+            borderRadius: '12px', 
+            padding: '12px 16px',
+            border: '1px solid #E2E8F0',
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '12px'
           }}>
             <div style={{
-              width: '48px', height: '48px', background: s.bg, borderRadius: '12px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px'
+              width: '32px', 
+              height: '32px', 
+              background: s.bg, 
+              borderRadius: '8px',
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              fontSize: '16px'
             }}>
               {s.icon}
             </div>
             <div>
-              <div style={{ fontSize: '24px', fontWeight: '700', color: s.color }}>{s.value}</div>
+              <div style={{ fontSize: '20px', fontWeight: '700', color: s.color }}>{s.value}</div>
               <div style={{ fontSize: '12px', color: '#6b7280' }}>{s.label}</div>
             </div>
           </div>
@@ -381,25 +407,70 @@ export default function ContainersPage() {
               <p style={{ color: '#6b7280' }}>Publiez votre premier conteneur vide</p>
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
               {myOffers.map(offer => (
                 <div key={offer.id} style={{
                   background: 'white', 
                   borderRadius: '16px', 
-                  border: '1px solid #E2E8F0',
+                  border: matchedOfferIds.includes(offer.id) ? '2px solid #0D9488' : '1px solid #E2E8F0',
                   boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-                  overflow: 'hidden'
+                  overflow: 'hidden',
+                  transition: 'transform 0.2s, box-shadow 0.2s',
+                  cursor: 'pointer'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)'
+                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)'
+                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)'
                 }}>
                   {/* Image */}
                   <div style={{
-                    height: '180px', 
+                    height: '160px', 
                     background: offer.imageUrls?.length > 0 ? 'transparent' : 'linear-gradient(135deg, #0B1F3A, #1CA7C7)',
                     display: 'flex',
                     alignItems: 'center', 
                     justifyContent: 'center', 
                     overflow: 'hidden',
-                    borderRadius: '16px 16px 0 0'
+                    borderRadius: '16px 16px 0 0',
+                    position: 'relative'
                   }}>
+                    {/* Type badge overlay */}
+                    <div style={{
+                      position: 'absolute',
+                      top: '12px',
+                      left: '12px',
+                      background: 'rgba(255,255,255,0.9)',
+                      color: '#0B1F3A',
+                      padding: '4px 10px',
+                      borderRadius: '6px',
+                      fontSize: '11px',
+                      fontWeight: '600',
+                      zIndex: 1
+                    }}>
+                      {offer.containerType?.replace(/_/g, ' ')}
+                    </div>
+                    
+                    {/* Match badge */}
+                    {matchedOfferIds.includes(offer.id) && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '12px',
+                        right: '12px',
+                        background: '#16A34A',
+                        color: 'white',
+                        padding: '4px 10px',
+                        borderRadius: '6px',
+                        fontSize: '11px',
+                        fontWeight: '600',
+                        zIndex: 1
+                      }}>
+                        Match
+                      </div>
+                    )}
+                    
                     {offer.imageUrls?.length > 0 ? (
                       <img src={offer.imageUrls[0]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
@@ -413,28 +484,30 @@ export default function ContainersPage() {
                   
                   {/* Content */}
                   <div style={{ padding: '16px' }}>
-                    {/* Type badge */}
-                    <div style={{ marginBottom: '8px' }}>
-                      <span style={{
-                        padding: '4px 8px',
-                        borderRadius: '9999px',
-                        fontSize: '12px',
-                        fontWeight: '600',
-                        background: '#EFF6FF',
-                        color: '#1D4ED8'
-                      }}>
-                        {offer.containerType?.replace(/_/g, ' ')}
-                      </span>
-                    </div>
-                    
-                    {/* Title */}
+                    {/* Title and status */}
                     <div style={{ 
-                      fontSize: '16px', 
-                      fontWeight: '600', 
-                      color: '#0B1F3A',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
                       marginBottom: '8px'
                     }}>
-                      {offer.containerType?.replace(/_/g, ' ')}
+                      <div style={{ 
+                        fontSize: '15px', 
+                        fontWeight: '600', 
+                        color: '#0B1F3A'
+                      }}>
+                        {offer.containerType?.replace(/_/g, ' ')}
+                      </div>
+                      <span style={{
+                        padding: '2px 8px',
+                        borderRadius: '9999px',
+                        fontSize: '11px',
+                        fontWeight: '600',
+                        background: '#DCFCE7',
+                        color: '#15803D'
+                      }}>
+                        Disponible
+                      </span>
                     </div>
                     
                     {/* Location */}
@@ -474,16 +547,6 @@ export default function ContainersPage() {
                     {/* Match indicator */}
                     {matchedOfferIds.includes(offer.id) && (
                       <div style={{ marginBottom: '12px' }}>
-                        <span style={{
-                          padding: '4px 8px',
-                          borderRadius: '9999px',
-                          fontSize: '12px',
-                          fontWeight: '600',
-                          background: '#DCFCE7',
-                          color: '#15803D'
-                        }}>
-                          🎯 Correspond à votre demande
-                        </span>
                         {matchScores[offer.id] && (
                           <div style={{ marginTop: '4px' }}>
                             <div style={{
@@ -509,7 +572,7 @@ export default function ContainersPage() {
                     {/* Separator */}
                     <div style={{ 
                       height: '1px', 
-                      background: '#E2E8F0', 
+                      background: '#F1F5F9', 
                       marginBottom: '12px' 
                     }} />
                     
@@ -519,14 +582,21 @@ export default function ContainersPage() {
                         onClick={() => navigate(`/containers/marketplace/${offer.id}`)}
                         style={{
                           flex: 1, 
-                          padding: '8px', 
+                          padding: '10px', 
                           background: '#0B1F3A', 
                           color: 'white',
                           border: 'none', 
-                          borderRadius: '8px', 
+                          borderRadius: '10px', 
                           cursor: 'pointer', 
                           fontSize: '14px',
-                          fontWeight: '500'
+                          fontWeight: '500',
+                          transition: 'background 0.2s'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.background = '#1CA7C7'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.background = '#0B1F3A'
                         }}
                       >
                         Voir les détails
@@ -534,13 +604,13 @@ export default function ContainersPage() {
                       <button
                         onClick={() => handleDeleteOffer(offer.id)}
                         style={{
-                          padding: '8px 12px', 
-                          background: '#FEE2E2', 
+                          padding: '10px', 
+                          background: 'white', 
                           color: '#DC2626',
-                          border: 'none', 
-                          borderRadius: '8px', 
+                          border: '1px solid #FEE2E2', 
+                          borderRadius: '10px', 
                           cursor: 'pointer', 
-                          fontSize: '12px',
+                          fontSize: '14px',
                           fontWeight: '500'
                         }}
                       >
@@ -709,7 +779,7 @@ export default function ContainersPage() {
               <h3>Aucun conteneur disponible</h3>
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
               {filteredOffers.map(offer => {
                 const isMatched = matchedOfferIds.includes(offer.id);
                 const matchScore = matchScores[offer.id];
@@ -718,100 +788,198 @@ export default function ContainersPage() {
                     key={offer.id}
                     onClick={() => navigate(`/containers/marketplace/${offer.id}`)}
                     style={{
-                      background: 'white', borderRadius: '16px', overflow: 'hidden',
-                      border: isMatched ? '2px solid #16a34a' : '1px solid #e5e7eb', cursor: 'pointer',
-                      boxShadow: isMatched ? '0 0 0 3px rgba(22,163,74,0.15)' : '0 2px 8px rgba(0,0,0,0.08)', 
-                      transition: 'transform 0.2s'
+                      background: 'white', 
+                      borderRadius: '16px', 
+                      overflow: 'hidden',
+                      border: isMatched ? '2px solid #0D9488' : '1px solid #E2E8F0', 
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.06)', 
+                      transition: 'transform 0.2s, box-shadow 0.2s'
                     }}
-                    onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-4px)'}
-                    onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.transform = 'translateY(-2px)'
+                      e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)'
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.transform = 'translateY(0)'
+                      e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)'
+                    }}
                   >
                     <div style={{
-                      height: '180px', background: '#f3f4f6', display: 'flex',
-                      alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative'
+                      height: '160px', 
+                      background: offer.imageUrls?.length > 0 ? 'transparent' : 'linear-gradient(135deg, #0B1F3A, #1CA7C7)', 
+                      display: 'flex',
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      overflow: 'hidden', 
+                      position: 'relative'
                     }}>
-                      {offer.imageUrls?.length > 0 ? (
-                        <img src={offer.imageUrls[0]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      ) : (
-                        <span style={{ fontSize: '56px' }}>📦</span>
-                      )}
-                      <span style={{
-                        position: 'absolute', top: '10px', right: '10px',
-                        background: '#16a34a', color: 'white', fontSize: '11px',
-                        padding: '3px 8px', borderRadius: '99px', fontWeight: '600'
+                      {/* Type badge overlay */}
+                      <div style={{
+                        position: 'absolute',
+                        top: '12px',
+                        left: '12px',
+                        background: 'rgba(255,255,255,0.9)',
+                        color: '#0B1F3A',
+                        padding: '4px 10px',
+                        borderRadius: '6px',
+                        fontSize: '11px',
+                        fontWeight: '600',
+                        zIndex: 1
                       }}>
-                        ✅ Disponible
-                      </span>
+                        {offer.containerType?.replace(/_/g, ' ')}
+                      </div>
+                      
+                      {/* Match badge */}
                       {isMatched && (
                         <div style={{
                           position: 'absolute',
-                          top: '10px', left: '10px',
-                          background: 'linear-gradient(135deg, #16a34a, #22c55e)',
+                          top: '12px',
+                          right: '12px',
+                          background: '#16A34A',
                           color: 'white',
+                          padding: '4px 10px',
+                          borderRadius: '6px',
                           fontSize: '11px',
-                          fontWeight: '700',
-                          padding: '6px 12px',
-                          borderRadius: '99px',
-                          zIndex: 2,
-                          boxShadow: '0 2px 8px rgba(22,163,74,0.4)',
-                          border: '2px solid white',
-                          maxWidth: '200px',
-                          textAlign: 'center'
+                          fontWeight: '600',
+                          zIndex: 1
                         }}>
-                          🎯 CORRESPONDANCE TROUVÉE
+                          Match
                         </div>
                       )}
-                      {isMatched && matchScore && (
-                        <div style={{
-                          position: 'absolute',
-                          bottom: '10px', right: '10px',
-                          background: matchScore >= 70 ? 'linear-gradient(135deg, #16a34a, #22c55e)' 
-                               : matchScore >= 40 ? 'linear-gradient(135deg, #d97706, #f59e0b)' 
-                               : 'linear-gradient(135deg, #6b7280, #9ca3af)',
-                          color: 'white',
-                          borderRadius: '10px',
-                          padding: '6px 10px',
-                          fontSize: '12px',
-                          fontWeight: '800',
-                          boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-                          border: '2px solid white',
-                          textAlign: 'center'
-                        }}>
-                          {Math.round(matchScore)}% COMPATIBLE
-                        </div>
+                      
+                      {offer.imageUrls?.length > 0 ? (
+                        <img src={offer.imageUrls[0]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5">
+                          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                          <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                          <line x1="12" y1="22.08" x2="12" y2="12"/>
+                        </svg>
                       )}
                     </div>
-                    <div style={{ padding: '1rem' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                        <span style={{ fontWeight: '600', fontSize: '14px' }}>
+                    
+                    {/* Content */}
+                    <div style={{ padding: '16px' }}>
+                      {/* Title and status */}
+                      <div style={{ 
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '8px'
+                      }}>
+                        <div style={{ 
+                          fontSize: '15px', 
+                          fontWeight: '600', 
+                          color: '#0B1F3A'
+                        }}>
                           {offer.containerType?.replace(/_/g, ' ')}
-                        </span>
+                        </div>
                         <span style={{
-                          fontSize: '11px', background: '#dbeafe', color: '#1e40af',
-                          padding: '2px 7px', borderRadius: '99px'
+                          padding: '2px 8px',
+                          borderRadius: '9999px',
+                          fontSize: '11px',
+                          fontWeight: '600',
+                          background: '#DCFCE7',
+                          color: '#15803D'
                         }}>
-                          {offer.cargoType}
+                          Disponible
                         </span>
                       </div>
-                      <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '4px' }}>
-                        📍 {offer.location}
+                      
+                      {/* Location */}
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '6px',
+                        fontSize: '14px', 
+                        color: '#64748B',
+                        marginBottom: '4px'
+                      }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                          <circle cx="12" cy="10" r="3"/>
+                        </svg>
+                        {offer.location}
                       </div>
-                      {offer.description && (
-                        <div style={{
-                          fontSize: '12px', color: '#9ca3af', marginBottom: '8px',
-                          overflow: 'hidden', display: '-webkit-box',
-                          WebkitLineClamp: 2, WebkitBoxOrient: 'vertical'
-                        }}>
-                          {offer.description}
+                      
+                      {/* Date */}
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '6px',
+                        fontSize: '14px', 
+                        color: '#64748B',
+                        marginBottom: '12px'
+                      }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                          <line x1="16" y1="2" x2="16" y2="6"/>
+                          <line x1="8" y1="2" x2="8" y2="6"/>
+                          <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                        {offer.availableDate}
+                      </div>
+                      
+                      {/* Match indicator */}
+                      {isMatched && (
+                        <div style={{ marginBottom: '12px' }}>
+                          {matchScore && (
+                            <div style={{ marginTop: '4px' }}>
+                              <div style={{
+                                height: '4px',
+                                background: '#E5E7EB',
+                                borderRadius: '2px',
+                                overflow: 'hidden'
+                              }}>
+                                <div style={{
+                                  height: '100%',
+                                  width: `${matchScore}%`,
+                                  background: '#16A34A'
+                                }} />
+                              </div>
+                              <div style={{ fontSize: '11px', color: '#64748B', marginTop: '2px' }}>
+                                {Math.round(matchScore)}% compatible
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
-                      <div style={{
-                        display: 'flex', justifyContent: 'space-between',
-                        paddingTop: '8px', borderTop: '1px solid #f3f4f6', fontSize: '12px'
-                      }}>
-                        <span style={{ color: '#6b7280' }}>📅 {offer.availableDate}</span>
-                        <span style={{ color: '#1d4ed8', fontWeight: '500' }}>Voir détails →</span>
-                      </div>
+                      
+                      {/* Separator */}
+                      <div style={{ 
+                        height: '1px', 
+                        background: '#F1F5F9', 
+                        marginBottom: '12px' 
+                      }} />
+                      
+                      {/* Action button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/containers/marketplace/${offer.id}`);
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '10px', 
+                          background: '#0B1F3A', 
+                          color: 'white',
+                          border: 'none', 
+                          borderRadius: '10px', 
+                          cursor: 'pointer', 
+                          fontSize: '14px',
+                          fontWeight: '500',
+                          transition: 'background 0.2s'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.background = '#1CA7C7'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.background = '#0B1F3A'
+                        }}
+                      >
+                        Voir les détails
+                      </button>
                     </div>
                   </div>
                 );
@@ -831,63 +999,120 @@ export default function ContainersPage() {
               <p style={{ color: '#6b7280' }}>Créez une demande pour déclencher le matchmaking automatique</p>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {myRequests.map(r => (
                 <div key={r.id} style={{
-                  background: 'white', borderRadius: '12px', padding: '1.5rem',
-                  border: '1px solid #e5e7eb', display: 'flex',
-                  justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem'
+                  background: 'white', 
+                  borderRadius: '16px', 
+                  padding: '20px',
+                  border: '1px solid #E2E8F0', 
+                  display: 'flex',
+                  justifyContent: 'space-between', 
+                  alignItems: 'center', 
+                  flexWrap: 'wrap', 
+                  gap: '16px',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                  transition: 'transform 0.2s, box-shadow 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)'
+                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)'
+                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)'
                 }}>
-                  <div>
-                    <div style={{ fontWeight: '600', marginBottom: '4px' }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ 
+                      fontWeight: '600', 
+                      fontSize: '16px',
+                      marginBottom: '8px',
+                      color: '#0B1F3A'
+                    }}>
                       {r.containerType?.replace(/_/g, ' ')}
                     </div>
-                    <div style={{ fontSize: '13px', color: '#6b7280' }}>
-                      📍 {r.loadingLocation} — 📅 {r.requiredDate}
+                    <div style={{ 
+                      fontSize: '14px', 
+                      color: '#64748B',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '16px'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                          <circle cx="12" cy="10" r="3"/>
+                        </svg>
+                        {r.loadingLocation}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                          <line x1="16" y1="2" x2="16" y2="6"/>
+                          <line x1="8" y1="2" x2="8" y2="6"/>
+                          <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                        {r.requiredDate}
+                      </div>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', gap: '6px' }}>
+                  <div style={{ display: 'flex', gap: '8px' }}>
                     <button
                       onClick={() => handleMatch(r.id)}
                       disabled={matchingId === r.id}
                       style={{
-                        padding: '6px 12px', 
-                        background: matchingId === r.id 
-                          ? '#e5e7eb' : '#d1fae5',
-                        color: matchingId === r.id 
-                          ? '#6b7280' : '#065f46',
-                        border: '1px solid #6ee7b7',
-                        borderRadius: '8px',
-                        cursor: matchingId === r.id 
-                          ? 'not-allowed' : 'pointer',
-                        fontSize: '12px',
+                        padding: '10px 16px', 
+                        background: matchingId === r.id ? '#9CA3AF' : '#0B1F3A', 
+                        color: 'white',
+                        border: 'none', 
+                        borderRadius: '10px', 
+                        cursor: matchingId === r.id ? 'not-allowed' : 'pointer', 
+                        fontSize: '14px',
                         fontWeight: '500',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px'
+                        transition: 'background 0.2s'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (matchingId !== r.id) {
+                          e.target.style.background = '#1CA7C7'
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (matchingId !== r.id) {
+                          e.target.style.background = '#0B1F3A'
+                        }
                       }}
                     >
-                      {matchingId === r.id 
-                        ? '⏳ Recherche en cours...' 
-                        : '🎯 Trouver des correspondances'}
+                      {matchingId === r.id ? '⏳ Recherche...' : '🎯 Trouver correspondances'}
                     </button>
                     <button
                       onClick={() => { setSelectedRequest(r); setShowEditModal(true); }}
                       style={{
-                        padding: '6px 12px', background: '#dbeafe', color: '#1e40af',
-                        border: '1px solid #93c5fd', borderRadius: '8px', cursor: 'pointer', fontSize: '12px'
+                        padding: '10px', 
+                        background: 'white', 
+                        color: '#1D4ED8',
+                        border: '1px solid #DBEAFE', 
+                        borderRadius: '10px', 
+                        cursor: 'pointer', 
+                        fontSize: '14px',
+                        fontWeight: '500'
                       }}
                     >
-                      ✏️
+                      Modifier
                     </button>
                     <button
                       onClick={() => handleDeleteRequest(r.id)}
                       style={{
-                        padding: '6px 12px', background: '#fee2e2', color: '#991b1b',
-                        border: '1px solid #fca5a5', borderRadius: '8px', cursor: 'pointer', fontSize: '12px'
+                        padding: '10px', 
+                        background: 'white', 
+                        color: '#DC2626',
+                        border: '1px solid #FEE2E2', 
+                        borderRadius: '10px', 
+                        cursor: 'pointer', 
+                        fontSize: '14px',
+                        fontWeight: '500'
                       }}
                     >
-                      🗑️
+                      Supprimer
                     </button>
                   </div>
                 </div>

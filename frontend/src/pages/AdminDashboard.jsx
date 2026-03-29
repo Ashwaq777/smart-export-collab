@@ -286,7 +286,7 @@ export default function AdminDashboard() {
     { key: 'users', label: 'Utilisateurs', icon: Users },
     { 
       key: 'containers', 
-      label: 'Conteneurs', 
+      label: 'Marketplace', 
       icon: () => (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
           <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
@@ -375,13 +375,23 @@ export default function AdminDashboard() {
   })
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', background: '#F4F7FA', height: '100vh', overflow: 'hidden' }}>
+    <div style={{ 
+      display: 'flex', 
+      height: '100vh', 
+      width: '100vw', 
+      overflow: 'hidden', 
+      margin: 0, 
+      padding: 0,
+      background: '#F4F7FA' 
+    }}>
       
       {/* Sidebar */}
       <div style={{
         width: '240px',
         minWidth: '240px',
+        maxWidth: '240px',
         flexShrink: 0,
+        overflow: 'hidden',
         background: '#0B1F3A',
         color: 'white',
         display: 'flex',
@@ -570,7 +580,11 @@ export default function AdminDashboard() {
       </div>
 
       {/* Main Content */}
-      <div style={{ flex: 1, overflowY: 'auto' }}>
+      <div style={{ 
+        flex: 1, 
+        minWidth: 0, 
+        overflowY: 'auto' 
+      }}>
         
         {/* Page Header */}
         <div style={{

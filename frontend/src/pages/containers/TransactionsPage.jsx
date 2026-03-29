@@ -232,15 +232,39 @@ export default function TransactionsPage() {
   );
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-      <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-          📋 Mes Transactions
-        </h1>
-        <p style={{ color: '#6b7280' }}>
-          {transactions.length} transaction(s) • {isProvider ? 'Provider' : 'Seeker'}
-        </p>
+    <div style={{ background: '#F8FAFC', minHeight: '100vh' }}>
+      {/* Header */}
+      <div style={{
+        background: 'linear-gradient(135deg, #0B1F3A 0%, #0E3A5D 50%, #1CA7C7 100%)',
+        padding: '48px 32px',
+        marginBottom: '32px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{
+            width: '56px', height: '56px', borderRadius: '16px',
+            background: 'rgba(255,255,255,0.15)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+          }}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+              <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+              <line x1="1" y1="10" x2="23" y2="10"/>
+            </svg>
+          </div>
+          <div>
+            <h1 style={{
+              fontSize: '32px', fontWeight: '800', color: 'white',
+              margin: 0, letterSpacing: '-0.5px'
+            }}>Mes Transactions</h1>
+            <p style={{ fontSize: '16px', color: 'rgba(255,255,255,0.75)', margin: '4px 0 0' }}>
+              {isProvider 
+                ? "Suivez et gérez vos échanges de conteneurs"
+                : "Consultez l'état de vos transactions en cours"}
+            </p>
+          </div>
+        </div>
       </div>
+
+      <div style={{ padding: '0 32px' }}>
 
       {transactions.length === 0 ? (
         <div style={{
@@ -442,6 +466,7 @@ export default function TransactionsPage() {
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 }

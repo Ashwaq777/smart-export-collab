@@ -105,15 +105,40 @@ export default function EirDocumentsPage() {
   }
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-      <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-          📄 Mes Documents EIR
-        </h1>
-        <p style={{ color: '#6b7280' }}>
-          Gérez vos documents EIR (Equipment Interchange Receipt) indépendamment des transactions.
-        </p>
+    <div style={{ background: '#F8FAFC', minHeight: '100vh' }}>
+      {/* Header */}
+      <div style={{
+        background: 'linear-gradient(135deg, #0B1F3A 0%, #0E3A5D 50%, #1CA7C7 100%)',
+        padding: '48px 32px',
+        marginBottom: '32px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{
+            width: '56px', height: '56px', borderRadius: '16px',
+            background: 'rgba(255,255,255,0.15)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+          }}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14,2 14,8 20,8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10,9 9,9 8,9"/>
+            </svg>
+          </div>
+          <div>
+            <h1 style={{
+              fontSize: '32px', fontWeight: '800', color: 'white',
+              margin: 0, letterSpacing: '-0.5px'
+            }}>Documents EIR</h1>
+            <p style={{ fontSize: '16px', color: 'rgba(255,255,255,0.75)', margin: '4px 0 0' }}>
+              Equipment Interchange Receipts - Vos documents logistiques
+            </p>
+          </div>
+        </div>
       </div>
+
+      <div style={{ padding: '0 32px' }}>
 
       {documents.length === 0 ? (
         <div style={{
@@ -245,17 +270,6 @@ export default function EirDocumentsPage() {
           ))}
         </div>
       )}
-
-      <div style={{
-        marginTop: '2rem',
-        padding: '1rem',
-        background: '#f3f4f6',
-        borderRadius: '8px',
-        fontSize: '0.9rem',
-        color: '#6b7280'
-      }}>
-        <strong>💡 Note :</strong> Les documents EIR sont générés lors de la confirmation des transactions.
-        Seuls les providers peuvent uploader et remplacer les documents EIR. Les seekers peuvent les télécharger.
       </div>
     </div>
   );

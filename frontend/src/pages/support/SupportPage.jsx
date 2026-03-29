@@ -153,51 +153,74 @@ export default function SupportPage() {
   };
 
   return (
-    <div style={{
-      padding: '1.5rem',
-      maxWidth: '1100px',
-      margin: '0 auto'
-    }}>
+    <div style={{ background: '#F8FAFC', minHeight: '100vh' }}>
       {/* Header */}
       <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '1.5rem'
+        background: 'linear-gradient(135deg, #0B1F3A 0%, #0E3A5D 50%, #1CA7C7 100%)',
+        padding: '48px 32px',
+        marginBottom: '32px'
       }}>
-        <div>
-          <h1 style={{
-            fontSize: '24px', fontWeight: '700',
-            margin: 0
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{
+            width: '56px', height: '56px', borderRadius: '16px',
+            background: 'rgba(255,255,255,0.15)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
           }}>
-            {isAdmin
-              ? '🎫 Gestion Support'
-              : '🎫 Support & Réclamations'}
-          </h1>
-          <p style={{
-            color: '#6b7280', margin: '4px 0 0',
-            fontSize: '14px'
-          }}>
-            {isAdmin
-              ? `${tickets.length} ticket(s) total` 
-              : 'Signalez un problème ou réclamation'}
-          </p>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              <line x1="8" y1="10" x2="16" y2="10"/>
+              <line x1="8" y1="14" x2="14" y2="14"/>
+            </svg>
+          </div>
+          <div>
+            <h1 style={{
+              fontSize: '32px', fontWeight: '800', color: 'white',
+              margin: 0, letterSpacing: '-0.5px'
+            }}>Support & Réclamations</h1>
+            <p style={{ fontSize: '16px', color: 'rgba(255,255,255,0.75)', margin: '4px 0 0' }}>
+              Notre équipe est là pour vous aider
+            </p>
+          </div>
         </div>
-        {!isAdmin && (
-          <button
-            onClick={() => setShowForm(!showForm)}
-            style={{
-              padding: '10px 20px',
-              background: '#1d4ed8', color: 'white',
-              border: 'none', borderRadius: '8px',
-              cursor: 'pointer', fontWeight: '600',
-              fontSize: '14px'
-            }}
-          >
-            {showForm ? '✕ Annuler' : '➕ Nouveau ticket'}
-          </button>
-        )}
       </div>
+
+      <div style={{ padding: '0 32px' }}>
+        <div style={{
+          maxWidth: '1100px',
+          margin: '0 auto'
+        }}>
+          {/* Actions */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '1.5rem'
+          }}>
+            <div>
+              <p style={{
+                color: '#64748B', margin: 0,
+                fontSize: '14px'
+              }}>
+                {isAdmin
+                  ? `${tickets.length} ticket(s) total` 
+                  : 'Signalez un problème ou réclamation'}
+              </p>
+            </div>
+            {!isAdmin && (
+              <button
+                onClick={() => setShowForm(!showForm)}
+                style={{
+                  padding: '10px 20px',
+                  background: '#1d4ed8', color: 'white',
+                  border: 'none', borderRadius: '8px',
+                  cursor: 'pointer', fontWeight: '600',
+                  fontSize: '14px'
+                }}
+              >
+                {showForm ? '✕ Annuler' : '➕ Nouveau ticket'}
+              </button>
+            )}
+          </div>
 
       {/* Admin stats */}
       {isAdmin && Object.keys(stats).length > 0 && (
@@ -704,6 +727,8 @@ export default function SupportPage() {
           ))}
         </div>
       )}
+    </div>
+      </div>
     </div>
   );
 }

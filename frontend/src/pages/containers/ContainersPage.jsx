@@ -245,20 +245,83 @@ export default function ContainersPage() {
   );
 
   return (
-    <div style={{ padding: '1.5rem', maxWidth: '1400px', margin: '0 auto' }}>
+    <div style={{ background: '#F8FAFC', minHeight: '100vh' }}>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <div>
-          <h1 style={{ fontSize: '24px', fontWeight: '700', margin: 0 }}>
-            {isImportateur ? '📦 Gestion de mes Conteneurs' : '🏪 Marketplace Conteneurs'}
-          </h1>
-          <p style={{ color: '#6b7280', margin: '4px 0 0', fontSize: '14px' }}>
-            {isImportateur
-              ? `${myOffers.length} offre(s) publiée(s)`
-              : `${filteredOffers.length} conteneur(s) disponible(s) dans le monde`}
-          </p>
+      <div style={{ 
+        background: 'white', 
+        padding: '20px 32px', 
+        borderBottom: '1px solid #E2E8F0' 
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h1 style={{ 
+              fontSize: '22px', 
+              fontWeight: '700', 
+              color: '#0B1F3A', 
+              margin: '0 0 4px 0' 
+            }}>
+              Marketplace de conteneurs
+            </h1>
+            <p style={{ 
+              fontSize: '14px', 
+              color: '#64748B', 
+              margin: 0 
+            }}>
+              {isImportateur
+                ? `${myOffers.length} offre(s) publiée(s)`
+                : `${filteredOffers.length} conteneur(s) disponible(s) dans le monde`}
+            </p>
+          </div>
+          
+          {isExportateur && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <input
+                type="text"
+                placeholder="Rechercher par type, port, destination..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                style={{ 
+                  width: '400px',
+                  padding: '10px 16px', 
+                  border: '1px solid #E2E8F0', 
+                  borderRadius: '8px', 
+                  fontSize: '14px',
+                  outline: 'none'
+                }}
+              />
+              
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                {['Tous', 'Standard 20', 'Standard 40', 'High Cube', 'Reefer'].map(filter => {
+                  const isActive = filter === 'Tous' ? filterType === 'ALL' : 
+                    filterType === filter.toUpperCase().replace(' ', '_');
+                  return (
+                    <button
+                      key={filter}
+                      onClick={() => setFilterType(filter === 'Tous' ? 'ALL' : 
+                        filter.toUpperCase().replace(' ', '_'))}
+                      style={{
+                        padding: '8px 16px',
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        border: 'none',
+                        cursor: 'pointer',
+                        background: isActive ? '#0B1F3A' : 'white',
+                        color: isActive ? 'white' : '#64748B',
+                        ...(isActive ? {} : { border: '1px solid #E2E8F0' })
+                      }}
+                    >
+                      {filter}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
+
+      <div style={{ padding: '24px' }}>
 
       {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
@@ -281,28 +344,8 @@ export default function ContainersPage() {
         ))}
       </div>
 
-      {/* Search bar for exportateur */}
-      {isExportateur && (
-        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
-          <input
-            type="text"
-            placeholder="🔍 Rechercher par port, pays..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            style={{ flex: 1, padding: '10px 14px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '14px' }}
-          />
-          <select
-            value={filterType}
-            onChange={e => setFilterType(e.target.value)}
-            style={{ padding: '10px 14px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '14px', background: 'white' }}
-          >
-            {['ALL', 'STANDARD_20', 'STANDARD_40', 'HIGH_CUBE_40', 'REEFER_20', 'REEFER_40'].map(t => (
-              <option key={t} value={t}>{t === 'ALL' ? 'Tous types' : t}</option>
-            ))}
-          </select>
-        </div>
-      )}
-
+      {/* Search bar for exportateur - REMOVE OLD */}
+      
       {/* Tabs */}
       <div style={{
         display: 'flex', gap: '4px', marginBottom: '1.5rem',
@@ -338,50 +381,170 @@ export default function ContainersPage() {
               <p style={{ color: '#6b7280' }}>Publiez votre premier conteneur vide</p>
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
               {myOffers.map(offer => (
                 <div key={offer.id} style={{
-                  background: 'white', borderRadius: '12px', overflow: 'hidden',
-                  border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
+                  background: 'white', 
+                  borderRadius: '16px', 
+                  border: '1px solid #E2E8F0',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                  overflow: 'hidden'
                 }}>
+                  {/* Image */}
                   <div style={{
-                    height: '150px', background: '#f3f4f6', display: 'flex',
-                    alignItems: 'center', justifyContent: 'center', overflow: 'hidden'
+                    height: '180px', 
+                    background: offer.imageUrls?.length > 0 ? 'transparent' : 'linear-gradient(135deg, #0B1F3A, #1CA7C7)',
+                    display: 'flex',
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    overflow: 'hidden',
+                    borderRadius: '16px 16px 0 0'
                   }}>
                     {offer.imageUrls?.length > 0 ? (
                       <img src={offer.imageUrls[0]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
-                      <span style={{ fontSize: '48px' }}>📦</span>
+                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                        <line x1="12" y1="22.08" x2="12" y2="12"/>
+                      </svg>
                     )}
                   </div>
-                  <div style={{ padding: '1rem' }}>
-                    <div style={{ fontWeight: '600', marginBottom: '4px' }}>
+                  
+                  {/* Content */}
+                  <div style={{ padding: '16px' }}>
+                    {/* Type badge */}
+                    <div style={{ marginBottom: '8px' }}>
+                      <span style={{
+                        padding: '4px 8px',
+                        borderRadius: '9999px',
+                        fontSize: '12px',
+                        fontWeight: '600',
+                        background: '#EFF6FF',
+                        color: '#1D4ED8'
+                      }}>
+                        {offer.containerType?.replace(/_/g, ' ')}
+                      </span>
+                    </div>
+                    
+                    {/* Title */}
+                    <div style={{ 
+                      fontSize: '16px', 
+                      fontWeight: '600', 
+                      color: '#0B1F3A',
+                      marginBottom: '8px'
+                    }}>
                       {offer.containerType?.replace(/_/g, ' ')}
                     </div>
-                    <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '8px' }}>
-                      📍 {offer.location}
+                    
+                    {/* Location */}
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '6px',
+                      fontSize: '14px', 
+                      color: '#64748B',
+                      marginBottom: '4px'
+                    }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                        <circle cx="12" cy="10" r="3"/>
+                      </svg>
+                      {offer.location}
                     </div>
-                    <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '12px' }}>
-                      📅 {offer.availableDate}
+                    
+                    {/* Date */}
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '6px',
+                      fontSize: '14px', 
+                      color: '#64748B',
+                      marginBottom: '12px'
+                    }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                      </svg>
+                      {offer.availableDate}
                     </div>
-                    <div style={{ display: 'flex', gap: '6px' }}>
+                    
+                    {/* Match indicator */}
+                    {matchedOfferIds.includes(offer.id) && (
+                      <div style={{ marginBottom: '12px' }}>
+                        <span style={{
+                          padding: '4px 8px',
+                          borderRadius: '9999px',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          background: '#DCFCE7',
+                          color: '#15803D'
+                        }}>
+                          🎯 Correspond à votre demande
+                        </span>
+                        {matchScores[offer.id] && (
+                          <div style={{ marginTop: '4px' }}>
+                            <div style={{
+                              height: '4px',
+                              background: '#E5E7EB',
+                              borderRadius: '2px',
+                              overflow: 'hidden'
+                            }}>
+                              <div style={{
+                                height: '100%',
+                                width: `${matchScores[offer.id]}%`,
+                                background: '#16A34A'
+                              }} />
+                            </div>
+                            <div style={{ fontSize: '11px', color: '#64748B', marginTop: '2px' }}>
+                              {Math.round(matchScores[offer.id])}% compatible
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* Separator */}
+                    <div style={{ 
+                      height: '1px', 
+                      background: '#E2E8F0', 
+                      marginBottom: '12px' 
+                    }} />
+                    
+                    {/* Actions */}
+                    <div style={{ display: 'flex', gap: '8px' }}>
                       <button
                         onClick={() => navigate(`/containers/marketplace/${offer.id}`)}
                         style={{
-                          flex: 1, padding: '6px', background: '#eff6ff', color: '#1d4ed8',
-                          border: '1px solid #bfdbfe', borderRadius: '6px', cursor: 'pointer', fontSize: '12px'
+                          flex: 1, 
+                          padding: '8px', 
+                          background: '#0B1F3A', 
+                          color: 'white',
+                          border: 'none', 
+                          borderRadius: '8px', 
+                          cursor: 'pointer', 
+                          fontSize: '14px',
+                          fontWeight: '500'
                         }}
                       >
-                        👁️ Voir
+                        Voir les détails
                       </button>
                       <button
                         onClick={() => handleDeleteOffer(offer.id)}
                         style={{
-                          padding: '6px 10px', background: '#fee2e2', color: '#991b1b',
-                          border: '1px solid #fca5a5', borderRadius: '6px', cursor: 'pointer', fontSize: '12px'
+                          padding: '8px 12px', 
+                          background: '#FEE2E2', 
+                          color: '#DC2626',
+                          border: 'none', 
+                          borderRadius: '8px', 
+                          cursor: 'pointer', 
+                          fontSize: '12px',
+                          fontWeight: '500'
                         }}
                       >
-                        🗑️
+                        Supprimer
                       </button>
                     </div>
                   </div>
@@ -914,6 +1077,7 @@ export default function ContainersPage() {
           onSuccess={() => { setShowEditModal(false); setSelectedRequest(null); loadAll(); }}
         />
       )}
+      </div>
     </div>
   );
 }

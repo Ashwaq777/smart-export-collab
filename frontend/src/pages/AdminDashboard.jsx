@@ -44,6 +44,11 @@ export default function AdminDashboard() {
   const [recentTransactions, setRecentTransactions] = useState([])
   const [selectedUser, setSelectedUser] = useState(null)
   const [showUserDetail, setShowUserDetail] = useState(false)
+  const [claims, setClaims] = useState([])
+  const [selectedClaim, setSelectedClaim] = useState(null)
+  const [showClaimModal, setShowClaimModal] = useState(false)
+  const [claimResponse, setClaimResponse] = useState('')
+  const [claimStatus, setClaimStatus] = useState('')
 
   const showMsg = (text, ok=true) => {
     setUserMsg({text,ok})
@@ -77,6 +82,16 @@ export default function AdminDashboard() {
       setUsers([])
     }
     setUserLoading(false)
+  }
+
+  const loadClaims = async () => {
+    try {
+      const r = await api.get('/v1/support/admin/all')
+      setClaims(r.data || [])
+    } catch(e) {
+      console.error('Error loading claims:', e)
+      setClaims([])
+    }
   }
 
   const loadRecentTransactions = async () => {
@@ -157,6 +172,12 @@ export default function AdminDashboard() {
     if(activeTab==='rates') loadRates()
     if(activeTab==='overview') {
       loadRecentTransactions()
+    }
+    if(activeTab==='transactions') {
+      loadRecentTransactions()
+    }
+    if(activeTab==='claims') {
+      loadClaims()
     }
   },[activeTab])
 
@@ -325,6 +346,16 @@ export default function AdminDashboard() {
     }
   }
 
+  const getPriorityColor = (priority) => {
+    switch(priority) {
+      case 'URGENT': return { bg: '#FEE2E2', text: '#DC2626' }
+      case 'HIGH': return { bg: '#FED7AA', text: '#EA580C' }
+      case 'MEDIUM': return { bg: '#FEF3C7', text: '#D97706' }
+      case 'LOW': return { bg: '#F3F4F6', text: '#6B7280' }
+      default: return { bg: '#F3F4F6', text: '#6B7280' }
+    }
+  }
+
   const getWorkflowStatusColor = (status) => {
     switch(status) {
       case 'AT_PROVIDER': return { bg: '#FEF3C7', text: '#92400E' }
@@ -344,19 +375,19 @@ export default function AdminDashboard() {
   })
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', background: '#F4F7FA' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', background: '#F4F7FA', height: '100vh', overflow: 'hidden' }}>
       
       {/* Sidebar */}
       <div style={{
         width: '240px',
+        minWidth: '240px',
+        flexShrink: 0,
         background: '#0B1F3A',
         color: 'white',
         display: 'flex',
         flexDirection: 'column',
-        position: 'fixed',
+        position: 'relative',
         height: '100vh',
-        left: 0,
-        top: 0,
         zIndex: 1000
       }}>
         {/* Logo */}
@@ -539,7 +570,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Main Content */}
-      <div style={{ marginLeft: '240px', flex: 1 }}>
+      <div style={{ flex: 1, overflowY: 'auto' }}>
         
         {/* Page Header */}
         <div style={{
@@ -1533,7 +1564,7 @@ export default function AdminDashboard() {
         )}
 
       {/* Placeholder Tabs */}
-        {['containers', 'transactions', 'claims'].includes(activeTab) && (
+        {activeTab === 'containers' && (
           <div style={{
             background: 'white',
             border: '1px solid #E2E8F0',
@@ -1545,7 +1576,7 @@ export default function AdminDashboard() {
               fontSize: '3rem',
               marginBottom: '1rem'
             }}>
-              {activeTab === 'containers' ? '📦' : activeTab === 'transactions' ? '🚚' : '🎫'}
+              📦
             </div>
             <h3 style={{
               fontSize: '1.25rem',
@@ -1553,9 +1584,7 @@ export default function AdminDashboard() {
               color: '#1B2A4A',
               margin: '0 0 0.5rem 0'
             }}>
-              {activeTab === 'containers' ? 'Gestion des Conteneurs' : 
-               activeTab === 'transactions' ? 'Gestion des Transactions' : 
-               'Gestion des Réclamations'}
+              Gestion des Conteneurs
             </h3>
             <p style={{
               fontSize: '0.875rem',
@@ -1564,6 +1593,393 @@ export default function AdminDashboard() {
             }}>
               Cette section sera bientôt disponible
             </p>
+          </div>
+        )}
+
+        {activeTab === 'transactions' && (
+          <div>
+            <div style={{
+              background: 'white',
+              border: '1px solid #E2E8F0',
+              borderRadius: '12px',
+              padding: '1.5rem',
+              marginBottom: '1rem',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
+            }}>
+              <h2 style={{
+                fontSize: '1rem',
+                fontWeight: '600',
+                color: '#0B1F3A',
+                margin: '0 0 1rem 0'
+              }}>
+                Transactions récentes
+              </h2>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ background: '#0B1F3A' }}>
+                      {['ID', 'Provider', 'Seeker', 'Statut', 'Date'].map(header => (
+                        <th key={header} style={{
+                          padding: '0.75rem 1rem',
+                          textAlign: 'left',
+                          fontSize: '0.75rem',
+                          fontWeight: '600',
+                          color: 'white',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em'
+                        }}>
+                          {header}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recentTransactions.map((tx, index) => (
+                      <tr key={tx.id || index} style={{
+                        background: index % 2 === 0 ? 'white' : '#F8FAFC',
+                        borderBottom: '1px solid #E2E8F0'
+                      }}>
+                        <td style={{
+                          padding: '0.75rem 1rem',
+                          fontSize: '0.875rem',
+                          color: '#1E293B',
+                          fontWeight: '500'
+                        }}>
+                          #{tx.id || index + 1}
+                        </td>
+                        <td style={{
+                          padding: '0.75rem 1rem',
+                          fontSize: '0.875rem',
+                          color: '#1E293B'
+                        }}>
+                          {tx.provider?.email || tx.providerEmail || 'N/A'}
+                        </td>
+                        <td style={{
+                          padding: '0.75rem 1rem',
+                          fontSize: '0.875rem',
+                          color: '#1E293B'
+                        }}>
+                          {tx.seeker?.email || tx.seekerEmail || 'N/A'}
+                        </td>
+                        <td style={{ padding: '0.75rem 1rem' }}>
+                          <span style={{
+                            padding: '0.25rem 0.75rem',
+                            borderRadius: '9999px',
+                            fontSize: '0.6875rem',
+                            fontWeight: '600',
+                            background: getWorkflowStatusColor(tx.workflowStatus || 'AT_PROVIDER').bg,
+                            color: getWorkflowStatusColor(tx.workflowStatus || 'AT_PROVIDER').text
+                          }}>
+                            {tx.workflowStatus || 'AT_PROVIDER'}
+                          </span>
+                        </td>
+                        <td style={{
+                          padding: '0.75rem 1rem',
+                          fontSize: '0.875rem',
+                          color: '#64748B'
+                        }}>
+                          {tx.createdAt ? new Date(tx.createdAt).toLocaleDateString('fr-FR') : 'N/A'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'claims' && (
+          <div>
+            <div style={{
+              background: 'white',
+              border: '1px solid #E2E8F0',
+              borderRadius: '12px',
+              padding: '1.5rem',
+              marginBottom: '1rem',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
+            }}>
+              <h2 style={{
+                fontSize: '1rem',
+                fontWeight: '600',
+                color: '#0B1F3A',
+                margin: '0 0 1rem 0'
+              }}>
+                Réclamations
+              </h2>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ background: '#0B1F3A' }}>
+                      {['Utilisateur', 'Sujet', 'Catégorie', 'Priorité', 'Statut', 'Date', 'Actions'].map(header => (
+                        <th key={header} style={{
+                          padding: '0.75rem 1rem',
+                          textAlign: 'left',
+                          fontSize: '0.75rem',
+                          fontWeight: '600',
+                          color: 'white',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em'
+                        }}>
+                          {header}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {claims.map((claim, index) => (
+                      <tr key={claim.id || index} style={{
+                        background: index % 2 === 0 ? 'white' : '#F8FAFC',
+                        borderBottom: '1px solid #E2E8F0'
+                      }}>
+                        <td style={{
+                          padding: '0.75rem 1rem',
+                          fontSize: '0.875rem',
+                          color: '#1E293B',
+                          fontWeight: '500'
+                        }}>
+                          {claim.user?.email || claim.userEmail || 'N/A'}
+                        </td>
+                        <td style={{
+                          padding: '0.75rem 1rem',
+                          fontSize: '0.875rem',
+                          color: '#1E293B'
+                        }}>
+                          {claim.subject || 'N/A'}
+                        </td>
+                        <td style={{
+                          padding: '0.75rem 1rem',
+                          fontSize: '0.875rem',
+                          color: '#1E293B'
+                        }}>
+                          {claim.category || 'N/A'}
+                        </td>
+                        <td style={{ padding: '0.75rem 1rem' }}>
+                          <span style={{
+                            padding: '0.25rem 0.75rem',
+                            borderRadius: '9999px',
+                            fontSize: '0.6875rem',
+                            fontWeight: '600',
+                            background: getPriorityColor(claim.priority || 'LOW').bg,
+                            color: getPriorityColor(claim.priority || 'LOW').text
+                          }}>
+                            {claim.priority || 'LOW'}
+                          </span>
+                        </td>
+                        <td style={{ padding: '0.75rem 1rem' }}>
+                          <span style={{
+                            padding: '0.25rem 0.75rem',
+                            borderRadius: '9999px',
+                            fontSize: '0.6875rem',
+                            fontWeight: '600',
+                            background: getStatusColor(claim.status || 'OPEN').bg,
+                            color: getStatusColor(claim.status || 'OPEN').text
+                          }}>
+                            {claim.status || 'OPEN'}
+                          </span>
+                        </td>
+                        <td style={{
+                          padding: '0.75rem 1rem',
+                          fontSize: '0.875rem',
+                          color: '#64748B'
+                        }}>
+                          {claim.createdAt ? new Date(claim.createdAt).toLocaleDateString('fr-FR') : 'N/A'}
+                        </td>
+                        <td style={{ padding: '0.75rem 1rem' }}>
+                          <button
+                            onClick={() => {
+                              setSelectedClaim(claim)
+                              setClaimResponse('')
+                              setClaimStatus(claim.status || 'OPEN')
+                              setShowClaimModal(true)
+                            }}
+                            style={{
+                              padding: '0.375rem 0.75rem',
+                              background: '#0B1F3A',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '0.375rem',
+                              cursor: 'pointer',
+                              fontSize: '0.75rem',
+                              fontWeight: '500'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.target.style.background = '#1CA7C7'
+                            }}
+                            onMouseLeave={(e) => {
+                              e.target.style.background = '#0B1F3A'
+                            }}
+                          >
+                            Répondre
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Claim Response Modal */}
+        {showClaimModal && selectedClaim && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000
+          }}>
+            <div style={{
+              background: 'white',
+              borderRadius: '0.75rem',
+              padding: '2rem',
+              width: '90%',
+              maxWidth: '500px'
+            }}>
+              <h3 style={{
+                color: '#1B2A4A',
+                margin: '0 0 1.5rem',
+                fontSize: '1.125rem',
+                fontWeight: '600'
+              }}>
+                Répondre à la réclamation
+              </h3>
+              
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '0.25rem',
+                  fontWeight: '600',
+                  color: '#374151',
+                  fontSize: '0.875rem'
+                }}>
+                  Sujet
+                </label>
+                <div style={{
+                  padding: '0.5rem 0.75rem',
+                  background: '#F8FAFC',
+                  borderRadius: '0.375rem',
+                  fontSize: '0.875rem',
+                  color: '#1B2A4A'
+                }}>
+                  {selectedClaim.subject}
+                </div>
+              </div>
+              
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '0.25rem',
+                  fontWeight: '600',
+                  color: '#374151',
+                  fontSize: '0.875rem'
+                }}>
+                  Réponse
+                </label>
+                <textarea
+                  style={{
+                    width: '100%',
+                    padding: '0.5rem 0.75rem',
+                    border: '1px solid #E2E8F0',
+                    borderRadius: '0.375rem',
+                    fontSize: '0.875rem',
+                    boxSizing: 'border-box',
+                    outline: 'none',
+                    minHeight: '100px',
+                    resize: 'vertical'
+                  }}
+                  value={claimResponse}
+                  onChange={e => setClaimResponse(e.target.value)}
+                  placeholder="Tapez votre réponse..."
+                />
+              </div>
+              
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '0.25rem',
+                  fontWeight: '600',
+                  color: '#374151',
+                  fontSize: '0.875rem'
+                }}>
+                  Statut
+                </label>
+                <select
+                  style={{
+                    width: '100%',
+                    padding: '0.5rem 0.75rem',
+                    border: '1px solid #E2E8F0',
+                    borderRadius: '0.375rem',
+                    fontSize: '0.875rem',
+                    boxSizing: 'border-box',
+                    outline: 'none'
+                  }}
+                  value={claimStatus}
+                  onChange={e => setClaimStatus(e.target.value)}
+                >
+                  <option value="OPEN">Ouvert</option>
+                  <option value="IN_PROGRESS">En cours</option>
+                  <option value="RESOLVED">Résolu</option>
+                  <option value="CLOSED">Fermé</option>
+                </select>
+              </div>
+              
+              <div style={{
+                display: 'flex',
+                gap: '0.75rem',
+                marginTop: '1.5rem'
+              }}>
+                <button
+                  onClick={async () => {
+                    try {
+                      await api.put(`/api/v1/support/admin/${selectedClaim.id}`, {
+                        response: claimResponse,
+                        status: claimStatus
+                      })
+                      showMsg('Réponse envoyée')
+                      setShowClaimModal(false)
+                      loadClaims()
+                    } catch(e) { 
+                      showMsg('Erreur: ' + e.message, false)
+                    }
+                  }}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    background: '#0B1F3A',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '0.375rem',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                    fontWeight: '500'
+                  }}
+                >
+                  Envoyer
+                </button>
+                <button
+                  onClick={() => setShowClaimModal(false)}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    background: '#6B7280',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '0.375rem',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                    fontWeight: '500'
+                  }}
+                >
+                  Annuler
+                </button>
+              </div>
+            </div>
           </div>
         )}
 

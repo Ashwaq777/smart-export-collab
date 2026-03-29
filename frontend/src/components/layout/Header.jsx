@@ -24,7 +24,7 @@ export const Header = () => {
     ...(user?.role !== 'ADMIN' ? [{ path: '/calculator', label: 'Calculator' }] : []),
     ...(user?.role !== 'ADMIN' ? [{ path: '/traceability', label: 'Traçabilité' }] : []),
     ...(user?.role !== 'ADMIN' ? [
-      { path: '/containers/marketplace', label: '🚢 Conteneurs' },
+      { path: '/containers/marketplace', label: '🚢 Marketplace' },
       { path: '/containers/transactions', label: '📋 Transactions' },
       { path: '/containers/eir-documents', label: '📄 Documents EIR' },
       { path: '/vessels', label: '🚢 Tracking Navires' }

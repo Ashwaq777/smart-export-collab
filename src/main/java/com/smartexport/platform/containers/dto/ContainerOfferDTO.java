@@ -27,6 +27,7 @@ public class ContainerOfferDTO {
     private String location;
     private Double latitude;
     private Double longitude;
+    private String portName;
     private LocalDate availableDate;
     private ContainerOfferStatus status;
     private LocalDateTime createdAt;

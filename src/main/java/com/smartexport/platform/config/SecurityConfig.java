@@ -67,6 +67,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/support/**").authenticated()
                 .requestMatchers("/api/v1/eir/**").hasAnyRole("IMPORTATEUR", "EXPORTATEUR")
                 .requestMatchers("/api/v1/containers/transactions/**").hasAnyRole("IMPORTATEUR", "EXPORTATEUR")
+                .requestMatchers("/api/v1/notifications/**").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/v1/containers/**").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/v1/containers/**").authenticated()
                 .requestMatchers(HttpMethod.PUT, "/api/v1/containers/**").authenticated()

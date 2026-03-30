@@ -144,7 +144,7 @@ export default function OfferDetailPage() {
               {[
                 ['📦 Type', offer.containerType],
                 ['🚛 Cargaison', offer.cargoType],
-                ['📍 Port', offer.location],
+                ['📍 Port', offer.portName || offer.location],
                 ['📅 Disponible', offer.availableDate],
                 ['🔢 Numéro', offer.containerNumber || 'N/A'],
                 ['🔧 État', offer.technicalCondition || 'N/A'],
@@ -207,7 +207,7 @@ export default function OfferDetailPage() {
               color: '#374151'
             }}>
               <div><b>Provider:</b> {offer.providerName}</div>
-              <div><b>Port:</b> {offer.location}</div>
+              <div><b>Port:</b> {offer.portName || offer.location}</div>
               <div>
                 <b>Disponible le:</b> {offer.availableDate}
               </div>

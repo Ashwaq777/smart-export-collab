@@ -76,6 +76,7 @@ public class ContainerOfferService {
             portService.getPortDetails(dto.getLocation()).ifPresent(port -> {
                 offer.setLatitude(port.getLatitude());
                 offer.setLongitude(port.getLongitude());
+                offer.setPortName(port.getName());
             });
             // Fallback to GeocodingService if PortService returns empty
             if (offer.getLatitude() == null) {
@@ -87,6 +88,14 @@ public class ContainerOfferService {
         } else {
             offer.setLatitude(dto.getLatitude());
             offer.setLongitude(dto.getLongitude());
+            if (dto.getPortName() != null) {
+                offer.setPortName(dto.getPortName());
+            } else {
+                // Try to get port name from location if not provided
+                portService.getPortDetails(dto.getLocation()).ifPresent(port -> {
+                    offer.setPortName(port.getName());
+                });
+            }
         }
         
         offer.setAvailableDate(dto.getAvailableDate());
@@ -278,6 +287,7 @@ public class ContainerOfferService {
         dto.setLocation(offer.getLocation());
         dto.setLatitude(offer.getLatitude());
         dto.setLongitude(offer.getLongitude());
+        dto.setPortName(offer.getPortName());
         dto.setAvailableDate(offer.getAvailableDate());
         dto.setStatus(offer.getStatus());
         dto.setCreatedAt(offer.getCreatedAt());

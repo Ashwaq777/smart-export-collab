@@ -52,6 +52,9 @@ public class ContainerOffer {
     @Column(name = "longitude")
     private Double longitude;
 
+    @Column(name = "port_name")
+    private String portName;
+
     @Column(name = "available_date", nullable = false)
     private LocalDate availableDate;
 

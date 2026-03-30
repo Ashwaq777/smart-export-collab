@@ -100,6 +100,9 @@ const containerService = {
   updateWorkflow: (id, status) =>
     api.patch(`/v1/containers/transactions/${id}/workflow?status=${status}`),
 
+  advanceTransactionStatus: (id) =>
+    api.put(`/v1/containers/transactions/${id}/advance-status`),
+
   // EIR Document Upload
   uploadEir: (transactionId, file) => {
     const formData = new FormData();

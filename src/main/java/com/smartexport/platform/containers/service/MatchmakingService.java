@@ -169,21 +169,26 @@ public class MatchmakingService {
             try {
                 emailService.sendMatchFoundEmail(match);
                 
-                // Push notification to provider
-                pushNotificationService.notifyUser(
-                    match.getOffer().getProvider().getEmail(),
-                    NotificationPayload.matchFound(
-                        match.getId(),
-                        match.getOffer().getContainerType().toString(),
-                        match.getOffer().getLocation()));
-
-                // Push notification to seeker
+                // Create specific notification for seeker with score
+                String seekerMessage = String.format("Un conteneur correspond à votre demande ! Score: %.0f/100", 
+                    match.getCompatibilityScore());
                 pushNotificationService.notifyUser(
                     match.getRequest().getSeeker().getEmail(),
                     NotificationPayload.matchFound(
                         match.getId(),
                         match.getOffer().getContainerType().toString(),
-                        match.getOffer().getLocation()));
+                        match.getOffer().getLocation()),
+                    seekerMessage);
+
+                // Create notification for provider
+                String providerMessage = "Votre offre a une correspondance !";
+                pushNotificationService.notifyUser(
+                    match.getOffer().getProvider().getEmail(),
+                    NotificationPayload.matchFound(
+                        match.getId(),
+                        match.getOffer().getContainerType().toString(),
+                        match.getOffer().getLocation()),
+                    providerMessage);
                         
             } catch (Exception e) {
                 log.warn("Notification failed for match {}: {}", 

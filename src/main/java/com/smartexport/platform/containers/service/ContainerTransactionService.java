@@ -70,13 +70,16 @@ public class ContainerTransactionService {
             try {
                 emailService.sendMatchConfirmedEmail(tx);
                 
-                // Push notifications for match confirmation
+                // Push notifications for match confirmation with custom message
+                String confirmationMessage = "Votre match a été confirmé ! La transaction a été créée.";
                 pushNotificationService.notifyUser(
                     tx.getMatch().getOffer().getProvider().getEmail(),
-                    NotificationPayload.matchConfirmed(tx.getId()));
+                    NotificationPayload.matchConfirmed(tx.getId()),
+                    confirmationMessage);
                 pushNotificationService.notifyUser(
                     tx.getMatch().getRequest().getSeeker().getEmail(),
-                    NotificationPayload.matchConfirmed(tx.getId()));
+                    NotificationPayload.matchConfirmed(tx.getId()),
+                    confirmationMessage);
                     
             } catch (Exception e) {
                 log.warn("Notification failed for transaction {}: {}", 
@@ -110,13 +113,16 @@ public class ContainerTransactionService {
             try {
                 emailService.sendMatchConfirmedEmail(tx);
                 
-                // Push notifications for match confirmation
+                // Push notifications for match confirmation with custom message
+                String confirmationMessage = "Votre match a été confirmé ! La transaction a été créée.";
                 pushNotificationService.notifyUser(
                     tx.getMatch().getOffer().getProvider().getEmail(),
-                    NotificationPayload.matchConfirmed(tx.getId()));
+                    NotificationPayload.matchConfirmed(tx.getId()),
+                    confirmationMessage);
                 pushNotificationService.notifyUser(
                     tx.getMatch().getRequest().getSeeker().getEmail(),
-                    NotificationPayload.matchConfirmed(tx.getId()));
+                    NotificationPayload.matchConfirmed(tx.getId()),
+                    confirmationMessage);
                     
             } catch (Exception e) {
                 log.warn("Notification failed for transaction {}: {}", 
@@ -169,6 +175,55 @@ public class ContainerTransactionService {
             log.warn("Notification failed for transaction {}: {}", 
                 tx.getId(), e.getMessage());
         }
+    }
+
+    public void advanceWorkflowStatus(Long transactionId, Long userId) {
+        ContainerTransaction tx = transactionRepository.findById(transactionId)
+                .orElseThrow(() -> new ContainerNotFoundException(
+                        "Transaction not found: " + transactionId));
+        
+        // Only provider can advance status
+        Long providerId = tx.getMatch().getOffer().getProvider().getId();
+        if (!providerId.equals(userId)) {
+            throw new UnauthorizedContainerAccessException(
+                    "Only provider can advance transaction status");
+        }
+        
+        WorkflowStatus currentStatus = tx.getWorkflowStatus();
+        WorkflowStatus nextStatus = getNextWorkflowStatus(currentStatus);
+        
+        if (nextStatus != null) {
+            tx.setWorkflowStatus(nextStatus);
+            transactionRepository.save(tx);
+            log.info("Transaction {} advanced from {} to {}", 
+                transactionId, currentStatus, nextStatus);
+                
+            // Send workflow update email
+            try {
+                emailService.sendWorkflowUpdateEmail(tx);
+                
+                // Push notification for workflow update
+                pushNotificationService.notifyUser(
+                    tx.getMatch().getRequest().getSeeker().getEmail(),
+                    NotificationPayload.workflowUpdate(
+                        tx.getId(),
+                        nextStatus.toString()));
+                        
+            } catch (Exception e) {
+                log.warn("Notification failed for transaction {}: {}", 
+                    tx.getId(), e.getMessage());
+            }
+        }
+    }
+
+    private WorkflowStatus getNextWorkflowStatus(WorkflowStatus current) {
+        return switch (current) {
+            case AT_PROVIDER -> WorkflowStatus.IN_TRANSIT;
+            case IN_TRANSIT -> WorkflowStatus.DELIVERED;
+            case DELIVERED -> WorkflowStatus.LOADING;
+            case LOADING -> WorkflowStatus.COMPLETED;
+            case COMPLETED -> null; // Already at final status
+        };
     }
 
     public String uploadEirDocument(Long transactionId, 

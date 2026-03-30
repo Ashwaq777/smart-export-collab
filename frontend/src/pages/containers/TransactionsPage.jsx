@@ -29,9 +29,9 @@ export default function TransactionsPage() {
   };
 
   const workflowSteps = [
-    { key: 'AT_PROVIDER', label: '🏭 Chez importateur' },
-    { key: 'IN_TRANSIT', label: '🚛 En transport' },
-    { key: 'DELIVERED_TO_EXPORTER', label: '📦 Livré' },
+    { key: 'AT_PROVIDER', label: '🏭 Chez provider' },
+    { key: 'IN_TRANSIT', label: '🚛 En transit' },
+    { key: 'DELIVERED', label: '📦 Livré' },
     { key: 'LOADING', label: '⚓ Chargement' },
     { key: 'COMPLETED', label: '✅ Terminé' },
   ];
@@ -39,6 +39,15 @@ export default function TransactionsPage() {
   const getNextStatuses = (current) => {
     const idx = workflowSteps.findIndex(s => s.key === current);
     return workflowSteps.slice(idx + 1);
+  };
+
+  const handleAdvanceStatus = async (txId) => {
+    try {
+      await containerService.advanceTransactionStatus(txId);
+      await loadTransactions();
+    } catch (err) {
+      alert('Erreur: ' + (err.response?.data?.message || err.message));
+    }
   };
 
   const handleUpdateWorkflow = async (txId, status) => {
@@ -96,124 +105,59 @@ export default function TransactionsPage() {
     }
   };
 
-  const getWorkflowTimeline = (status) => {
-    const currentIndex = workflowSteps.findIndex(s => s.key === status);
+  const getWorkflowTimeline = (status, txId) => {
+    const steps = ['AT_PROVIDER', 'IN_TRANSIT', 'DELIVERED', 'LOADING', 'COMPLETED'];
+    const labels = ['Chez provider', 'En transit', 'Livré', 'Chargement', 'Terminé'];
+    const currentIndex = steps.indexOf(status);
     
     return (
-      <div style={{ marginTop: '1rem' }}>
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'space-between',
-          marginBottom: '0.5rem',
-          position: 'relative'
-        }}>
-          {workflowSteps.map((step, index) => {
-            const isCompleted = index < currentIndex;
-            const isCurrent = index === currentIndex;
-            const isFuture = index > currentIndex;
-            
-            return (
-              <div key={step.key} style={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
-                alignItems: 'center',
-                flex: 1,
-                position: 'relative'
-              }}>
-                {/* Circle */}
+      <div>
+        <div style={{ display: 'flex', alignItems: 'center', margin: '20px 0' }}>
+          {steps.map((step, i) => (
+            <>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <div style={{
-                  width: '20px',
-                  height: '20px',
-                  borderRadius: '50%',
-                  background: isCompleted ? '#0D9488' : isCurrent ? '#0B1F3A' : '#E2E8F0',
-                  border: isCurrent ? '3px solid #0B1F3A' : isCompleted ? '2px solid #0D9488' : '2px solid #E2E8F0',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '10px',
-                  color: isCompleted || isCurrent ? 'white' : '#9CA3AF',
-                  fontWeight: isCurrent ? 'bold' : 'normal',
-                  zIndex: 1,
-                  transition: 'all 0.3s'
+                  width: 28, height: 28, borderRadius: '50%',
+                  background: i <= currentIndex ? '#0D9488' : '#E2E8F0',
+                  border: i === currentIndex ? '3px solid white' : 'none',
+                  boxShadow: i === currentIndex ? '0 0 0 3px #0B1F3A' : 'none',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}>
-                  {isCompleted ? '●' : isCurrent ? '●' : '○'}
+                  {i < currentIndex && <span style={{ color: 'white', fontSize: 14 }}>✓</span>}
                 </div>
-                
-                {/* Line */}
-                {index < workflowSteps.length - 1 && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '10px',
-                    left: '50%',
-                    width: '100%',
-                    height: '2px',
-                    background: isCompleted ? '#0D9488' : '#E2E8F0',
-                    zIndex: 0
-                  }} />
-                )}
-                
-                {/* Label */}
-                <div style={{
-                  marginTop: '0.5rem',
-                  fontSize: '11px',
-                  color: isCurrent ? '#0B1F3A' : isCompleted ? '#374151' : '#9CA3AF',
-                  fontWeight: isCurrent ? '600' : 'normal',
-                  textAlign: 'center',
-                  maxWidth: '90px',
-                  lineHeight: '1.2'
-                }}>
-                  {step.label.split(' ')[0]}
-                  <div style={{ fontSize: '9px', color: '#64748B', marginTop: '2px' }}>
-                    {step.label.split(' ').slice(1).join(' ')}
-                  </div>
-                </div>
+                <span style={{ fontSize: 10, color: '#64748B', marginTop: 4, textAlign: 'center', maxWidth: 60 }}>
+                  {labels[i]}
+                </span>
               </div>
-            );
-          })}
+              {i < steps.length - 1 && (
+                <div style={{
+                  flex: 1, height: 2,
+                  background: i < currentIndex ? '#0D9488' : '#E2E8F0',
+                  marginBottom: 16
+                }}/>
+              )}
+            </>
+          ))}
         </div>
         
-        {/* Current status indicator */}
-        <div style={{
-          textAlign: 'center',
-          fontSize: '12px',
-          color: '#64748B',
-          marginTop: '1rem',
-          padding: '8px',
-          background: '#F8FAFC',
-          borderRadius: '8px',
-          border: '1px solid #E2E8F0'
-        }}>
-          Étape actuelle : <strong>{workflowSteps[currentIndex]?.label || status}</strong>
-        </div>
-        
-        {/* Action button for IMPORTATEUR */}
-        {isProvider && currentIndex < workflowSteps.length - 1 && (
-          <div style={{ marginTop: '1rem', textAlign: 'center' }}>
-            <select
-              onChange={(e) => {
-                if (e.target.value) {
-                  handleUpdateWorkflow(status, e.target.value);
-                  e.target.value = '';
-                }
-              }}
+        {/* Bouton Avancer le statut pour IMPORTATEUR uniquement */}
+        {isProvider && currentIndex < steps.length - 1 && (
+          <div style={{ textAlign: 'center', marginTop: '10px' }}>
+            <button
+              onClick={() => handleAdvanceStatus(txId)}
               style={{
-                padding: '8px 12px',
-                border: '1px solid #E2E8F0',
-                borderRadius: '8px',
+                padding: '8px 16px',
+                background: '#0D9488',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
                 fontSize: '12px',
-                background: 'white',
-                color: '#374151',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                fontWeight: '500'
               }}
             >
-              <option value="">Avancer le statut →</option>
-              {getNextStatuses(status).map(next => (
-                <option key={next.key} value={next.key}>
-                  {next.label}
-                </option>
-              ))}
-            </select>
+              Avancer le statut
+            </button>
           </div>
         )}
       </div>
@@ -332,7 +276,7 @@ export default function TransactionsPage() {
               </div>
 
               {/* Workflow Timeline */}
-              {getWorkflowTimeline(tx.workflowStatus)}
+              {getWorkflowTimeline(tx.workflowStatus, tx.id)}
 
               {/* Actions Section */}
               <div style={{ 

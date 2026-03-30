@@ -62,6 +62,17 @@ public class ContainerTransactionController {
             ContainerApiResponse.success("Workflow updated to " + status, null));
     }
 
+    // PUT /{id}/advance-status
+    @PutMapping("/{id}/advance-status")
+    @Operation(summary = "Advance workflow status to next step")
+    public ResponseEntity<ContainerApiResponse<Void>> advanceStatus(
+            @PathVariable Long id) {
+        Long userId = ContainerSecurityUtils.getCurrentUserId(userRepository);
+        transactionService.advanceWorkflowStatus(id, userId);
+        return ResponseEntity.ok(
+            ContainerApiResponse.success("Status advanced", null));
+    }
+
     // POST /{id}/eir — upload EIR document
     @PostMapping(value = "/{id}/eir", 
                  consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

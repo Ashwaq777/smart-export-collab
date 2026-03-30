@@ -1,20 +1,63 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import { useNotifications } from '../../hooks/useNotifications';
 import { useAuth } from '../../context/AuthContext';
+import axios from 'axios';
 
 export default function NotificationBell() {
   const { user } = useAuth();
-  const { notifications, connected, 
-          clearNotification, clearAll } = 
-    useNotifications(user?.email);
   const [open, setOpen] = useState(false);
-  const unread = notifications.length;
+  const [unreadCount, setUnreadCount] = useState(0);
 
-  const handleBellClick = () => {
+  // Fetch unread count from API
+  const fetchUnreadCount = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get('/api/v1/notifications/my/unread-count', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      setUnreadCount(response.data.data || 0);
+    } catch (error) {
+      console.error('Error fetching unread count:', error);
+    }
+  };
+
+  const [httpNotifications, setHttpNotifications] = React.useState([]);
+  React.useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    axios.get('/api/v1/notifications/my', { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => setHttpNotifications(r.data?.data || []))
+      .catch(() => {});
+  }, []);
+  const { notifications, connected, 
+          clearNotification, clearAll, usePolling } = 
+    useNotifications(user?.email, fetchUnreadCount);
+
+  useEffect(() => {
+    if (user) {
+      fetchUnreadCount();
+    }
+  }, [user]);
+
+  const handleBellClick = async () => {
     // Request permission on user click (gesture)
     if (Notification.permission === 'default') {
       Notification.requestPermission();
     }
+    
+    // Mark all as read when opening notifications
+    if (unreadCount > 0) {
+      try {
+        const token = localStorage.getItem('token');
+        await axios.put('/api/v1/notifications/my/mark-read', {}, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        setUnreadCount(0);
+      } catch (error) {
+        console.error('Error marking notifications as read:', error);
+      }
+    }
+    
     setOpen(!open);
   };
 
@@ -60,12 +103,12 @@ export default function NotificationBell() {
           fontSize: '20px',
           padding: '6px',
           borderRadius: '8px',
-          color: connected ? 'inherit' : '#9ca3af'
+          color: connected ? 'inherit' : (usePolling ? '#f59e0b' : '#9ca3af')
         }}
-        title={connected ? 'Connecté' : 'Déconnecté'}
+        title={connected ? 'Connecté (WebSocket)' : usePolling ? 'Connecté (Polling)' : 'Déconnecté'}
       >
         🔔
-        {unread > 0 && (
+        {unreadCount > 0 && (
           <span style={{
             position: 'absolute',
             top: '0px', right: '0px',
@@ -81,7 +124,7 @@ export default function NotificationBell() {
             justifyContent: 'center',
             padding: '0 3px'
           }}>
-            {unread > 9 ? '9+' : unread}
+            {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
       </button>
@@ -114,20 +157,9 @@ export default function NotificationBell() {
               fontWeight: '600', fontSize: '14px' 
             }}>
               Notifications
-              {connected && (
-                <span style={{
-                  marginLeft: '8px',
-                  fontSize: '10px',
-                  color: '#16a34a',
-                  background: '#d1fae5',
-                  padding: '2px 6px',
-                  borderRadius: '99px'
-                }}>
-                  ● Live
-                </span>
-              )}
+
             </span>
-            {notifications.length > 0 && (
+            {httpNotifications.length > 0 && (
               <button
                 onClick={clearAll}
                 style={{
@@ -145,7 +177,7 @@ export default function NotificationBell() {
 
           {/* Notifications list */}
           <div style={{ overflowY: 'auto', flex: 1 }}>
-            {notifications.length === 0 ? (
+            {httpNotifications.length === 0 ? (
               <div style={{
                 padding: '2rem',
                 textAlign: 'center',
@@ -155,7 +187,7 @@ export default function NotificationBell() {
                 Aucune notification
               </div>
             ) : (
-              notifications.map((notif, idx) => (
+              httpNotifications.map((notif, idx) => (
                 <div
                   key={idx}
                   style={{

@@ -24,12 +24,12 @@ export const Header = () => {
     ...(user?.role !== 'ADMIN' ? [{ path: '/calculator', label: 'Calculator' }] : []),
     ...(user?.role !== 'ADMIN' ? [{ path: '/traceability', label: 'Traçabilité' }] : []),
     ...(user?.role !== 'ADMIN' ? [
-      { path: '/containers/marketplace', label: '🚢 Marketplace' },
-      { path: '/containers/transactions', label: '📋 Transactions' },
-      { path: '/containers/eir-documents', label: '📄 Documents EIR' },
-      { path: '/vessels', label: '🚢 Tracking Navires' }
+      { path: '/containers/marketplace', label: 'Marketplace' },
+      { path: '/containers/transactions', label: 'Transactions' },
+      { path: '/containers/eir-documents', label: 'Documents EIR' },
+      { path: '/vessels', label: 'Tracking Navires' }
     ] : []),
-    { path: '/support', label: '🎫 Support' },
+    { path: '/support', label: 'Support' },
     { path: '/about', label: 'About Us' },
     ...(user?.role === 'ADMIN' ? [{ path: '/admin/dashboard', label: 'Admin' }] : []),
   ]
@@ -53,16 +53,16 @@ export const Header = () => {
   return (
     <header
       style={{ position: 'relative', zIndex: 100 }}
-      className={`fixed top-0 left-0 right-0 transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 transition-all duration-300 z-50 min-h-[64px] ${
         isScrolled
-          ? 'bg-white shadow-lg py-3'
-          : 'bg-white/95 backdrop-blur-sm py-4'
+          ? 'bg-[#0B1F3A] shadow-lg py-3'
+          : 'bg-gradient-to-r from-[#0B1F3A] to-[#1CA7C7] py-4'
       }`}
     >
       <div className="max-w-7xl mx-auto px-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between min-h-[64px]">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 group">
+          <Link to="/" className="flex items-center gap-3 group mr-12">
             <div className="relative">
               <div className="w-14 h-14 bg-gradient-to-br from-maritime-navy via-maritime-deepBlue to-accent-500 rounded-xl flex items-center justify-center shadow-xl group-hover:shadow-2xl transition-all duration-300 group-hover:scale-105 border-2 border-accent-500/20">
                 <Ship className="w-7 h-7 text-white drop-shadow-lg" />
@@ -72,10 +72,10 @@ export const Header = () => {
               </div>
             </div>
             <div>
-              <h1 className="text-xl font-bold text-maritime-navy leading-tight tracking-tight">
+              <h1 className="text-xl font-bold text-white leading-tight tracking-tight">
                 Smart Export
               </h1>
-              <p className="text-xs font-medium text-gray-600 leading-tight">
+              <p className="text-xs font-medium text-white/80 leading-tight">
                 Global Maritime Trade
               </p>
             </div>
@@ -89,8 +89,8 @@ export const Header = () => {
                 to={link.path + (link.hash || '')}
                 className={`text-sm font-semibold transition-colors duration-200 ${
                   location.pathname === link.path && !link.hash
-                    ? 'text-accent-500'
-                    : 'text-gray-700 hover:text-accent-500'
+                    ? 'text-white'
+                    : 'text-white/80 hover:text-white'
                 }`}
               >
                 {link.label}

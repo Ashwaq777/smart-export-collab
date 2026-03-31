@@ -7,7 +7,7 @@ export const MainLayout = ({ children, showHeader = true, showFooter = true }) =
     <div className="min-h-screen bg-maritime-cream">
       {showHeader && <Header />}
       
-      <main className="min-h-screen">
+      <main className="min-h-screen pt-20">
         {children}
       </main>
 

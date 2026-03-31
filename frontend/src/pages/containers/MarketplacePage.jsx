@@ -53,20 +53,28 @@ export default function MarketplacePage() {
     'DANGEROUS','PERISHABLE'];
 
   return (
-    <div style={{ padding: '2rem', 
-                  maxWidth: '1400px', 
-                  margin: '0 auto' }}>
-      <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '28px', 
-                     fontWeight: '700',
-                     margin: '0 0 8px' }}>
-          🏪 Marketplace Conteneurs
-        </h1>
-        <p style={{ color: '#6b7280', margin: 0 }}>
-          {filtered.length} conteneur(s) disponible(s) 
-          dans le monde
-        </p>
+    <div>
+      {/* Bandeau bleu gradient avec titre */}
+      <div className="bg-gradient-to-r from-[#0B1F3A] to-[#1CA7C7] py-12 px-6">
+        <div className="max-w-7xl mx-auto flex items-center gap-4">
+          <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+              <line x1="12" y1="22.08" x2="12" y2="12"/>
+            </svg>
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-white">Marketplace</h1>
+            <p className="text-white/80 mt-1">Trouvez le conteneur idéal pour votre expédition</p>
+          </div>
+        </div>
       </div>
+
+      {/* Contenu principal */}
+      <div style={{ padding: '2rem', 
+                    maxWidth: '1400px', 
+                    margin: '0 auto' }}>
 
       <div style={{
         display: 'flex', gap: '1rem',
@@ -157,6 +165,7 @@ export default function MarketplacePage() {
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 }

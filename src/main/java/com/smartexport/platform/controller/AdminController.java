@@ -1,5 +1,6 @@
 package com.smartexport.platform.controller;
 
+import com.smartexport.platform.containers.entity.ContainerOffer;
 import com.smartexport.platform.containers.entity.ContainerTransaction;
 import com.smartexport.platform.containers.entity.enums.ContainerOfferStatus;
 import com.smartexport.platform.containers.entity.enums.WorkflowStatus;
@@ -18,6 +19,10 @@ import com.smartexport.platform.service.OverpassPortService;
 import com.smartexport.platform.service.UserAdminService;
 import com.smartexport.platform.support.repository.SupportTicketRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -359,6 +364,139 @@ public class AdminController {
         } catch (Exception e) {
             log.error("Error fetching recent transactions", e);
             return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    // Container Management Endpoints
+    
+    @GetMapping("/containers/stats")
+    public ResponseEntity<Map<String, Object>> getContainerStats() {
+        try {
+            long totalActive = 0;
+            long totalInactive = 0;
+            Map<String, Long> typeDistribution = new HashMap<>();
+            Map<String, Long> countryDistribution = new HashMap<>();
+            
+            try {
+                List<ContainerOffer> allOffers = containerOfferRepository.findAll();
+                log.info("Found {} total offers", allOffers.size());
+                
+                for (ContainerOffer offer : allOffers) {
+                    // Count by status
+                    if (offer.getStatus() == ContainerOfferStatus.AVAILABLE) {
+                        totalActive++;
+                    } else {
+                        totalInactive++;
+                    }
+                    
+                    // Count by type
+                    String type = offer.getContainerType() != null ? offer.getContainerType().toString() : "UNKNOWN";
+                    typeDistribution.put(type, typeDistribution.getOrDefault(type, 0L) + 1);
+                    
+                    // Count by country/location
+                    String location = offer.getLocation() != null ? offer.getLocation() : "UNKNOWN";
+                    countryDistribution.put(location, countryDistribution.getOrDefault(location, 0L) + 1);
+                }
+                
+                log.info("Container stats - Active: {}, Inactive: {}", totalActive, totalInactive);
+            } catch (Exception e) {
+                log.error("Error calculating container stats", e);
+            }
+            
+            Map<String, Object> stats = new HashMap<>();
+            stats.put("totalActive", totalActive);
+            stats.put("totalInactive", totalInactive);
+            stats.put("typeDistribution", typeDistribution);
+            stats.put("countryDistribution", countryDistribution);
+            
+            return ResponseEntity.ok(stats);
+        } catch (Exception e) {
+            log.error("Error fetching container stats", e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/containers")
+    public ResponseEntity<Page<Map<String, Object>>> getContainers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        try {
+            log.info("Fetching containers page {} size {}", page, size);
+            
+            Pageable pageable = PageRequest.of(page, size);
+            List<ContainerOffer> allOffers = containerOfferRepository.findAll();
+            
+            // Convert to DTOs
+            List<Map<String, Object>> containerDTOs = allOffers.stream()
+                .skip((long) page * size)
+                .limit(size)
+                .map(offer -> {
+                    Map<String, Object> dto = new HashMap<>();
+                    dto.put("id", offer.getId());
+                    dto.put("containerType", offer.getContainerType() != null ? offer.getContainerType().toString() : "UNKNOWN");
+                    dto.put("location", offer.getLocation());
+                    dto.put("status", offer.getStatus() != null ? offer.getStatus().toString() : "UNKNOWN");
+                    dto.put("ownerName", offer.getProvider() != null ? 
+                        (offer.getProvider().getFirstName() + " " + offer.getProvider().getLastName()).trim() : "Unknown");
+                    dto.put("ownerEmail", offer.getProvider() != null ? offer.getProvider().getEmail() : "unknown@example.com");
+                    dto.put("cargoType", offer.getCargoType() != null ? offer.getCargoType().toString() : "UNKNOWN");
+                    dto.put("availableDate", offer.getAvailableDate());
+                    // Remove price as it doesn't exist in ContainerOffer entity
+                    return dto;
+                })
+                .collect(Collectors.toList());
+            
+            // Create page
+            Page<Map<String, Object>> pageResult = new PageImpl<>(
+                containerDTOs, 
+                pageable, 
+                allOffers.size()
+            );
+            
+            log.info("Returning {} containers out of {} total", containerDTOs.size(), allOffers.size());
+            return ResponseEntity.ok(pageResult);
+        } catch (Exception e) {
+            log.error("Error fetching containers", e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @PutMapping("/containers/{id}/deactivate")
+    public ResponseEntity<Map<String, Object>> deactivateContainer(@PathVariable Long id) {
+        try {
+            ContainerOffer offer = containerOfferRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Container not found: " + id));
+            
+            offer.setStatus(ContainerOfferStatus.RESERVED); // Using RESERVED as deactivated state
+            containerOfferRepository.save(offer);
+            
+            log.info("Deactivated container {}", id);
+            return ResponseEntity.ok(Map.of("message", "Container deactivated", "id", id));
+        } catch (RuntimeException e) {
+            log.error("Error deactivating container {}", id, e);
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            log.error("Error deactivating container {}", id, e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @DeleteMapping("/containers/{id}")
+    public ResponseEntity<Map<String, Object>> deleteContainer(@PathVariable Long id) {
+        try {
+            ContainerOffer offer = containerOfferRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Container not found: " + id));
+            
+            containerOfferRepository.delete(offer);
+            
+            log.info("Deleted container {}", id);
+            return ResponseEntity.ok(Map.of("message", "Container deleted", "id", id));
+        } catch (RuntimeException e) {
+            log.error("Error deleting container {}", id, e);
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            log.error("Error deleting container {}", id, e);
+            return ResponseEntity.internalServerError().build();
         }
     }
 }

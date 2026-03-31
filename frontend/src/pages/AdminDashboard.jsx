@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { Ship, Anchor, Users, CreditCard, MapPin, Package, BarChart2, Globe, DollarSign, MessageSquare } from "lucide-react"
 import api from '../services/api'
+import AdminContainerManager from '../components/admin/AdminContainerManager'
 
 const TOKEN = () => localStorage.getItem('token') || ''
 const NAVY = '#0B1F3A';
@@ -1578,37 +1579,7 @@ export default function AdminDashboard() {
         )}
 
       {/* Placeholder Tabs */}
-        {activeTab === 'containers' && (
-          <div style={{
-            background: 'white',
-            border: '1px solid #E2E8F0',
-            borderRadius: '0.75rem',
-            padding: '3rem',
-            textAlign: 'center'
-          }}>
-            <div style={{
-              fontSize: '3rem',
-              marginBottom: '1rem'
-            }}>
-              📦
-            </div>
-            <h3 style={{
-              fontSize: '1.25rem',
-              fontWeight: '600',
-              color: '#1B2A4A',
-              margin: '0 0 0.5rem 0'
-            }}>
-              Gestion des Conteneurs
-            </h3>
-            <p style={{
-              fontSize: '0.875rem',
-              color: '#64748B',
-              margin: 0
-            }}>
-              Cette section sera bientôt disponible
-            </p>
-          </div>
-        )}
+        {activeTab === 'containers' && <AdminContainerManager />}
 
         {activeTab === 'transactions' && (
           <div>

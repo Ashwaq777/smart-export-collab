@@ -102,7 +102,7 @@ function App() {
             <Route path="/containers/marketplace" element={
               <ProtectedRoute excludeRole="ADMIN">
                 <MainLayout>
-                  <ContainersPage />
+                  <MarketplacePage />
                 </MainLayout>
               </ProtectedRoute>
             } />

@@ -9,10 +9,13 @@ export function useNotifications(userEmail, onNewNotification) {
   const [usePolling, setUsePolling] = useState(false);
   const clientRef = useRef(null);
   const pollingIntervalRef = useRef(null);
+  const pollingStarted = useRef(false);
 
   // Polling fallback function
   const startPolling = () => {
     if (pollingIntervalRef.current) return;
+    if (pollingStarted.current) return;
+    pollingStarted.current = true;
     
     console.log('Starting polling fallback for notifications');
     setUsePolling(true);
@@ -49,6 +52,7 @@ export function useNotifications(userEmail, onNewNotification) {
       clearInterval(pollingIntervalRef.current);
       pollingIntervalRef.current = null;
     }
+    pollingStarted.current = false;
     setUsePolling(false);
   };
 
@@ -60,6 +64,7 @@ export function useNotifications(userEmail, onNewNotification) {
 
     let reconnectDelay = 1000; // Start with 1 second
     const maxReconnectAttempts = 3;
+    let retryCount = 0;
 
     const client = new Client({
       webSocketFactory: () => 
@@ -97,9 +102,12 @@ export function useNotifications(userEmail, onNewNotification) {
         setConnected(false);
         console.log('WebSocket disconnected');
         
-        // Start polling if we haven't exceeded reconnection attempts
-        if (reconnectAttempts >= maxReconnectAttempts) {
+        retryCount++;
+        if (retryCount >= maxReconnectAttempts) {
+          console.log('Max reconnection attempts reached, stopping WebSocket');
+          client.deactivate();
           startPolling();
+          return;
         }
       },
       onStompError: (frame) => {
@@ -123,11 +131,16 @@ export function useNotifications(userEmail, onNewNotification) {
     client.beforeConnect = () => {
       if (reconnectAttempts >= maxReconnectAttempts) {
         console.log('Max reconnection attempts reached, stopping WebSocket');
+        client.deactivate();
+        startPolling();
         return false;
       }
       
       // Exponential backoff
       reconnectDelay = Math.min(reconnectDelay * 2, 8000); // Max 8 seconds
+      
+      // Increment attempts counter
+      setReconnectAttempts(prev => prev + 1);
       
       if (originalBeforeConnect) {
         return originalBeforeConnect();
@@ -141,6 +154,7 @@ export function useNotifications(userEmail, onNewNotification) {
     return () => {
       client.deactivate();
       stopPolling();
+      pollingStarted.current = false;
     };
   }, [userEmail, onNewNotification, reconnectAttempts]);
 

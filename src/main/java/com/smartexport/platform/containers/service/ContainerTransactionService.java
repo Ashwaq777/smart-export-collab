@@ -12,6 +12,7 @@ import com.smartexport.platform.notification.PushNotificationService;
 import com.smartexport.platform.notification.dto.NotificationPayload;
 import com.smartexport.platform.containers.repository.ContainerMatchRepository;
 import com.smartexport.platform.containers.repository.ContainerTransactionRepository;
+import com.smartexport.platform.entity.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -183,10 +184,27 @@ public class ContainerTransactionService {
                         "Transaction not found: " + transactionId));
         
         // Only provider can advance status
-        Long providerId = tx.getMatch().getOffer().getProvider().getId();
-        if (!providerId.equals(userId)) {
+        if (tx.getMatch() == null) {
+            throw new RuntimeException("Match not found for transaction " + transactionId);
+        }
+        if (tx.getMatch().getOffer() == null) {
+            throw new RuntimeException("Offer not found for transaction " + transactionId);
+        }
+        
+        User provider = tx.getMatch().getOffer().getProvider();
+        if (provider == null) {
+            throw new RuntimeException("Provider not found for transaction " + transactionId);
+        }
+        Long providerId = provider.getId();
+        Long seekerId = tx.getMatch().getRequest() != null && tx.getMatch().getRequest().getSeeker() != null ? 
+          tx.getMatch().getRequest().getSeeker().getId() : null;
+        
+        boolean isAuthorized = providerId.equals(userId) || 
+          (seekerId != null && seekerId.equals(userId));
+        
+        if (!isAuthorized) {
             throw new UnauthorizedContainerAccessException(
-                    "Only provider can advance transaction status");
+                "Only provider or seeker can advance transaction status");
         }
         
         WorkflowStatus currentStatus = tx.getWorkflowStatus();
@@ -219,8 +237,8 @@ public class ContainerTransactionService {
     private WorkflowStatus getNextWorkflowStatus(WorkflowStatus current) {
         return switch (current) {
             case AT_PROVIDER -> WorkflowStatus.IN_TRANSIT;
-            case IN_TRANSIT -> WorkflowStatus.DELIVERED;
-            case DELIVERED -> WorkflowStatus.LOADING;
+            case IN_TRANSIT -> WorkflowStatus.DELIVERED_TO_EXPORTER;
+            case DELIVERED_TO_EXPORTER -> WorkflowStatus.LOADING;
             case LOADING -> WorkflowStatus.COMPLETED;
             case COMPLETED -> null; // Already at final status
         };

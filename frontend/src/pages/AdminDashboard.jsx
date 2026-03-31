@@ -361,7 +361,7 @@ export default function AdminDashboard() {
     switch(status) {
       case 'AT_PROVIDER': return { bg: '#FEF3C7', text: '#92400E' }
       case 'IN_TRANSIT': return { bg: '#DBEAFE', text: '#1E40AF' }
-      case 'DELIVERED': return { bg: '#D1FAE5', text: '#065F46' }
+      case 'DELIVERED_TO_EXPORTER': return { bg: '#D1FAE5', text: '#065F46' }
       case 'COMPLETED': return { bg: '#E0F2FE', text: '#0369A1' }
       case 'LOADING': return { bg: '#F3F4F6', text: '#6B7280' }
       default: return { bg: '#F3F4F6', text: '#6B7280' }

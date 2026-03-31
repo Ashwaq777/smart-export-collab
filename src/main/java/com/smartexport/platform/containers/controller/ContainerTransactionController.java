@@ -67,10 +67,28 @@ public class ContainerTransactionController {
     @Operation(summary = "Advance workflow status to next step")
     public ResponseEntity<ContainerApiResponse<Void>> advanceStatus(
             @PathVariable Long id) {
-        Long userId = ContainerSecurityUtils.getCurrentUserId(userRepository);
-        transactionService.advanceWorkflowStatus(id, userId);
-        return ResponseEntity.ok(
-            ContainerApiResponse.success("Status advanced", null));
+        try {
+            Long userId = ContainerSecurityUtils.getCurrentUserId(userRepository);
+            transactionService.advanceWorkflowStatus(id, userId);
+            return ResponseEntity.ok(
+                ContainerApiResponse.success("Status advanced", null));
+        } catch (Exception e) {
+            // Log the exact exception for debugging
+            System.err.println("Error in advanceStatus for transaction " + id + ": " + e.getClass().getSimpleName() + " - " + e.getMessage());
+            e.printStackTrace();
+            
+            // Return appropriate error response
+            if (e.getMessage().contains("Only provider can advance")) {
+                return ResponseEntity.status(403)
+                    .body(ContainerApiResponse.error("Seul le provider peut avancer le statut de la transaction"));
+            } else if (e.getMessage().contains("not found")) {
+                return ResponseEntity.status(404)
+                    .body(ContainerApiResponse.error("Transaction ou utilisateur non trouvé"));
+            } else {
+                return ResponseEntity.status(500)
+                    .body(ContainerApiResponse.error("Erreur interne: " + e.getMessage()));
+            }
+        }
     }
 
     // POST /{id}/eir — upload EIR document

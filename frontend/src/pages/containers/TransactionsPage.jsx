@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import containerService from '../../services/containerService';
 
@@ -31,7 +31,7 @@ export default function TransactionsPage() {
   const workflowSteps = [
     { key: 'AT_PROVIDER', label: '🏭 Chez provider' },
     { key: 'IN_TRANSIT', label: '🚛 En transit' },
-    { key: 'DELIVERED', label: '📦 Livré' },
+    { key: 'DELIVERED_TO_EXPORTER', label: '📦 Livré' },
     { key: 'LOADING', label: '⚓ Chargement' },
     { key: 'COMPLETED', label: '✅ Terminé' },
   ];
@@ -43,10 +43,22 @@ export default function TransactionsPage() {
 
   const handleAdvanceStatus = async (txId) => {
     try {
-      await containerService.advanceTransactionStatus(txId);
+      const token = localStorage.getItem('token');
+      const response = await fetch(
+        `http://localhost:8080/api/v1/containers/transactions/${txId}/advance-status`,
+        {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       await loadTransactions();
     } catch (err) {
-      alert('Erreur: ' + (err.response?.data?.message || err.message));
+      console.error('Erreur advance-status:', err);
+      alert('Erreur: ' + err.message);
     }
   };
 
@@ -106,7 +118,7 @@ export default function TransactionsPage() {
   };
 
   const getWorkflowTimeline = (status, txId) => {
-    const steps = ['AT_PROVIDER', 'IN_TRANSIT', 'DELIVERED', 'LOADING', 'COMPLETED'];
+    const steps = ['AT_PROVIDER', 'IN_TRANSIT', 'DELIVERED_TO_EXPORTER', 'LOADING', 'COMPLETED'];
     const labels = ['Chez provider', 'En transit', 'Livré', 'Chargement', 'Terminé'];
     const currentIndex = steps.indexOf(status);
     
@@ -114,7 +126,7 @@ export default function TransactionsPage() {
       <div>
         <div style={{ display: 'flex', alignItems: 'center', margin: '20px 0' }}>
           {steps.map((step, i) => (
-            <>
+            <React.Fragment key={i}>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <div style={{
                   width: 28, height: 28, borderRadius: '50%',
@@ -136,7 +148,7 @@ export default function TransactionsPage() {
                   marginBottom: 16
                 }}/>
               )}
-            </>
+            </React.Fragment>
           ))}
         </div>
         

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNotifications } from '../../hooks/useNotifications';
+import useNotifications from '../../hooks/useNotifications';
 import { useAuth } from '../../context/AuthContext';
 import axios from 'axios';
 

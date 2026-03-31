@@ -227,8 +227,8 @@ export default function ContainersPage() {
   };
 
   // Tabs definition per role
-  const importateurTabs = ['📦 Mes Offres', '📬 Demandes reçues', '🤝 Mes Correspondances', '🗺️ Carte'];
-  const exportateurTabs = ['🏪 Marketplace', '🔍 Mes Demandes', '📬 Mes Requêtes', '🤝 Mes Correspondances', '🗺️ Carte'];
+  const importateurTabs = ['Mes Offres', 'Demandes reçues', 'Mes Correspondances', 'Carte'];
+  const exportateurTabs = ['Marketplace', 'Mes Demandes', 'Mes Requêtes', 'Mes Correspondances', 'Carte'];
   const tabs = isImportateur ? importateurTabs : exportateurTabs;
 
   const statCards = [

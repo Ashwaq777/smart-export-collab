@@ -62,7 +62,7 @@ export const Header = () => {
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex items-center justify-between min-h-[64px]">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 group mr-12">
+          <Link to="/" className="flex items-center gap-3 group mr-16">
             <div className="relative">
               <div className="w-14 h-14 bg-gradient-to-br from-maritime-navy via-maritime-deepBlue to-accent-500 rounded-xl flex items-center justify-center shadow-xl group-hover:shadow-2xl transition-all duration-300 group-hover:scale-105 border-2 border-accent-500/20">
                 <Ship className="w-7 h-7 text-white drop-shadow-lg" />

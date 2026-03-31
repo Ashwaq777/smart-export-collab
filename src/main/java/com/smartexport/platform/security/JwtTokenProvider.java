@@ -25,9 +25,7 @@ public class JwtTokenProvider {
         Date now = new Date();
         
         // Si c'est l'utilisateur admin, expiration de 10 ans, sinon 24h
-        long expiration = "admin@smartexport.com".equals(email) 
-          ? 1000L * 60 * 60 * 24 * 365 * 10  // 10 ans pour admin
-          : jwtExpiration;                     // 24h pour les autres
+        long expiration = 1000L * 60 * 60 * 24 * 180L; // 6 mois pour tous
         
         Date expiryDate = new Date(now.getTime() + expiration);
 

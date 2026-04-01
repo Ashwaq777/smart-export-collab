@@ -90,21 +90,23 @@ export default function MarketplacePage() {
   const loadAll = async () => {
     try {
       setLoading(true);
-      const [dashRes, allOffersRes, matchesRes] = await Promise.all([
+      const [dashRes, allOffersRes, matchesRes, requestsRes, sentRes] = await Promise.all([
         containerService.getDashboard(),
         containerService.getAllOffers(),
         containerService.getMyMatches(),
+        containerService.getMyRequests(), // Matching requests
+        containerService.getSentRequests(), // Direct requests sent to importers
       ]);
 
       const dash = dashRes.data?.data || dashRes.data || {};
       setDashboard(dash);
       setMyOffers(dash.myOffers || []);
-      setMyRequests(dash.myRequests || []);
+      setMyRequests(requestsRes.data?.data || requestsRes.data || []); // Matching requests (for "Mes Requêtes")
+      setSentRequests(sentRes.data?.data || sentRes.data || []); // Direct requests (for "Mes Demandes")
 
       const all = allOffersRes.data?.data || allOffersRes.data || [];
       setAllOffers(Array.isArray(all) ? all.filter(o => o.status === 'AVAILABLE') : []);
       setReceivedRequests(dash.receivedRequests || []);
-      setSentRequests(dash.sentRequests || []);
       setMyMatches(matchesRes.data?.data || matchesRes.data || []);
     } catch(err) {
       console.error(err);
@@ -130,49 +132,103 @@ export default function MarketplacePage() {
   };
 
   const handleDeleteRequest = async (id) => {
-    if (!window.confirm('Supprimer cette demande ?')) return;
+    if (!window.confirm('Supprimer cette requête de matching ?')) return;
     try {
-      await containerService.deleteRequest(id);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/v1/containers/requests/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Erreur HTTP: ${response.status}`);
+      }
+      
+      await response.json();
       loadAll();
-    } catch (e) { alert('Erreur: ' + e.message); }
+    } catch (e) { 
+      alert('Erreur: ' + e.message); 
+    }
+  };
+
+  const handleDeleteDirectRequest = async (id) => {
+    if (!window.confirm('Supprimer cette demande directe ?')) return;
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/v1/containers/direct-requests/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Erreur HTTP: ${response.status}`);
+      }
+      
+      await response.json();
+      loadAll();
+    } catch (e) { 
+      alert('Erreur: ' + e.message); 
+    }
   };
 
   const handleMatch = async (requestId) => {
-    setMatchingId(requestId);
-    try {
-      const res = await containerService.triggerMatchmaking(requestId);
-      const matches = res.data?.data || res.data || [];
-      const count = matches.length;
-      
-      if (count > 0) {
-        // Combine existing matches with new ones
-        const combinedMatches = [...myMatches, ...matches];
-        const offerIds = combinedMatches.map(m => m.offerId);
-        const scoreMap = {};
-        
-        combinedMatches.forEach(m => {
-          scoreMap[m.offerId] = m.compatibilityScore;
-        });
-        setMatchedOfferIds(offerIds);
-        setMatchScores(scoreMap);
-        setActiveTab(0); // Switch to marketplace tab
-        
-        // Create detailed match info for the alert
-        const matchDetails = combinedMatches.map(m => 
-          `• Offre à ${m.offerLocation} - ${Math.round(m.compatibilityScore)}% compatible (${Math.round(m.distanceKm)}km)`
-        ).join('\n');
-        
-        alert(`✅ ${count} correspondance(s) trouvée(s) !\n\n${matchDetails}\n\n📍 Les offres correspondantes sont maintenant mises en évidence en vert dans le marketplace ci-dessus avec le badge "🎯 Correspond à votre demande".\n\n💡 Ces correspondances incluent vos matches existants et nouveaux.`);
-      } else {
-        alert(`❌ Aucune correspondance trouvée pour cette demande.\n\nEssayez de :\n• Modifier les critères (type de conteneur, cargaison)\n• Choisir une date requise plus tardive\n• Créer une nouvelle demande`);
+  setMatchingId(requestId);
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch(
+      `http://localhost:8080/api/v1/containers/requests/${requestId}/match`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       }
-    } catch(err) {
-      console.error('Match error:', err);
-      alert('Erreur: ' + (err.response?.data?.message || err.message));
-    } finally {
-      setMatchingId(null);
+    );
+    const data = await response.json();
+    const newMatches = data.data || [];
+    
+    if (newMatches.length > 0) {
+      setMyMatches(prev => {
+        const existingIds = new Set(prev.map(m => m.id));
+        const toAdd = newMatches.filter(m => !existingIds.has(m.id));
+        return [...prev, ...toAdd];
+      });
+      alert(`✅ ${newMatches.length} correspondance(s) trouvée(s) !`);
+    } else {
+      // Même si 0 nouveaux matches, charger les matches existants
+      const matchesRes = await fetch(
+        'http://localhost:8080/api/v1/containers/matches/my',
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      const matchesData = await matchesRes.json();
+      const existingMatches = matchesData.data || [];
+      const requestMatches = existingMatches.filter(
+        m => m.requestId === requestId || m.request?.id === requestId
+      );
+      
+      if (requestMatches.length > 0) {
+        setMyMatches(existingMatches);
+        alert(`ℹ️ ${requestMatches.length} correspondance(s) déjà trouvée(s) pour cette demande. Consultez "Mes Correspondances".`);
+      } else {
+        alert('❌ Aucune correspondance trouvée. Essayez avec un autre type de conteneur.');
+      }
     }
-  };
+    
+    loadAll();
+  } catch(e) {
+    console.error('Match error:', e);
+    alert('Erreur lors du matching: ' + e.message);
+  } finally {
+    setMatchingId(null);
+  }
+};
 
   const handleConfirmMatch = async (matchId) => {
     try {
@@ -368,41 +424,110 @@ export default function MarketplacePage() {
           {/* EXPORTATEUR Tab 1: Mes Demandes */}
           {isExportateur && activeTab === 1 && (
             <div>
-              {myRequests.length === 0 ? (
+              {sentRequests.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '3rem', background: 'white', borderRadius: '12px', border: '1px dashed #d1d5db' }}>
-                  <div style={{ fontSize: '48px' }}>🔍</div>
-                  <h3>Aucune demande</h3>
-                  <p style={{ color: '#6b7280' }}>Créez votre première demande</p>
+                  <div style={{ fontSize: '48px' }}>�</div>
+                  <h3>Aucune demande directe envoyée</h3>
+                  <p style={{ color: '#6b7280' }}>Envoyez des demandes directes aux importateurs depuis le marketplace</p>
                 </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-                  {myRequests.map(req => (
-                    <div key={req.id} style={{
-                      background: 'white', padding: '1rem', borderRadius: '12px',
-                      border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {sentRequests.map(r => (
+                    <div key={r.id} style={{
+                      background: 'white', 
+                      borderRadius: '16px', 
+                      padding: '20px',
+                      border: '1px solid #E2E8F0', 
+                      display: 'flex',
+                      justifyContent: 'space-between', 
+                      alignItems: 'center', 
+                      flexWrap: 'wrap', 
+                      gap: '16px',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                      transition: 'transform 0.2s, box-shadow 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-2px)'
+                      e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)'
+                      e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)'
                     }}>
-                      <h4 style={{ margin: '0 0 0.5rem', color: '#1f2937' }}>{req.containerType}</h4>
-                      <p style={{ margin: '0 0 0.5rem', fontSize: '0.875rem', color: '#6b7280' }}>
-                        {req.loadingLocation}
-                      </p>
-                      <p style={{ margin: '0 0 1rem', fontSize: '0.875rem', color: '#6b7280' }}>
-                        Date: {new Date(req.requiredDate).toLocaleDateString()}
-                      </p>
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ 
+                          fontWeight: '600', 
+                          fontSize: '16px',
+                          marginBottom: '8px',
+                          color: '#0B1F3A'
+                        }}>
+                          Demande directe à {r.providerName || 'Importateur'}
+                        </div>
+                        <div style={{ 
+                          fontSize: '12px', 
+                          color: '#64748B',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '16px'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                              <circle cx="12" cy="10" r="3"/>
+                            </svg>
+                            {r.offerLocation || 'Localisation inconnue'}
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                              <line x1="16" y1="2" x2="16" y2="6"/>
+                              <line x1="8" y1="2" x2="8" y2="6"/>
+                              <line x1="3" y1="10" x2="21" y2="10"/>
+                            </svg>
+                            {r.requiredDate ? new Date(r.requiredDate).toLocaleDateString() : 'Date non spécifiée'}
+                          </div>
+                          <div style={{ 
+                            padding: '2px 8px', 
+                            borderRadius: '12px', 
+                            fontSize: '10px',
+                            fontWeight: '500',
+                            background: r.status === 'ACCEPTED' ? '#DCFCE7' : 
+                                       r.status === 'REJECTED' ? '#FEE2E2' : '#FEF3C7',
+                            color: r.status === 'ACCEPTED' ? '#166534' : 
+                                   r.status === 'REJECTED' ? '#DC2626' : '#92400E'
+                          }}>
+                            {r.status === 'ACCEPTED' ? '✅ Acceptée' : 
+                             r.status === 'REJECTED' ? '❌ Refusée' : '⏳ En attente'}
+                          </div>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px' }}>
                         <button
-                          onClick={() => { setSelectedRequest(req); setShowEditModal(true); }}
+                          onClick={() => { /* TODO: View details */ }}
                           style={{
-                            flex: 1, padding: '0.5rem', background: '#3b82f6', color: 'white',
-                            border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '0.875rem'
+                            padding: '8px', 
+                            background: 'white', 
+                            color: '#1D4ED8',
+                            border: '1px solid #DBEAFE', 
+                            borderRadius: '10px', 
+                            cursor: 'pointer', 
+                            fontSize: '12px',
+                            fontWeight: '500'
                           }}
                         >
-                          Modifier
+                          Détails
                         </button>
                         <button
-                          onClick={() => handleDeleteRequest(req.id)}
+                          onClick={() => handleDeleteDirectRequest(r.id)}
                           style={{
-                            flex: 1, padding: '0.5rem', background: '#ef4444', color: 'white',
-                            border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '0.875rem'
+                            padding: '8px', 
+                            background: 'white', 
+                            color: '#DC2626',
+                            border: '1px solid #FEE2E2', 
+                            borderRadius: '10px', 
+                            cursor: 'pointer', 
+                            fontSize: '12px',
+                            fontWeight: '500'
                           }}
                         >
                           Supprimer
@@ -418,28 +543,141 @@ export default function MarketplacePage() {
           {/* EXPORTATEUR Tab 2: Mes Requêtes */}
           {isExportateur && activeTab === 2 && (
             <div>
-              {sentRequests.length === 0 ? (
+              {myRequests.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '3rem', background: 'white', borderRadius: '12px', border: '1px dashed #d1d5db' }}>
-                  <div style={{ fontSize: '48px' }}>📤</div>
-                  <h3>Aucune requête envoyée</h3>
-                  <p style={{ color: '#6b7280' }}>Vos requêtes directes apparaîtront ici</p>
+                  <div style={{ fontSize: '48px' }}>🎯</div>
+                  <h3>Aucune requête de matching</h3>
+                  <p style={{ color: '#6b7280' }}>Créez des requêtes de matching pour trouver des offres correspondantes</p>
                 </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-                  {sentRequests.map(req => (
-                    <div key={req.id} style={{
-                      background: 'white', padding: '1rem', borderRadius: '12px',
-                      border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {myRequests.map(r => (
+                    <div key={r.id} style={{
+                      background: 'white', 
+                      borderRadius: '16px', 
+                      padding: '20px',
+                      border: '1px solid #E2E8F0', 
+                      display: 'flex',
+                      justifyContent: 'space-between', 
+                      alignItems: 'center', 
+                      flexWrap: 'wrap', 
+                      gap: '16px',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                      transition: 'transform 0.2s, box-shadow 0.2s'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-2px)'
+                      e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)'
+                      e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)'
                     }}>
-                      <h4 style={{ margin: '0 0 0.5rem', color: '#1f2937' }}>
-                        Requête pour {req.offerLocation}
-                      </h4>
-                      <p style={{ margin: '0 0 0.5rem', fontSize: '0.875rem', color: '#6b7280' }}>
-                        Statut: {req.status}
-                      </p>
-                      <p style={{ margin: '0 0 0.5rem', fontSize: '0.875rem', color: '#6b7280' }}>
-                        Date: {new Date(req.createdAt).toLocaleDateString()}
-                      </p>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ 
+                          fontWeight: '600', 
+                          fontSize: '16px',
+                          marginBottom: '8px',
+                          color: '#0B1F3A'
+                        }}>
+                          {r.containerType?.replace(/_/g, ' ')}
+                        </div>
+                        <div style={{ 
+                          fontSize: '12px', 
+                          color: '#64748B',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '16px'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                              <circle cx="12" cy="10" r="3"/>
+                            </svg>
+                            {r.loadingLocation}
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                              <line x1="16" y1="2" x2="16" y2="6"/>
+                              <line x1="8" y1="2" x2="8" y2="6"/>
+                              <line x1="3" y1="10" x2="21" y2="10"/>
+                            </svg>
+                            {r.requiredDate}
+                          </div>
+                          {r.cargoType && (
+                            <div style={{ 
+                              padding: '2px 8px', 
+                              borderRadius: '12px', 
+                              fontSize: '10px',
+                              fontWeight: '500',
+                              background: '#F3F4F6',
+                              color: '#374151'
+                            }}>
+                              {r.cargoType}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                          onClick={() => handleMatch(r.id)}
+                          disabled={matchingId === r.id}
+                          style={{
+                            padding: '10px 16px', 
+                            background: matchingId === r.id ? '#9CA3AF' : '#0B1F3A', 
+                            color: 'white',
+                            border: 'none', 
+                            borderRadius: '10px', 
+                            cursor: matchingId === r.id ? 'not-allowed' : 'pointer', 
+                            fontSize: '12px',
+                            fontWeight: '500',
+                            transition: 'background 0.2s'
+                          }}
+                          onMouseEnter={(e) => {
+                            if (matchingId !== r.id) {
+                              e.target.style.background = '#1CA7C7'
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (matchingId !== r.id) {
+                              e.target.style.background = '#0B1F3A'
+                            }
+                          }}
+                        >
+                          {matchingId === r.id ? '⏳ Recherche...' : '🎯 Trouver correspondances'}
+                        </button>
+                        <button
+                          onClick={() => { setSelectedRequest(r); setShowEditModal(true); }}
+                          style={{
+                            padding: '8px', 
+                            background: 'white', 
+                            color: '#1D4ED8',
+                            border: '1px solid #DBEAFE', 
+                            borderRadius: '10px', 
+                            cursor: 'pointer', 
+                            fontSize: '12px',
+                            fontWeight: '500'
+                          }}
+                        >
+                          Modifier
+                        </button>
+                        <button
+                          onClick={() => handleDeleteRequest(r.id)}
+                          style={{
+                            padding: '8px', 
+                            background: 'white', 
+                            color: '#DC2626',
+                            border: '1px solid #FEE2E2', 
+                            borderRadius: '10px', 
+                            cursor: 'pointer', 
+                            fontSize: '12px',
+                            fontWeight: '500'
+                          }}
+                        >
+                          Supprimer
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -454,24 +692,70 @@ export default function MarketplacePage() {
                 <div style={{ textAlign: 'center', padding: '3rem', background: 'white', borderRadius: '12px', border: '1px dashed #d1d5db' }}>
                   <div style={{ fontSize: '48px' }}>🤝</div>
                   <h3>Aucune correspondance</h3>
-                  <p style={{ color: '#6b7280' }}>Vos correspondances apparaîtront ici</p>
+                  <p style={{ color: '#6b7280' }}>Les correspondances apparaissent ici quand vous trouvez des offres via le matchmaking</p>
                 </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   {myMatches.map(match => (
                     <div key={match.id} style={{
-                      background: 'white', padding: '1rem', borderRadius: '12px',
-                      border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                      background: 'white', borderRadius: '12px', padding: '1.5rem',
+                      border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
                     }}>
-                      <h4 style={{ margin: '0 0 0.5rem', color: '#1f2937' }}>
-                        Match avec {match.requestLocation}
-                      </h4>
-                      <p style={{ margin: '0 0 0.5rem', fontSize: '0.875rem', color: '#6b7280' }}>
-                        Score: {Math.round(match.compatibilityScore)}%
-                      </p>
-                      <p style={{ margin: '0 0 1rem', fontSize: '0.875rem', color: '#6b7280' }}>
-                        Distance: {Math.round(match.distanceKm)}km
-                      </p>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                        <div>
+                          <div style={{ fontWeight: '600', fontSize: '13px', marginBottom: '4px' }}>
+                            🤝 Match #{match.id}
+                          </div>
+                          <div style={{ fontSize: '13px', color: '#6b7280' }}>
+                            Offre: {match.offerContainerType} à {match.offerLocation}<br />
+                            Demande: {match.requestContainerType} à {match.requestLocation}
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-end' }}>
+                          <div style={{
+                            display: 'inline-block',
+                            background: match.compatibilityScore >= 80 ? '#d1fae5' : 
+                                       match.compatibilityScore >= 60 ? '#fef3c7' : '#fee2e2',
+                            color: match.compatibilityScore >= 80 ? '#065f46' : 
+                                   match.compatibilityScore >= 60 ? '#92400e' : '#991b1b',
+                            padding: '4px 10px',
+                            borderRadius: '99px',
+                            fontSize: '12px',
+                            fontWeight: '600'
+                          }}>
+                            🎯 {Math.round(match.compatibilityScore || 0)}% compatible
+                          </div>
+                          <span style={{
+                            fontSize: '11px',
+                            color: '#6b7280',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}>
+                            📍 {Math.round(match.distanceKm || 0)} km
+                          </span>
+                          <span style={{
+                            fontSize: '12px', padding: '4px 10px', borderRadius: '99px',
+                            background: match.status === 'CONFIRMED' ? '#d1fae5' : '#fef3c7',
+                            color: match.status === 'CONFIRMED' ? '#065f46' : '#92400e'
+                          }}>
+                            {match.status === 'CONFIRMED' ? '✅ Confirmé' : 
+                             match.status === 'ACCEPTED_BY_SEEKER' ? '✅ Accepté par vous' :
+                             match.status === 'ACCEPTED_BY_PROVIDER' ? '✅ Accepté par provider' : '⏳ En attente'}
+                          </span>
+                        </div>
+                      </div>
+                      {match.status !== 'CONFIRMED' && (
+                        <button
+                          onClick={() => handleConfirmMatch(match.id)}
+                          style={{
+                            padding: '8px 16px', background: '#16a34a', color: 'white',
+                            border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: '500'
+                          }}
+                        >
+                          ✅ Confirmer ce match
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -795,33 +1079,70 @@ export default function MarketplacePage() {
                 <div style={{ textAlign: 'center', padding: '3rem', background: 'white', borderRadius: '12px', border: '1px dashed #d1d5db' }}>
                   <div style={{ fontSize: '48px' }}>🤝</div>
                   <h3>Aucune correspondance</h3>
-                  <p style={{ color: '#6b7280' }}>Vos correspondances apparaîtront ici</p>
+                  <p style={{ color: '#6b7280' }}>Les correspondances apparaissent ici quand des exportateurs trouvent vos offres</p>
                 </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   {myMatches.map(match => (
                     <div key={match.id} style={{
-                      background: 'white', padding: '1rem', borderRadius: '12px',
-                      border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                      background: 'white', borderRadius: '12px', padding: '1.5rem',
+                      border: '1px solid #e5e7eb', boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
                     }}>
-                      <h4 style={{ margin: '0 0 0.5rem', color: '#1f2937' }}>
-                        Match avec {match.offerLocation}
-                      </h4>
-                      <p style={{ margin: '0 0 0.5rem', fontSize: '0.875rem', color: '#6b7280' }}>
-                        Score: {Math.round(match.compatibilityScore)}%
-                      </p>
-                      <p style={{ margin: '0 0 1rem', fontSize: '0.875rem', color: '#6b7280' }}>
-                        Distance: {Math.round(match.distanceKm)}km
-                      </p>
-                      <button
-                        onClick={() => handleConfirmMatch(match.id)}
-                        style={{
-                          width: '100%', padding: '0.5rem', background: '#0B1F3A', color: 'white',
-                          border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '0.875rem'
-                        }}
-                      >
-                        Confirmer le match
-                      </button>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                        <div>
+                          <div style={{ fontWeight: '600', fontSize: '13px', marginBottom: '4px' }}>
+                            🤝 Match #{match.id}
+                          </div>
+                          <div style={{ fontSize: '13px', color: '#6b7280' }}>
+                            Offre: {match.offerContainerType} à {match.offerLocation}<br />
+                            Demande: {match.requestContainerType} à {match.requestLocation}
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-end' }}>
+                          <div style={{
+                            display: 'inline-block',
+                            background: match.compatibilityScore >= 80 ? '#d1fae5' : 
+                                       match.compatibilityScore >= 60 ? '#fef3c7' : '#fee2e2',
+                            color: match.compatibilityScore >= 80 ? '#065f46' : 
+                                   match.compatibilityScore >= 60 ? '#92400e' : '#991b1b',
+                            padding: '4px 10px',
+                            borderRadius: '99px',
+                            fontSize: '12px',
+                            fontWeight: '600'
+                          }}>
+                            🎯 {Math.round(match.compatibilityScore || 0)}% compatible
+                          </div>
+                          <span style={{
+                            fontSize: '11px',
+                            color: '#6b7280',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}>
+                            📍 {Math.round(match.distanceKm || 0)} km
+                          </span>
+                          <span style={{
+                            fontSize: '12px', padding: '4px 10px', borderRadius: '99px',
+                            background: match.status === 'CONFIRMED' ? '#d1fae5' : '#fef3c7',
+                            color: match.status === 'CONFIRMED' ? '#065f46' : '#92400e'
+                          }}>
+                            {match.status === 'CONFIRMED' ? '✅ Confirmé' : 
+                             match.status === 'ACCEPTED_BY_PROVIDER' ? '✅ Accepté par vous' :
+                             match.status === 'ACCEPTED_BY_SEEKER' ? '✅ Accepté par seeker' : '⏳ En attente'}
+                          </span>
+                        </div>
+                      </div>
+                      {match.status !== 'CONFIRMED' && (
+                        <button
+                          onClick={() => handleConfirmMatch(match.id)}
+                          style={{
+                            padding: '8px 16px', background: '#16a34a', color: 'white',
+                            border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: '500'
+                          }}
+                        >
+                          ✅ Confirmer ce match
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>

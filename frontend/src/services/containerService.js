@@ -83,6 +83,21 @@ const containerService = {
   triggerMatchmaking: (id) =>
     api.post(`/v1/containers/requests/${id}/match`),
 
+  // Direct Requests
+  getSentRequests: () =>
+    api.get('/v1/containers/direct-requests/my'),
+
+  getReceivedDirectRequests: () =>
+    api.get('/v1/containers/direct-requests/received'),
+
+  sendDirectRequest: (offerId, data) =>
+    api.post(`/v1/containers/direct-requests/offers/${offerId}`, data),
+
+  respondToDirectRequest: (id, accepted, response) =>
+    api.patch(`/v1/containers/direct-requests/${id}/respond`, null, {
+      params: { accepted, response }
+    }),
+
   // Matches
   getMyMatches: () =>
     api.get('/v1/containers/matches/my'),

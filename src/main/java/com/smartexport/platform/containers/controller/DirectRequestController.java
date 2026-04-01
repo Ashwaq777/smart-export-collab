@@ -91,4 +91,16 @@ public class DirectRequestController {
             ContainerApiResponse.success(
                 service.getReceivedRequests(userId)));
     }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete direct request")
+    public ResponseEntity<ContainerApiResponse<Void>> delete(
+            @PathVariable Long id) {
+        Long userId = ContainerSecurityUtils
+            .getCurrentUserId(userRepository);
+        service.deleteDirectRequest(id, userId);
+        return ResponseEntity.ok(
+            ContainerApiResponse.success(
+                "Demande directe supprimée", null));
+    }
 }

@@ -281,7 +281,7 @@ public class ContainerOfferService {
         dto.setProviderName(offer.getProvider().getFirstName()
                 + " " + offer.getProvider().getLastName());
         dto.setContainerType(offer.getContainerType());
-        dto.setCargoType(dto.getCargoType());
+        dto.setCargoType(offer.getCargoType());
         dto.setSize(offer.getSize());
         dto.setTechnicalDetails(offer.getTechnicalDetails());
         dto.setLocation(offer.getLocation());

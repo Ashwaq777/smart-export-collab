@@ -63,6 +63,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.DELETE, "/api/v1/containers/offers/**").authenticated()
                 .requestMatchers(HttpMethod.PUT, "/api/v1/containers/offers/**").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/v1/containers/requests/**").authenticated()
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/containers/requests/**").authenticated()
                 .requestMatchers("/api/v1/containers/direct-requests/**").authenticated()
                 .requestMatchers("/api/v1/support/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/v1/support/**").authenticated()

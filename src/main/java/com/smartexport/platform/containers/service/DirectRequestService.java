@@ -134,6 +134,24 @@ public class DirectRequestService {
             .collect(Collectors.toList());
     }
 
+    public void deleteDirectRequest(Long id, Long userId) {
+        ContainerDirectRequest req = directRequestRepository
+            .findById(id)
+            .orElseThrow(() ->
+                new ContainerNotFoundException(
+                    "Direct request not found: " + id));
+
+        if (!req.getSeeker().getId().equals(userId)) {
+            throw new 
+                UnauthorizedContainerAccessException(
+                    "Not authorized to delete this request");
+        }
+
+        directRequestRepository.delete(req);
+        log.info("Direct request {} deleted by user {}", 
+            id, userId);
+    }
+
     private void sendEmailToProvider(
             ContainerDirectRequest req) {
         try {

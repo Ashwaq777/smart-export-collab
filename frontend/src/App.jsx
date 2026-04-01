@@ -95,7 +95,7 @@ function App() {
             <Route path="/containers" element={
               <ProtectedRoute excludeRole="ADMIN">
                 <MainLayout>
-                  <ContainersPage />
+                  <Navigate to="/containers/marketplace" replace />
                 </MainLayout>
               </ProtectedRoute>
             } />

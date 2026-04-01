@@ -8,6 +8,7 @@ import containerService from '../../services/containerService';
 import CreateOfferModal from './CreateOfferModal';
 import CreateRequestModal from './CreateRequestModal';
 import EditRequestModal from './EditRequestModal';
+import EditOfferModal from './EditOfferModal';
 import 'leaflet/dist/leaflet.css';
 
 // Fix Leaflet icons
@@ -53,6 +54,7 @@ export default function ContainersPage() {
   const [showOfferModal, setShowOfferModal] = useState(false);
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedOffer, setSelectedOffer] = useState(null);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [matchingId, setMatchingId] = useState(null);
   const [matchedOfferIds, setMatchedOfferIds] = useState([]);
@@ -136,6 +138,12 @@ export default function ContainersPage() {
       await containerService.deleteOffer(id);
       loadAll();
     } catch (e) { alert('Erreur: ' + e.message); }
+  };
+
+  // Edit handlers
+  const handleEditOffer = (offer) => {
+    setSelectedOffer(offer);
+    setShowEditModal(true);
   };
 
   const handleDeleteRequest = async (id) => {
@@ -397,6 +405,27 @@ export default function ContainersPage() {
         ))}
       </div>
 
+      {isImportateur && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
+          <button
+            type="button"
+            onClick={() => setShowOfferModal(true)}
+            style={{
+              background: 'linear-gradient(to right, #0B1F3A, #1CA7C7)',
+              color: 'white',
+              border: 'none',
+              padding: '10px 20px',
+              borderRadius: '8px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+          >
+            + Créer une offre
+          </button>
+        </div>
+      )}
+
       {/* ============ IMPORTATEUR TABS ============ */}
 
       {/* IMPORTATEUR Tab 0: Mes Offres */}
@@ -580,6 +609,28 @@ export default function ContainersPage() {
                     
                     {/* Actions */}
                     <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        onClick={() => handleEditOffer(offer)}
+                        style={{
+                          padding: '8px', 
+                          background: '#F3F4F6', 
+                          color: '#374151',
+                          border: '1px solid #E5E7EB', 
+                          borderRadius: '10px', 
+                          cursor: 'pointer', 
+                          fontSize: '12px',
+                          fontWeight: '500',
+                          transition: 'background 0.2s'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.background = '#E5E7EB'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.background = '#F3F4F6'
+                        }}
+                      >
+                        Modifier
+                      </button>
                       <button
                         onClick={() => navigate(`/containers/marketplace/${offer.id}`)}
                         style={{
@@ -1259,19 +1310,6 @@ export default function ContainersPage() {
       )}
 
       {/* FAB Button */}
-      {isImportateur && (
-        <button
-          onClick={() => setShowOfferModal(true)}
-          style={{
-            position: 'fixed', bottom: '2rem', right: '2rem', padding: '14px 20px',
-            background: '#1d4ed8', color: 'white', border: 'none', borderRadius: '99px',
-            cursor: 'pointer', fontWeight: '600', fontSize: '12px', zIndex: 100,
-            boxShadow: '0 4px 12px rgba(29,78,216,0.4)'
-          }}
-        >
-          ➕ Nouvelle Offre
-        </button>
-      )}
       {isExportateur && (
         <button
           onClick={() => setShowRequestModal(true)}
@@ -1302,6 +1340,14 @@ export default function ContainersPage() {
           request={selectedRequest}
           onClose={() => { setShowEditModal(false); setSelectedRequest(null); }}
           onSuccess={() => { setShowEditModal(false); setSelectedRequest(null); loadAll(); }}
+        />
+      )}
+      {showEditModal && selectedOffer && (
+        <EditOfferModal
+          isOpen={showEditModal}
+          offer={selectedOffer}
+          onClose={() => { setShowEditModal(false); setSelectedOffer(null); }}
+          onSuccess={() => { setShowEditModal(false); setSelectedOffer(null); loadAll(); }}
         />
       )}
       </div>

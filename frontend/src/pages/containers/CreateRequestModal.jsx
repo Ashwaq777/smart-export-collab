@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import containerService from '../../services/containerService'
 import { worldPortsService } from '../../services/worldPortsApi'
 import { countriesService } from '../../services/countriesApi'
+import api from '../../services/api'
 
 const CreateRequestModal = ({ isOpen, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
@@ -28,17 +29,65 @@ const CreateRequestModal = ({ isOpen, onClose, onSuccess }) => {
   }, [isOpen])
 
   const loadCountries = async () => {
-    setCountriesLoading(true)
+    setCountriesLoading(true);
     try {
-      const maritimeCountries = await countriesService.getMaritimeCountries()
-      setCountries(maritimeCountries || [])
-    } catch (error) {
-      console.error('Error loading countries:', error)
-      setCountries([])
+      const response = await fetch(
+        'https://restcountries.com/v3.1/all?fields=name,translations,cca2,region',
+        { signal: AbortSignal.timeout(10000) }
+      );
+      const data = await response.json();
+      const maritimeISO = new Set([
+        'MA','DZ','TN','EG','LY','MR','DJ','SO','ER','SN','GM','SL','LR',
+        'CI','GH','TG','BJ','NG','CM','GA','CG','AO','NA','ZA','MZ','TZ',
+        'KE','MG','MU','SC','KM','FR','ES','PT','GB','IE','NL','BE','DE',
+        'DK','SE','NO','FI','PL','EE','LV','LT','IT','GR','HR','MT','CY',
+        'RO','BG','UA','TR','IL','LB','SA','AE','KW','QA','BH','OM','YE',
+        'IR','IQ','RU','IN','PK','BD','LK','MM','TH','MY','SG','ID','PH',
+        'VN','CN','JP','KR','US','CA','MX','BR','AR','CL','CO','PE','AU',
+        'NZ','PA','CU','JM','HT','BO','EC','VE','UY','PY','GY','SR',
+        'CV','ST','MV','BN','TL','PG','FJ','WS','TO','SB'
+      ]);
+      const countries = data
+        .filter(c => maritimeISO.has(c.cca2))
+        .map(c => ({
+          name: c?.translations?.fra?.common || c?.name?.common || '',
+          iso2: c?.cca2 || ''
+        }))
+        .filter(c => c.name && c.iso2)
+        .sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+      setCountries(countries);
+    } catch(e) {
+      console.error('Error loading countries:', e);
+      setCountries([
+        {name:'Maroc',iso2:'MA'},{name:'France',iso2:'FR'},
+        {name:'Espagne',iso2:'ES'},{name:'Italie',iso2:'IT'},
+        {name:'Chine',iso2:'CN'},{name:'Japon',iso2:'JP'},
+        {name:'États-Unis',iso2:'US'},{name:'Singapour',iso2:'SG'},
+        {name:'Inde',iso2:'IN'},{name:'Brésil',iso2:'BR'}
+      ]);
     } finally {
-      setCountriesLoading(false)
+      setCountriesLoading(false);
     }
-  }
+  };
+
+  const normalizeCountryName = (name) => {
+    const nameMap = {
+      'United States': 'États-Unis',
+      'USA': 'États-Unis',
+      'South Africa': 'Afrique du Sud',
+      'United Kingdom': 'Royaume-Uni',
+      'UK': 'Royaume-Uni',
+      'UAE': 'Émirats arabes unis',
+      'United Arab Emirates': 'Émirats arabes unis',
+      'China': 'Chine',
+      'India': 'Inde',
+      'Japan': 'Japon',
+      'South Korea': 'Corée du Sud',
+      'Brazil': 'Brésil',
+      'Egypt': 'Égypte',
+    };
+    return nameMap[name] || name;
+  };
 
   const loadPortsByCountry = async (country) => {
     if (!country) {
@@ -47,18 +96,29 @@ const CreateRequestModal = ({ isOpen, onClose, onSuccess }) => {
     }
     
     setPortsLoading(true)
+    
     try {
-      const portsResult = await worldPortsService.getPortsByCountry(country)
+      // Normalize country name for consistent matching
+      const normalizedCountry = normalizeCountryName(country)
+      
+      // Récupérer les données du pays pour vérifier s'il est enclavé
+      const countryData = countries.find(c => c.name === country || c.name === normalizedCountry)
+      
+      // Charger les ports depuis le service mondial avec couverture 100% (use normalized name)
+      const portsResult = await worldPortsService.getPortsByCountry(normalizedCountry, countryData)
       
       if (portsResult.hasPorts && portsResult.ports.length > 0) {
-        const portsWithFees = portsResult.ports.map((port, index) => ({
-          id: port.id || `${country.toLowerCase()}-${index + 1}`,
-          nom: port.name,
-          nomPort: port.name,
-          ville: port.city,
-          pays: country,
-          coordinates: port.coordinates
-        }))
+        // Utiliser les ports réels de la base UNCTAD avec frais calculés
+        const portsWithFees = portsResult.ports.map((port, index) => {
+          return {
+            id: port.id || `${country.toLowerCase()}-${index + 1}`,
+            nom: port.name,
+            nomPort: port.name,
+            ville: port.city,
+            pays: country,
+            coordinates: { lat: port.latitude, lng: port.longitude }
+          }
+        })
         setPorts(portsWithFees)
       } else {
         setPorts([])
@@ -69,7 +129,7 @@ const CreateRequestModal = ({ isOpen, onClose, onSuccess }) => {
     } finally {
       setPortsLoading(false)
     }
-  }
+  };
 
   const handleInputChange = async (e) => {
     const { name, value } = e.target
@@ -83,9 +143,10 @@ const CreateRequestModal = ({ isOpen, onClose, onSuccess }) => {
     const country = e.target.value
     setSelectedCountry(country)
     setFormData(prev => ({ ...prev, loadingLocation: '' }))
-    setPorts([])
     if (country) {
       loadPortsByCountry(country)
+    } else {
+      setPorts([])
     }
   }
 

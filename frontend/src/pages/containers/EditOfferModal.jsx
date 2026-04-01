@@ -2,9 +2,8 @@ import { useState, useEffect } from 'react'
 import containerService from '../../services/containerService'
 import { worldPortsService } from '../../services/worldPortsApi'
 import { countriesService } from '../../services/countriesApi'
-import api from '../../services/api'
 
-const CreateOfferModal = ({ isOpen, onClose, onSuccess }) => {
+const EditOfferModal = ({ isOpen, onClose, onSuccess, offer }) => {
   const [formData, setFormData] = useState({
     location: '',
     containerType: 'STANDARD_20',
@@ -14,10 +13,9 @@ const CreateOfferModal = ({ isOpen, onClose, onSuccess }) => {
     technicalDetails: ''
   })
   const [loading, setLoading] = useState(false)
-  const [selectedFiles, setSelectedFiles] = useState([])
-  const [countries, setCountries] = useState([])
   const [ports, setPorts] = useState([])
   const [portsLoading, setPortsLoading] = useState(false)
+  const [countries, setCountries] = useState([])
   const [countriesLoading, setCountriesLoading] = useState(false)
   const [selectedCountry, setSelectedCountry] = useState('')
 
@@ -25,10 +23,19 @@ const CreateOfferModal = ({ isOpen, onClose, onSuccess }) => {
   const cargoTypes = ['DRY', 'REEFER', 'DANGEROUS', 'PERISHABLE']
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && offer) {
+      // Pre-fill form with offer data
+      setFormData({
+        location: offer.location || '',
+        containerType: offer.containerType || 'STANDARD_20',
+        cargoType: offer.cargoType || 'DRY',
+        availableDate: offer.availableDate ? offer.availableDate.split('T')[0] : '',
+        size: offer.size || 'STANDARD',
+        technicalDetails: offer.technicalDetails || ''
+      })
       loadCountries()
     }
-  }, [isOpen])
+  }, [isOpen, offer])
 
   const loadCountries = async () => {
     setCountriesLoading(true);
@@ -161,39 +168,14 @@ const CreateOfferModal = ({ isOpen, onClose, onSuccess }) => {
       const selectedPort = ports.find(p => (p.nomPort || p.nom) === formData.location)
       const offerData = {
         ...formData,
-        latitude: selectedPort?.coordinates?.lat || null,
-        longitude: selectedPort?.coordinates?.lng || selectedPort?.coordinates?.lon || null
+        coordinates: selectedPort?.coordinates || null
       }
-      
-      const response = await containerService.createOffer(offerData)
-      const newOffer = response.data?.data || response.data
-      const offerId = newOffer?.id
 
-      if (offerId && selectedFiles.length > 0) {
-        try {
-          await containerService.uploadOfferImages(offerId, selectedFiles)
-        } catch(e) {
-          console.warn('Image upload failed:', e.message)
-        }
-      }
-      
-      onSuccess()
-      onClose()
-      // Reset form
-      setFormData({
-        location: '',
-        containerType: 'STANDARD_20',
-        cargoType: 'DRY',
-        availableDate: '',
-        size: 'STANDARD',
-        technicalDetails: ''
-      })
-      setSelectedCountry('')
-      setPorts([])
-      setSelectedFiles([])
+      await containerService.updateOffer(offer.id, offerData)
+      onSuccess && onSuccess()
     } catch (error) {
-      console.error('Error creating offer:', error)
-      alert('Erreur lors de la création de l\'offre')
+      console.error('Error updating offer:', error)
+      alert('Erreur lors de la mise à jour de l\'offre')
     } finally {
       setLoading(false)
     }
@@ -202,51 +184,88 @@ const CreateOfferModal = ({ isOpen, onClose, onSuccess }) => {
   if (!isOpen) return null
 
   return (
-    <div style={{ 
+    <div style={{
       position: 'fixed',
-      inset: 0,
-      zIndex: 9999,
-      backgroundColor: 'rgba(0,0,0,0.5)',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'center'
+      justifyContent: 'center',
+      zIndex: 1000
     }}>
-      <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-screen overflow-y-auto">
-        <h2 className="text-xl font-bold mb-4">Nouvelle Offre de Conteneur</h2>
+      <div style={{
+        backgroundColor: 'white',
+        padding: '2rem',
+        borderRadius: '12px',
+        width: '90%',
+        maxWidth: '500px',
+        maxHeight: '90vh',
+        overflowY: 'auto'
+      }}>
+        <h2 style={{ marginBottom: '1.5rem', color: '#1f2937' }}>Modifier l'offre</h2>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Country Selection */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Pays
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+              Type de conteneur
             </label>
-            {countriesLoading ? (
-              <div className="text-sm text-gray-500">Chargement des pays...</div>
-            ) : (
-              <select
-                name="country"
-                value={selectedCountry}
-                onChange={handleCountryChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">-- Sélectionner pays --</option>
-                {countries.map((c) => (
-                  <option key={c.iso2 || c.code} value={c.nameFr || c.name}>
-                    {c.flagEmoji ? `${c.flagEmoji} ` : ''}{c.nameFr || c.name}
-                  </option>
-                ))}
-              </select>
-            )}
+            <select
+              name="containerType"
+              value={formData.containerType}
+              onChange={handleInputChange}
+              required
+              style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+            >
+              {containerTypes.map(type => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
           </div>
 
-          {/* Port Selection */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+              Type de cargaison
+            </label>
+            <select
+              name="cargoType"
+              value={formData.cargoType}
+              onChange={handleInputChange}
+              required
+              style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+            >
+              {cargoTypes.map(type => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
+          </div>
+
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+              Pays
+            </label>
+            <select
+              name="country"
+              value={selectedCountry}
+              onChange={handleCountryChange}
+              required
+              style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+            >
+              <option value="">-- Sélectionner pays --</option>
+              {countries.map(country => (
+                <option key={country.iso2} value={country.name}>{country.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
               Localisation
             </label>
             {portsLoading ? (
-              <div className="text-sm text-gray-500">Chargement des ports...</div>
+              <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>Chargement des ports...</div>
             ) : (
               <select
                 name="location"
@@ -254,7 +273,7 @@ const CreateOfferModal = ({ isOpen, onClose, onSuccess }) => {
                 onChange={handleInputChange}
                 required
                 disabled={!selectedCountry || ports.length === 0}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
               >
                 <option value="">-- Sélectionner port --</option>
                 {ports.map((p) => (
@@ -267,44 +286,9 @@ const CreateOfferModal = ({ isOpen, onClose, onSuccess }) => {
             )}
           </div>
 
-          {/* Container Type */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Type de Conteneur
-            </label>
-            <select
-              name="containerType"
-              value={formData.containerType}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              {containerTypes.map(type => (
-                <option key={type} value={type}>{type}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Cargo Type */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Type de Cargaison
-            </label>
-            <select
-              name="cargoType"
-              value={formData.cargoType}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              {cargoTypes.map(type => (
-                <option key={type} value={type}>{type}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Available Date */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Date Disponibilité
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+              Date de disponibilité
             </label>
             <input
               type="date"
@@ -312,95 +296,51 @@ const CreateOfferModal = ({ isOpen, onClose, onSuccess }) => {
               value={formData.availableDate}
               onChange={handleInputChange}
               required
-              min={new Date().toISOString().split('T')[0]}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
             />
           </div>
 
-          {/* Size */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Taille
-            </label>
-            <select
-              name="size"
-              value={formData.size}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="STANDARD">Standard</option>
-              <option value="HIGH_CUBE">High Cube</option>
-              <option value="REEFER">Reefer</option>
-            </select>
-          </div>
-
-          {/* Technical Details */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Détails Techniques (optionnel)
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+              Détails techniques
             </label>
             <textarea
               name="technicalDetails"
               value={formData.technicalDetails}
               onChange={handleInputChange}
               rows="3"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Informations techniques supplémentaires..."
+              style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
             />
           </div>
 
-          {/* Image Upload */}
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={{
-              display: 'block',
-              fontSize: '13px',
-              fontWeight: '500',
-              color: '#374151',
-              marginBottom: '6px'
-            }}>
-              📸 Photos du conteneur (optionnel)
-            </label>
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={e => setSelectedFiles(Array.from(e.target.files))}
-              style={{
-                width: '100%',
-                padding: '8px',
-                border: '1px dashed #d1d5db',
-                borderRadius: '8px',
-                fontSize: '13px',
-                cursor: 'pointer',
-                boxSizing: 'border-box'
-              }}
-            />
-            {selectedFiles.length > 0 && (
-              <p style={{
-                fontSize: '12px',
-                color: '#16a34a',
-                marginTop: '4px', margin: 0
-              }}>
-                ✅ {selectedFiles.length} photo(s) sélectionnée(s)
-              </p>
-            )}
-          </div>
-
-          {/* Buttons */}
-          <div className="flex space-x-3 pt-4">
+          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+              style={{
+                padding: '0.75rem 1.5rem',
+                border: '1px solid #d1d5db',
+                backgroundColor: 'white',
+                color: '#6b7280',
+                borderRadius: '6px',
+                cursor: 'pointer'
+              }}
             >
               Annuler
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+              style={{
+                padding: '0.75rem 1.5rem',
+                backgroundColor: loading ? '#9ca3af' : '#0B1F3A',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: loading ? 'not-allowed' : 'pointer'
+              }}
             >
-              {loading ? 'Création...' : 'Créer l\'offre'}
+              {loading ? 'Mise à jour...' : 'Mettre à jour'}
             </button>
           </div>
         </form>
@@ -409,4 +349,4 @@ const CreateOfferModal = ({ isOpen, onClose, onSuccess }) => {
   )
 }
 
-export default CreateOfferModal
+export default EditOfferModal

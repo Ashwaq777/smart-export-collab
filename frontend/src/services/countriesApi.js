@@ -1,30 +1,78 @@
 import axios from 'axios'
 
 import { ttlCache } from '../utils/ttlCache'
-import { MARITIME_COUNTRIES_ISO2_SET } from '../data/maritimeCountries'
+import { MARITIME_COUNTRIES_ISO2, fetchMaritimeCountries, MARITIME_FALLBACK } from '../data/maritimeCountries'
 import { API_URLS } from '../config/apiConfig'
 
 const FALLBACK_MARITIME_COUNTRIES = [
   { iso2: 'MA', name: 'Maroc' },
+  { iso2: 'DZ', name: 'Algérie' },
+  { iso2: 'TN', name: 'Tunisie' },
+  { iso2: 'EG', name: 'Égypte' },
   { iso2: 'FR', name: 'France' },
   { iso2: 'ES', name: 'Espagne' },
   { iso2: 'PT', name: 'Portugal' },
   { iso2: 'IT', name: 'Italie' },
-  { iso2: 'GB', name: 'Royaume-Uni' },
+  { iso2: 'GR', name: 'Grèce' },
+  { iso2: 'DE', name: 'Allemagne' },
   { iso2: 'NL', name: 'Pays-Bas' },
   { iso2: 'BE', name: 'Belgique' },
-  { iso2: 'DE', name: 'Allemagne' },
-  { iso2: 'US', name: 'États-Unis' },
-  { iso2: 'CA', name: 'Canada' },
-  { iso2: 'BR', name: 'Brésil' },
-  { iso2: 'AR', name: 'Argentine' },
+  { iso2: 'GB', name: 'Royaume-Uni' },
+  { iso2: 'NO', name: 'Norvège' },
+  { iso2: 'SE', name: 'Suède' },
+  { iso2: 'DK', name: 'Danemark' },
+  { iso2: 'FI', name: 'Finlande' },
+  { iso2: 'RU', name: 'Russie' },
   { iso2: 'TR', name: 'Turquie' },
-  { iso2: 'EG', name: 'Égypte' },
-  { iso2: 'ZA', name: 'Afrique du Sud' },
-  { iso2: 'NG', name: 'Nigeria' },
+  { iso2: 'IL', name: 'Israël' },
+  { iso2: 'LB', name: 'Liban' },
+  { iso2: 'SA', name: 'Arabie Saoudite' },
+  { iso2: 'AE', name: 'Émirats' },
+  { iso2: 'QA', name: 'Qatar' },
+  { iso2: 'KW', name: 'Koweït' },
+  { iso2: 'OM', name: 'Oman' },
   { iso2: 'IN', name: 'Inde' },
+  { iso2: 'PK', name: 'Pakistan' },
+  { iso2: 'BD', name: 'Bangladesh' },
+  { iso2: 'LK', name: 'Sri Lanka' },
+  { iso2: 'MM', name: 'Myanmar' },
+  { iso2: 'TH', name: 'Thaïlande' },
+  { iso2: 'MY', name: 'Malaisie' },
+  { iso2: 'SG', name: 'Singapour' },
+  { iso2: 'ID', name: 'Indonésie' },
+  { iso2: 'PH', name: 'Philippines' },
+  { iso2: 'VN', name: 'Vietnam' },
   { iso2: 'CN', name: 'Chine' },
   { iso2: 'JP', name: 'Japon' },
+  { iso2: 'KR', name: 'Corée du Sud' },
+  { iso2: 'US', name: 'États-Unis' },
+  { iso2: 'CA', name: 'Canada' },
+  { iso2: 'MX', name: 'Mexique' },
+  { iso2: 'BR', name: 'Brésil' },
+  { iso2: 'AR', name: 'Argentine' },
+  { iso2: 'CL', name: 'Chili' },
+  { iso2: 'CO', name: 'Colombie' },
+  { iso2: 'PE', name: 'Pérou' },
+  { iso2: 'ZA', name: 'Afrique du Sud' },
+  { iso2: 'NG', name: 'Nigéria' },
+  { iso2: 'KE', name: 'Kenya' },
+  { iso2: 'GH', name: 'Ghana' },
+  { iso2: 'SN', name: 'Sénégal' },
+  { iso2: 'CI', name: 'Côte d\'Ivoire' },
+  { iso2: 'CM', name: 'Cameroun' },
+  { iso2: 'AO', name: 'Angola' },
+  { iso2: 'MZ', name: 'Mozambique' },
+  { iso2: 'TZ', name: 'Tanzanie' },
+  { iso2: 'MG', name: 'Madagascar' },
+  { iso2: 'MU', name: 'Maurice' },
+  { iso2: 'DJ', name: 'Djibouti' },
+  { iso2: 'SO', name: 'Somalie' },
+  { iso2: 'AU', name: 'Australie' },
+  { iso2: 'NZ', name: 'Nouvelle-Zélande' },
+  { iso2: 'PA', name: 'Panama' },
+  { iso2: 'CU', name: 'Cuba' },
+  { iso2: 'JM', name: 'Jamaïque' },
+  { iso2: 'HT', name: 'Haïti' }
 ]
 
 const countriesApi = axios.create({
@@ -61,42 +109,26 @@ const retryRequest = async (requestFn, maxRetries = 3, delay = 1000) => {
 
 export const countriesService = {
   getMaritimeCountries: async () => {
-    const cached = ttlCache.get(MARITIME_COUNTRIES_CACHE_KEY)
-    if (cached && Array.isArray(cached)) return cached
-
-    // API: REST Countries
-    let response
+    // Clear any existing cache to ensure fresh data
+    ttlCache.remove && ttlCache.remove(MARITIME_COUNTRIES_CACHE_KEY)
+    
+    console.log("Maritime set size:", MARITIME_COUNTRIES_ISO2?.size)
+    
     try {
-      response = await retryRequest(() =>
-        countriesApi.get('/all?fields=name,translations,cca2,flags,region,subregion')
-      )
-    } catch {
-      const fallback = FALLBACK_MARITIME_COUNTRIES.map((c) => ({
-        name: c.name,
-        iso2: c.iso2,
-        flagPng: '',
-        region: '',
-        subregion: '',
-      }))
-      ttlCache.set(MARITIME_COUNTRIES_CACHE_KEY, fallback, MARITIME_COUNTRIES_CACHE_TTL)
-      return fallback
+      // Use the proper fetchMaritimeCountries function from maritimeCountries.js
+      const maritime = await fetchMaritimeCountries()
+      
+      // Cache the result for future use
+      ttlCache.set(MARITIME_COUNTRIES_CACHE_KEY, maritime, MARITIME_COUNTRIES_CACHE_TTL)
+      
+      return maritime
+    } catch (error) {
+      console.warn('Failed to fetch maritime countries, using fallback:', error)
+      
+      // Use the proper fallback from maritimeCountries.js instead of the limited one
+      ttlCache.set(MARITIME_COUNTRIES_CACHE_KEY, MARITIME_FALLBACK, MARITIME_COUNTRIES_CACHE_TTL)
+      return MARITIME_FALLBACK
     }
-
-    const maritimeCountries = (response.data || [])
-      .map((c) => ({
-        name: c?.translations?.fra?.common || c?.name?.common || '',
-        iso2: c?.cca2 || '',
-        flagPng: c?.flags?.png || c?.flags?.svg || '',
-        region: c?.region || '',
-        subregion: c?.subregion || '',
-      }))
-      .filter((c) => c.name && c.iso2)
-      .filter((c) => MARITIME_COUNTRIES_ISO2_SET.has(String(c.iso2).toUpperCase()))
-      .sort((a, b) => a.name.localeCompare(b.name, 'fr'))
-
-    ttlCache.set(MARITIME_COUNTRIES_CACHE_KEY, maritimeCountries, MARITIME_COUNTRIES_CACHE_TTL)
-
-    return maritimeCountries
   },
 
   /**

@@ -51,6 +51,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/pdf/**").permitAll()
                 .requestMatchers("/api/forex/**").permitAll()
                 .requestMatchers("/api/countries/**").permitAll()
+                .requestMatchers("/api/ports/**").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/admin/recent-transactions").permitAll()
                 .requestMatchers("/api/users/me/**").authenticated()

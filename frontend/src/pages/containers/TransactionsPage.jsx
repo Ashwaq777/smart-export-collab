@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import containerService from '../../services/containerService';
 
 export default function TransactionsPage() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const isProvider = user?.role === 'IMPORTATEUR';
   const isSeeker = user?.role === 'EXPORTATEUR';
   
@@ -22,18 +24,18 @@ export default function TransactionsPage() {
       setTransactions(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('TRANSACTIONS ERROR:', err.response?.data || err.message);
-      setError('Erreur chargement transactions');
+      setError(t('transactions.errorLoad'));
     } finally {
       setLoading(false);
     }
   };
 
   const workflowSteps = [
-    { key: 'AT_PROVIDER', label: '🏭 Chez provider' },
-    { key: 'IN_TRANSIT', label: '🚛 En transit' },
-    { key: 'DELIVERED_TO_EXPORTER', label: '📦 Livré' },
-    { key: 'LOADING', label: '⚓ Chargement' },
-    { key: 'COMPLETED', label: '✅ Terminé' },
+    { key: 'AT_PROVIDER', label: '🏭 ' + t('transactions.status.AT_PROVIDER') },
+    { key: 'IN_TRANSIT', label: '🚛 ' + t('transactions.status.IN_TRANSIT') },
+    { key: 'DELIVERED_TO_EXPORTER', label: '📦 ' + t('transactions.status.DELIVERED') },
+    { key: 'LOADING', label: '⚓ ' + t('transactions.status.LOADING') },
+    { key: 'COMPLETED', label: '✅ ' + t('transactions.status.COMPLETED') },
   ];
 
   const getNextStatuses = (current) => {
@@ -119,7 +121,7 @@ export default function TransactionsPage() {
 
   const getWorkflowTimeline = (status, txId) => {
     const steps = ['AT_PROVIDER', 'IN_TRANSIT', 'DELIVERED_TO_EXPORTER', 'LOADING', 'COMPLETED'];
-    const labels = ['Chez provider', 'En transit', 'Livré', 'Chargement', 'Terminé'];
+    const labels = [t('transactions.status.AT_PROVIDER'), t('transactions.status.IN_TRANSIT'), t('transactions.status.DELIVERED'), t('transactions.status.LOADING'), t('transactions.status.COMPLETED')];
     const currentIndex = steps.indexOf(status);
     
     return (
@@ -168,7 +170,7 @@ export default function TransactionsPage() {
                 fontWeight: '500'
               }}
             >
-              Avancer le statut
+              {t('transactions.advanceStatus')}
             </button>
           </div>
         )}
@@ -179,7 +181,7 @@ export default function TransactionsPage() {
   if (loading) return (
     <div style={{ display: 'flex', justifyContent: 'center',
                   alignItems: 'center', height: '300px' }}>
-      <div>Chargement...</div>
+      <div>{t('transactions.loading')}</div>
     </div>
   );
 
@@ -210,11 +212,11 @@ export default function TransactionsPage() {
             <h1 style={{
               fontSize: '32px', fontWeight: '800', color: 'white',
               margin: 0, letterSpacing: '-0.5px'
-            }}>Mes Transactions</h1>
+            }}>{t('transactions.title')}</h1>
             <p style={{ fontSize: '16px', color: 'rgba(255,255,255,0.75)', margin: '4px 0 0' }}>
               {isProvider 
                 ? "Suivez et gérez vos échanges de conteneurs"
-                : "Consultez l'état de vos transactions en cours"}
+                : t('transactions.subtitle')}
             </p>
           </div>
         </div>
@@ -255,7 +257,7 @@ export default function TransactionsPage() {
                     fontSize: '13px', color: '#6b7280', 
                     marginBottom: '4px' 
                   }}>
-                    Transaction #{tx.id}
+                    {t('transactions.transaction')} #{tx.id}
                   </div>
                   <div style={{ fontSize: '16px', fontWeight: '600' }}>
                     {tx.containerType || 'Conteneur'}
@@ -282,7 +284,7 @@ export default function TransactionsPage() {
                       background: '#eff6ff'
                     }}
                   >
-                    🚢 Voir l'offre
+                    🚢 {t('transactions.viewOffer')}
                   </a>
                 )}
               </div>
@@ -302,7 +304,7 @@ export default function TransactionsPage() {
                   fontWeight: '600',
                   color: '#374151'
                 }}>
-                  Actions & Documents
+                  {t('transactions.actionsDocuments')}
                 </h4>
 
                 {/* Provider Actions */}
@@ -312,7 +314,7 @@ export default function TransactionsPage() {
                     {tx.workflowStatus !== 'COMPLETED' && (
                       <div style={{ marginBottom: '1rem' }}>
                         <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '0.5rem' }}>
-                          Avancer le statut :
+                          {t('transactions.advanceStatus')} :
                         </div>
                         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                           {getNextStatuses(tx.workflowStatus).map(s => (
@@ -341,7 +343,7 @@ export default function TransactionsPage() {
                       {tx.eirDocumentPath ? (
                         <>
                           <span style={{ fontSize: '12px', color: '#16a34a' }}>
-                            ✅ Document déposé
+                            ✅ {t('transactions.eirAvailable')}
                           </span>
                           <button
                             onClick={() => handleDownloadEir(tx.id)}
@@ -370,7 +372,7 @@ export default function TransactionsPage() {
                         borderRadius: '6px', cursor: 'pointer',
                         fontSize: '12px', fontWeight: '500'
                       }}>
-                        {uploadingEir === tx.id ? '⏳ Upload...' : '📤 Déposer EIR'}
+                        {uploadingEir === tx.id ? '⏳ Upload...' : '📤 ' + t('transactions.uploadEir')}
                         <input
                           type="file"
                           accept=".pdf,.doc,.docx"
@@ -393,7 +395,7 @@ export default function TransactionsPage() {
                     {tx.eirDocumentPath ? (
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <span style={{ fontSize: '12px', color: '#16a34a' }}>
-                          ✅ Document disponible
+                          ✅ {t('transactions.eirAvailable')}
                         </span>
                         <button
                           onClick={() => handleDownloadEir(tx.id)}
@@ -407,12 +409,12 @@ export default function TransactionsPage() {
                             fontWeight: '500'
                           }}
                         >
-                          📥 Télécharger EIR
+                          📥 {t('transactions.downloadEir')}
                         </button>
                       </div>
                     ) : (
                       <span style={{ fontSize: '12px', color: '#f59e0b' }}>
-                        ⏳ En attente du document EIR du provider
+                        ⏳ {t('transactions.waitingEir')}
                       </span>
                     )}
                   </div>

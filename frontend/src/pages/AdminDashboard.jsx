@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { useAuth } from '../context/AuthContext'
+import { useLanguage } from '../context/LanguageContext'
 import { useNavigate } from 'react-router-dom'
 import { Ship, Anchor, Users, CreditCard, MapPin, Package, BarChart2, Globe, DollarSign, MessageSquare } from "lucide-react"
 import api from '../services/api'
@@ -15,6 +16,7 @@ const BASE = 'http://localhost:8080/api'
 
 export default function AdminDashboard() {
   const { logout, user } = useAuth()
+  const { t: translate } = useLanguage()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('overview')
 
@@ -274,7 +276,7 @@ export default function AdminDashboard() {
   const sidebarItems = [
     { 
       key: 'overview', 
-      label: 'Tableau de bord', 
+      label: translate('admin.overview'), 
       icon: () => (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
           <rect x="3" y="3" width="7" height="7"/>
@@ -284,7 +286,7 @@ export default function AdminDashboard() {
         </svg>
       )
     },
-    { key: 'users', label: 'Utilisateurs', icon: Users },
+    { key: 'users', label: translate('admin.users'), icon: Users },
     { 
       key: 'containers', 
       label: 'Marketplace', 
@@ -296,10 +298,10 @@ export default function AdminDashboard() {
         </svg>
       )
     },
-    { key: 'transactions', label: 'Transactions', icon: CreditCard },
+    { key: 'transactions', label: translate('admin.transactions'), icon: CreditCard },
     { 
       key: 'claims', 
-      label: 'Réclamations', 
+      label: translate('admin.claims'), 
       icon: () => (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
@@ -308,7 +310,7 @@ export default function AdminDashboard() {
     },
     { 
       key: 'countries', 
-      label: 'Pays & Tarifs', 
+      label: translate('admin.countries') + ' & Tarifs', 
       icon: () => (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
           <circle cx="12" cy="12" r="10"/>
@@ -317,7 +319,7 @@ export default function AdminDashboard() {
         </svg>
       )
     },
-    { key: 'ports', label: 'Ports', icon: MapPin },
+    { key: 'ports', label: translate('admin.ports'), icon: MapPin },
     { 
       key: 'rates', 
       label: 'Taux de change', 
@@ -650,14 +652,14 @@ export default function AdminDashboard() {
               marginBottom: '2rem'
             }}>
               {[
-                { label: 'Total utilisateurs', value: stats.totalUsers, color: '#0B1F3A', bgColor: '#EFF6FF', icon: Users },
+                { label: translate('admin.totalUsers'), value: stats.totalUsers, color: '#0B1F3A', bgColor: '#EFF6FF', icon: Users },
                 { label: 'Utilisateurs actifs', value: stats.activeUsers, color: '#0B1F3A', bgColor: '#DCFCE7', icon: Users },
                 { label: 'Importateurs', value: users.filter(u => u.role === 'IMPORTATEUR').length, color: '#0B1F3A', bgColor: '#EFF6FF', icon: Package },
                 { label: 'Exportateurs', value: users.filter(u => u.role === 'EXPORTATEUR').length, color: '#0B1F3A', bgColor: '#F0FDFA', icon: Package },
-                { label: 'Offres actives', value: stats.activeOffers, color: '#0B1F3A', bgColor: '#DCFCE7', icon: Package },
+                { label: translate('admin.activeOffers'), value: stats.activeOffers, color: '#0B1F3A', bgColor: '#DCFCE7', icon: Package },
                 { label: 'Matches total', value: stats.totalMatches, color: '#0B1F3A', bgColor: '#EDE9FE', icon: Users },
-                { label: 'Transactions', value: stats.totalTransactions, color: '#0B1F3A', bgColor: '#EFF6FF', icon: CreditCard },
-                { label: 'Tickets en attente', value: stats.pendingTickets, color: '#0B1F3A', bgColor: '#FEE2E2', icon: MessageSquare }
+                { label: translate('admin.transactions'), value: stats.totalTransactions, color: '#0B1F3A', bgColor: '#EFF6FF', icon: CreditCard },
+                { label: translate('admin.pendingTickets'), value: stats.pendingTickets, color: '#0B1F3A', bgColor: '#FEE2E2', icon: MessageSquare }
               ].map((metric, index) => {
                 const Icon = metric.icon
                 return (
@@ -839,7 +841,7 @@ export default function AdminDashboard() {
                 }}
                 value={userSearch}
                 onChange={e => setUserSearch(e.target.value)}
-                placeholder="Rechercher par email ou rôle..."
+                placeholder={translate('admin.search') + ' par email ou rôle...'}
               />
               <button
                 onClick={loadUsers}

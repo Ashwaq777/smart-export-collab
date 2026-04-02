@@ -1,7 +1,9 @@
 import React from 'react'
 import { ArrowRight, Ship, Globe, TrendingUp } from 'lucide-react'
+import { useLanguage } from '../../context/LanguageContext'
 
 export const HeroSection = () => {
+  const { t } = useLanguage()
   const scrollToCalculator = () => {
     const calculatorSection = document.getElementById('calculator')
     if (calculatorSection) {
@@ -23,19 +25,18 @@ export const HeroSection = () => {
           <div className="space-y-8">
             <div className="inline-flex items-center gap-2 bg-accent-100 text-accent-700 px-4 py-2 rounded-full text-sm font-semibold">
               <Globe className="w-4 h-4" />
-              Global Maritime Trade Platform
+              {t('home.hero.badge')}
             </div>
 
             <h1 className="text-5xl md:text-6xl font-bold text-maritime-navy leading-tight">
-              Export Duties Calculator with{' '}
+              {t('home.hero.title')}{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent-500 to-accent-600">
-                Precision
+                {t('home.hero.products')}
               </span>
             </h1>
 
             <p className="text-xl text-gray-600 leading-relaxed">
-              Smart Export helps you estimate customs duties, VAT, and maritime port costs instantly. 
-              Navigate international trade with confidence.
+                {t('home.hero.subtitle')}
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
@@ -43,14 +44,14 @@ export const HeroSection = () => {
                 onClick={scrollToCalculator}
                 className="group bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105 flex items-center justify-center gap-2"
               >
-                Calculate Now
+                {t('home.hero.ctaStart')}
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
               <a
                 href="/about"
                 className="border-2 border-maritime-navy text-maritime-navy px-8 py-4 rounded-xl font-bold text-lg hover:bg-maritime-navy hover:text-white transition-all duration-300 inline-block text-center"
               >
-                Learn More
+                {t('home.hero.ctaLearn')}
               </a>
             </div>
 
@@ -58,15 +59,15 @@ export const HeroSection = () => {
             <div className="grid grid-cols-3 gap-6 pt-8">
               <div>
                 <div className="text-3xl font-bold text-maritime-navy">150+</div>
-                <div className="text-sm text-gray-600">Countries</div>
+                <div className="text-sm text-gray-600">{t('home.hero.countries')}</div>
               </div>
               <div>
                 <div className="text-3xl font-bold text-maritime-navy">10K+</div>
-                <div className="text-sm text-gray-600">Products</div>
+                <div className="text-sm text-gray-600">{t('home.hero.products')}</div>
               </div>
               <div>
                 <div className="text-3xl font-bold text-maritime-navy">99%</div>
-                <div className="text-sm text-gray-600">Accuracy</div>
+                <div className="text-sm text-gray-600">{t('home.hero.accuracy')}</div>
               </div>
             </div>
           </div>
@@ -83,8 +84,8 @@ export const HeroSection = () => {
                     <Ship className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <div className="text-sm font-semibold text-gray-700">Maritime Shipping</div>
-                    <div className="text-xs text-gray-500">Real-time port costs</div>
+                    <div className="text-sm font-semibold text-gray-700">{t('home.hero.maritimeShipping')}</div>
+                    <div className="text-xs text-gray-500">{t('home.hero.portCosts')}</div>
                   </div>
                 </div>
 
@@ -93,8 +94,8 @@ export const HeroSection = () => {
                     <TrendingUp className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <div className="text-sm font-semibold text-gray-700">Customs Duties</div>
-                    <div className="text-xs text-gray-500">Accurate calculations</div>
+                    <div className="text-sm font-semibold text-gray-700">{t('home.hero.customsDuties')}</div>
+                    <div className="text-xs text-gray-500">{t('home.hero.accurateCalc')}</div>
                   </div>
                 </div>
 
@@ -103,8 +104,8 @@ export const HeroSection = () => {
                     <Globe className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <div className="text-sm font-semibold text-gray-700">Global Coverage</div>
-                    <div className="text-xs text-gray-500">150+ countries</div>
+                    <div className="text-sm font-semibold text-gray-700">{t('home.hero.globalCoverage')}</div>
+                    <div className="text-xs text-gray-500">{t('home.hero.countriesCount')}</div>
                   </div>
                 </div>
               </div>

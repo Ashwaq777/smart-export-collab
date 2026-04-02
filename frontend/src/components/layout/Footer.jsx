@@ -1,8 +1,10 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { Ship, Anchor, Mail, Phone, MapPin, Linkedin, Twitter, Facebook } from 'lucide-react'
+import { useLanguage } from '../../context/LanguageContext'
 
 export const Footer = () => {
+  const { t: translate } = useLanguage()
   return (
     <footer className="bg-maritime-navy text-white mt-20">
       <div className="max-w-7xl mx-auto px-6 py-12">
@@ -19,13 +21,12 @@ export const Footer = () => {
                 </div>
               </div>
               <div>
-                <h3 className="text-xl font-bold tracking-tight">Smart Export</h3>
-                <p className="text-xs text-gray-400 font-medium">Global Maritime Trade Platform</p>
+                <h3 className="text-xl font-bold tracking-tight">{translate('footer.title')}</h3>
+                <p className="text-xs text-gray-400 font-medium">{translate('footer.description')}</p>
               </div>
             </div>
             <p className="text-sm text-gray-300 leading-relaxed max-w-md">
-              Smart Export is a maritime-focused platform designed to simplify international trade operations. 
-              We provide accurate, real-time cost estimation tools for importers and exporters navigating global markets.
+              {translate('footer.description')}
             </p>
           </div>
 
@@ -35,7 +36,7 @@ export const Footer = () => {
             <ul className="space-y-2">
               <li>
                 <Link to="/" className="text-sm text-gray-300 hover:text-accent-400 transition-colors">
-                  Home
+                  {translate('footer.links.marketplace')}
                 </Link>
               </li>
               <li>
@@ -50,7 +51,7 @@ export const Footer = () => {
               </li>
               <li>
                 <Link to="/#about" className="text-sm text-gray-300 hover:text-accent-400 transition-colors">
-                  About Us
+                  {translate('footer.links.about')}
                 </Link>
               </li>
               <li>
@@ -84,7 +85,7 @@ export const Footer = () => {
         {/* Bottom Bar */}
         <div className="border-t border-gray-700 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-gray-400">
-            © 2024 Smart Export. All rights reserved.
+            {translate('footer.rights')}
           </p>
           <div className="flex items-center gap-4">
             <a href="#" className="text-gray-400 hover:text-accent-400 transition-colors">

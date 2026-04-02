@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function SupportPage() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const isAdmin = user?.role === 'ADMIN';
 
   const [tickets, setTickets] = useState([]);
@@ -60,7 +62,7 @@ export default function SupportPage() {
 
   const handleCreate = async () => {
     if (!formData.subject || !formData.description) {
-      alert('Sujet et description obligatoires');
+      alert(t('support.validation'));
       return;
     }
     try {
@@ -128,11 +130,11 @@ export default function SupportPage() {
 
   const statusColors = {
     OPEN: { bg: '#fee2e2', text: '#991b1b',
-      label: '🔴 Ouvert' },
+      label: '🔴 ' + t('support.status.OPEN') },
     IN_PROGRESS: { bg: '#fef3c7', text: '#92400e',
-      label: '🟡 En cours' },
+      label: '🟡 ' + t('support.status.IN_PROGRESS') },
     RESOLVED: { bg: '#d1fae5', text: '#065f46',
-      label: '🟢 Résolu' },
+      label: '🟢 ' + t('support.status.RESOLVED') },
     CLOSED: { bg: '#f3f4f6', text: '#6b7280',
       label: '⚫ Fermé' },
   };
@@ -176,9 +178,9 @@ export default function SupportPage() {
             <h1 style={{
               fontSize: '32px', fontWeight: '800', color: 'white',
               margin: 0, letterSpacing: '-0.5px'
-            }}>Support & Réclamations</h1>
+            }}>{t('support.title')}</h1>
             <p style={{ fontSize: '16px', color: 'rgba(255,255,255,0.75)', margin: '4px 0 0' }}>
-              Notre équipe est là pour vous aider
+              {t('support.subtitle')}
             </p>
           </div>
         </div>
@@ -203,7 +205,7 @@ export default function SupportPage() {
               }}>
                 {isAdmin
                   ? `${tickets.length} ticket(s) total` 
-                  : 'Signalez un problème ou réclamation'}
+                  : t('support.signaler')}
               </p>
             </div>
             {!isAdmin && (
@@ -217,7 +219,7 @@ export default function SupportPage() {
                   fontSize: '14px'
                 }}
               >
-                {showForm ? '✕ Annuler' : '➕ Nouveau ticket'}
+                {showForm ? '✕ ' + t('common.cancel') : '➕ ' + t('support.newTicket')}
               </button>
             )}
           </div>
@@ -288,7 +290,7 @@ export default function SupportPage() {
           border: '1px solid #e5e7eb'
         }}>
           <h3 style={{ margin: '0 0 1rem' }}>
-            📝 Nouveau Ticket
+            📝 {t('support.newTicket')}
           </h3>
           <div style={{
             display: 'grid',
@@ -361,7 +363,7 @@ export default function SupportPage() {
               display: 'block', fontSize: '13px',
               fontWeight: '500', marginBottom: '4px'
             }}>
-              Sujet *
+              {t('support.subject')} *
             </label>
             <input
               type="text"
@@ -384,7 +386,7 @@ export default function SupportPage() {
               display: 'block', fontSize: '13px',
               fontWeight: '500', marginBottom: '4px'
             }}>
-              Description *
+              {t('support.description')} *
             </label>
             <textarea
               value={formData.description}
@@ -436,7 +438,7 @@ export default function SupportPage() {
                 fontSize: '14px'
               }}
             >
-              📤 Soumettre
+              📤 {t('support.submit')}
             </button>
             <button
               onClick={() => setShowForm(false)}
@@ -460,7 +462,7 @@ export default function SupportPage() {
           textAlign: 'center', padding: '3rem',
           color: '#6b7280'
         }}>
-          Chargement...
+          {t('support.loading')}
         </div>
       ) : tickets.length === 0 ? (
         <div style={{
@@ -611,7 +613,7 @@ export default function SupportPage() {
                   && ticket.status !== 'CLOSED'
                   ? '10px' : 0
               }}>
-                Créé le {new Date(ticket.createdAt)
+                {t('support.createdAt')} {new Date(ticket.createdAt)
                   .toLocaleDateString('fr-FR')}
               </div>
 
@@ -628,7 +630,7 @@ export default function SupportPage() {
                         value={responseText}
                         onChange={e =>
                           setResponseText(e.target.value)}
-                        placeholder="Votre réponse..."
+                        placeholder={t('support.replyPlaceholder')}
                         rows={3}
                         style={{
                           width: '100%', padding: '8px',
@@ -718,7 +720,7 @@ export default function SupportPage() {
                         fontWeight: '500'
                       }}
                     >
-                      💬 Répondre
+                      💬 {t('support.reply')}
                     </button>
                   )}
                 </div>

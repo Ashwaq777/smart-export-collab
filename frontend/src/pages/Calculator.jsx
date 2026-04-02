@@ -6,12 +6,14 @@ import { worldPortsService } from '../services/worldPortsApi'
 import { agriculturalProductsService } from '../services/agriculturalProductsApi'
 import { useMaritimeCountries } from '../hooks/useMaritimeCountries'
 import { useAuth } from '../context/AuthContext'
+import { useLanguage } from '../context/LanguageContext'
 import CostDashboard from '../components/CostDashboard'
 import { WORLD_CURRENCIES } from '../data/worldCurrencies'
 import { updateExchangeRates } from '../utils/currencyConverter'
 
 function Calculator() {
   const { user } = useAuth();
+  const { t: translate } = useLanguage();
   const isImportateur = user?.role === 'IMPORTATEUR';
   
   const {
@@ -529,13 +531,10 @@ function Calculator() {
           </div>
           <div className="header-text">
             <h1 className="header-title">
-              {isImportateur ? 'IMPORT DUTIES CALCULATOR' : 'EXPORT DUTIES CALCULATOR'}
+              {translate('calculator.title')}
             </h1>
             <p className="header-subtitle">
-              {isImportateur 
-                ? 'Calculate complete landed costs including freight, customs duties, VAT and port fees'
-                : 'Calculate complete import costs including customs duties, VAT, parafiscal taxes and port fees'
-              }
+              {translate('calculator.subtitle')}
             </p>
           </div>
         </div>
@@ -549,7 +548,7 @@ function Calculator() {
             <div className="card-header">
               <CalcIcon className="card-icon" />
               <h2 className="card-title">
-                {isImportateur ? 'Product Information' : 'Product Information'}
+                {translate('calculator.productInfo')}
               </h2>
             </div>
             
@@ -557,11 +556,11 @@ function Calculator() {
               {/* Formulaire Importateur - Copie exacte de l'exportateur */}
               {isImportateur && (
                 <div className="form-section">
-                  <h3 className="section-title">Basic Information</h3>
+                  <h3 className="section-title">{translate('calculator.basicInfo')}</h3>
                   <div className="form-grid">
                     <div className="form-group">
                       <label className="form-label">
-                        Catégorie
+                        {translate('calculator.category')}
                       </label>
                       <select
                         name="categorie"
@@ -580,7 +579,7 @@ function Calculator() {
                         marginTop: '4px'
                       }}
                       >
-                        <option value="">Sélectionnez une catégorie</option>
+                        <option value="">{translate('calculator.selectCategory')}</option>
                         {categories.map(cat => (
                           <option key={cat} value={cat}>{cat}</option>
                         ))}
@@ -589,7 +588,7 @@ function Calculator() {
 
                     <div className="form-group">
                       <label className="form-label">
-                        Pays de destination
+                        {translate('calculator.destination')}
                       </label>
                       {maritimeCountriesError && (
                         <div className="form-error">
@@ -618,7 +617,7 @@ function Calculator() {
                         marginTop: '4px'
                       }}
                       >
-                        <option value="">-- Sélectionner pays de destination --</option>
+                        <option value="">{translate('calculator.selectDestination')}</option>
                         {maritimeCountries.map((c) => (
                           <option key={c.code} value={c.name}>
                             {c.flagEmoji ? `${c.flagEmoji} ` : ''}{c.nameFr || c.name}
@@ -629,7 +628,7 @@ function Calculator() {
 
                     <div className="form-group">
                       <label className="form-label">
-                        Port de déchargement
+                        {translate('calculator.unloadingPort')}
                       </label>
                       {portsLoading ? (
                         <div className="loading-text">Chargement des ports...</div>
@@ -654,7 +653,7 @@ function Calculator() {
                         marginTop: '4px'
                       }}
                         >
-                          <option value="">-- Sélectionner port de déchargement --</option>
+                          <option value="">{translate('calculator.selectPort')}</option>
                           {portsDestination.map((p) => (
                             <option key={p.id} value={p.id}>
                               {p.nomPort || p.nom || p.name}
@@ -673,7 +672,7 @@ function Calculator() {
 
                     <div className="form-group">
                       <label className="form-label">
-                        Produit
+                        {translate('calculator.product')}
                       </label>
                       {productsError && (
                         <div className="form-error">
@@ -698,7 +697,7 @@ function Calculator() {
                         marginTop: '4px'
                       }}
                       >
-                        <option value="">-- Sélectionner produit --</option>
+                        <option value="">{translate('calculator.selectProduct')}</option>
                         {products.map((p) => (
                           <option key={p.codeHs} value={p.codeHs}>
                             {p.codeHs} - {p.description}
@@ -712,11 +711,11 @@ function Calculator() {
 
               {!isImportateur && (
                 <div className="form-section">
-                  <h3 className="section-title">Basic Information</h3>
+                  <h3 className="section-title">{translate('calculator.basicInfo')}</h3>
                   <div className="form-grid">
                     <div className="form-group">
                       <label className="form-label">
-                        Catégorie
+                        {translate('calculator.category')}
                       </label>
                       <select
                         name="categorie"
@@ -735,7 +734,7 @@ function Calculator() {
                         marginTop: '4px'
                       }}
                       >
-                        <option value="">Sélectionnez une catégorie</option>
+                        <option value="">{translate('calculator.selectCategory')}</option>
                         {categories.map(cat => (
                           <option key={cat} value={cat}>{cat}</option>
                         ))}
@@ -744,7 +743,7 @@ function Calculator() {
 
                     <div className="form-group">
                       <label className="form-label">
-                        Pays de destination
+                        {translate('calculator.destination')}
                       </label>
                       {maritimeCountriesError && (
                         <div className="form-error">
@@ -809,7 +808,7 @@ function Calculator() {
                         marginTop: '4px'
                       }}
                         >
-                          <option value="">-- Sélectionner port --</option>
+                          <option value="">{translate('calculator.selectPort')}</option>
                           {ports.map((p) => (
                             <option key={p.id} value={p.id}>
                               {p.nomPort || p.nom || p.name}
@@ -828,7 +827,7 @@ function Calculator() {
 
                     <div className="form-group">
                       <label className="form-label">
-                        Produit
+                        {translate('calculator.product')}
                       </label>
                       <select
                         name="codeHs"
@@ -848,7 +847,7 @@ function Calculator() {
                         marginTop: '4px'
                       }}
                       >
-                        <option value="">Sélectionnez un produit</option>
+                        <option value="">{translate('calculator.selectProduct')}</option>
                         {products.map(product => (
                           <option key={product.id} value={product.codeHs}>
                             {product.nomProduit} ({product.codeHs})
@@ -862,11 +861,11 @@ function Calculator() {
 
               {/* Financial Information Card */}
               <div className="form-section">
-                <h3 className="section-title">Financial Information</h3>
+                <h3 className="section-title">{translate('calculator.financialInfo')}</h3>
                 <div className="form-grid">
                   <div className="form-group">
                     <label className="form-label">
-                      {isImportateur ? 'Valeur FOB marchandise' : 'Valeur CIF (FOB)'}
+                      {isImportateur ? translate('calculator.fobValue') : 'Valeur CIF (FOB)'}
                     </label>
                     <input
                       type="number"
@@ -893,7 +892,7 @@ function Calculator() {
 
                   <div className="form-group">
                       <label className="form-label">
-                        Coût de transport
+                        {translate('calculator.transportCost')}
                       </label>
                       <input
                         type="number"
@@ -914,13 +913,13 @@ function Calculator() {
                         display: 'block',
                         marginTop: '4px'
                       }}
-                        placeholder="Ex: 500"
+                      placeholder="Ex: 500"
                       />
                     </div>
 
                   <div className="form-group">
                     <label className="form-label">
-                      Assurance
+                      {translate('calculator.insurance')}
                     </label>
                     <input
                       type="number"
@@ -974,7 +973,7 @@ function Calculator() {
 
                   <div className="form-group">
                     <label className="form-label">
-                      Devise
+                      {translate('calculator.currency')}
                     </label>
                     <select
                       name="currency"
@@ -1004,18 +1003,18 @@ function Calculator() {
 
               {/* Legal Information Card */}
               <div className="form-section">
-                <h3 className="section-title">Informations Légales (optionnel)</h3>
+                <h3 className="section-title">{translate('calculator.legalInfo')}</h3>
                 <div className="form-grid">
                   <div className="form-group">
                     <label className="form-label">
-                      Nom Entreprise
+                      {translate('calculator.companyName')}
                     </label>
                     <input
                       type="text"
                       name="nomEntreprise"
                       value={formData.nomEntreprise}
                       onChange={handleInputChange}
-                      placeholder="Nom Entreprise"
+                      placeholder={translate('calculator.companyName')}
                       style={{
                         width: '100%',
                         padding: '10px 12px',
@@ -1032,14 +1031,14 @@ function Calculator() {
                   
                   <div className="form-group">
                     <label className="form-label">
-                      Registre Commerce (RC)
+                      {translate('calculator.rc')}
                     </label>
                     <input
                       type="text"
                       name="registreCommerce"
                       value={formData.registreCommerce}
                       onChange={handleInputChange}
-                      placeholder="Registre Commerce (RC)"
+                      placeholder={translate('calculator.rc')}
                       style={{
                         width: '100%',
                         padding: '10px 12px',
@@ -1056,14 +1055,14 @@ function Calculator() {
                   
                   <div className="form-group">
                     <label className="form-label">
-                      ICE
+                      {translate('calculator.ice')}
                     </label>
                     <input
                       type="text"
                       name="ice"
                       value={formData.ice}
                       onChange={handleInputChange}
-                      placeholder="ICE"
+                      placeholder={translate('calculator.ice')}
                       style={{
                         width: '100%',
                         padding: '10px 12px',
@@ -1080,7 +1079,7 @@ function Calculator() {
 
                   <div className="form-group">
                     <label className="form-label">
-                      Incoterm
+                      {translate('calculator.incoterm')}
                     </label>
                     <select
                       name="incoterm"
@@ -1113,7 +1112,7 @@ function Calculator() {
                 <div className="form-grid">
                   <div className="form-group">
                     <label className="form-label">
-                      Prix de vente prévisionnel (optionnel)
+                      {translate('calculator.sellingPrice')}
                     </label>
                     <input
                       type="number"
@@ -1122,7 +1121,7 @@ function Calculator() {
                       onChange={handleInputChange}
                       step="0.01"
                       min="0"
-                      placeholder="Pour analyse de rentabilité"
+                      placeholder={translate('calculator.profitAnalysis')}
                       style={{
                         width: '100%',
                         padding: '10px 12px',
@@ -1139,7 +1138,7 @@ function Calculator() {
 
                   <div className="form-group">
                     <label className="form-label">
-                      Poids Net (kg)
+                      {translate('calculator.netWeight')}
                     </label>
                     <input
                       type="number"
@@ -1148,7 +1147,7 @@ function Calculator() {
                       onChange={handleInputChange}
                       step="0.01"
                       min="0"
-                      placeholder="Poids Net (kg)"
+                      placeholder={translate('calculator.netWeight')}
                       style={{
                         width: '100%',
                         padding: '10px 12px',
@@ -1165,7 +1164,7 @@ function Calculator() {
                   
                   <div className="form-group">
                     <label className="form-label">
-                      Poids Brut (kg)
+                      {translate('calculator.grossWeight')}
                     </label>
                     <input
                       type="number"
@@ -1174,7 +1173,7 @@ function Calculator() {
                       onChange={handleInputChange}
                       step="0.01"
                       min="0"
-                      placeholder="Poids Brut (kg)"
+                      placeholder={translate('calculator.grossWeight')}
                       style={{
                         width: '100%',
                         padding: '10px 12px',
@@ -1191,14 +1190,14 @@ function Calculator() {
                   
                   <div className="form-group">
                     <label className="form-label">
-                      Type Unité
+                      {translate('calculator.unitType')}
                     </label>
                     <input
                       type="text"
                       name="typeUnite"
                       value={formData.typeUnite}
                       onChange={handleInputChange}
-                      placeholder="Type Unité (ex: conteneur 40')"
+                      placeholder={translate('calculator.unitTypePlaceholder')}
                       style={{
                         width: '100%',
                         padding: '10px 12px',
@@ -1227,7 +1226,7 @@ function Calculator() {
                 disabled={loading}
                 className="submit-button"
               >
-                {loading ? 'Calculating...' : 'Calculate Landed Cost'}
+                {loading ? translate('calculator.loading') : translate('calculator.calculate')}
               </button>
             </form>
           </div>
@@ -1249,7 +1248,7 @@ function Calculator() {
                 className="download-button"
               >
                 <Download className="button-icon" />
-                Download PDF Report
+                {translate('calculator.downloadReport')}
               </button>
             </div>
           )}
@@ -1259,9 +1258,9 @@ function Calculator() {
               <div className="placeholder-icon">
                 <CalcIcon className="w-12 h-12" />
               </div>
-              <h3 className="placeholder-title">Ready to Calculate?</h3>
+              <h3 className="placeholder-title">{translate('calculator.readyTitle')}</h3>
               <p className="placeholder-text">
-                Fill in the form to see your complete import cost breakdown
+                {translate('calculator.readyText')}
               </p>
             </div>
           )}

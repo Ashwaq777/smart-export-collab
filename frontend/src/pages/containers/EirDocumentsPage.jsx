@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { FiDownload, FiFile, FiTrash2, FiUpload, FiPackage, FiMapPin } from 'react-icons/fi';
 import containerService from '../../services/containerService';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function EirDocumentsPage() {
+  const { t: translate } = useLanguage();
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(null);
@@ -20,7 +22,7 @@ export default function EirDocumentsPage() {
       setDocuments(res.data?.data || []);
     } catch (err) {
       console.error('Error loading EIR documents:', err);
-      alert('Erreur lors du chargement des documents EIR');
+      alert(translate('eir.loadError'));
     } finally {
       setLoading(false);
     }
@@ -49,7 +51,7 @@ export default function EirDocumentsPage() {
       document.body.removeChild(a);
     } catch (err) {
       console.error('Download error:', err);
-      alert('Erreur lors du téléchargement du document');
+      alert(translate('eir.downloadError'));
     }
   };
 
@@ -73,33 +75,33 @@ export default function EirDocumentsPage() {
         throw new Error('Upload failed');
       }
 
-      alert('✅ Document EIR uploadé avec succès !');
+      alert(translate('eir.uploadSuccess'));
       loadDocuments();
     } catch (err) {
       console.error('Upload error:', err);
-      alert('Erreur lors de l\'upload du document');
+      alert(translate('eir.uploadError'));
     } finally {
       setUploading(null);
     }
   };
 
   const handleDelete = async (transactionId) => {
-    if (!window.confirm('Supprimer ce document EIR ?')) return;
+    if (!window.confirm(translate('eir.deleteConfirm'))) return;
     
     try {
       await containerService.deleteEirDocument(transactionId);
-      alert('✅ Document EIR supprimé avec succès');
+      alert(translate('eir.deleteSuccess'));
       loadDocuments();
     } catch (err) {
       console.error('Delete error:', err);
-      alert('Erreur lors de la suppression du document');
+      alert(translate('eir.deleteError'));
     }
   };
 
   if (loading) {
     return (
       <div style={{ padding: '2rem', textAlign: 'center' }}>
-        <div>Chargement des documents EIR...</div>
+        <div>{translate('eir.loading')}</div>
       </div>
     );
   }
@@ -130,9 +132,9 @@ export default function EirDocumentsPage() {
             <h1 style={{
               fontSize: '32px', fontWeight: '800', color: 'white',
               margin: 0, letterSpacing: '-0.5px'
-            }}>Documents EIR</h1>
+            }}>{translate('eir.title')}</h1>
             <p style={{ fontSize: '16px', color: 'rgba(255,255,255,0.75)', margin: '4px 0 0' }}>
-              Equipment Interchange Receipts - Vos documents logistiques
+              {translate('eir.subtitle')}
             </p>
           </div>
         </div>
@@ -150,10 +152,10 @@ export default function EirDocumentsPage() {
         }}>
           <FiFile size={48} style={{ color: '#9ca3af', marginBottom: '1rem' }} />
           <h3 style={{ color: '#6b7280', marginBottom: '0.5rem' }}>
-            Aucun document EIR trouvé
+            {translate('eir.noDocuments')}
           </h3>
           <p style={{ color: '#9ca3af' }}>
-            Les documents EIR apparaissent ici une fois que les transactions sont confirmées et les documents uploadés.
+            {translate('eir.noDocumentsText')}
           </p>
         </div>
       ) : (

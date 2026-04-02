@@ -3,8 +3,10 @@ import containerService from '../../services/containerService'
 import { worldPortsService } from '../../services/worldPortsApi'
 import { countriesService } from '../../services/countriesApi'
 import api from '../../services/api'
+import { useLanguage } from '../../context/LanguageContext'
 
 const CreateRequestModal = ({ isOpen, onClose, onSuccess }) => {
+  const { t: translate } = useLanguage()
   const [formData, setFormData] = useState({
     loadingLocation: '',
     containerType: 'STANDARD_20',
@@ -222,16 +224,16 @@ const CreateRequestModal = ({ isOpen, onClose, onSuccess }) => {
       justifyContent: 'center'
     }}>
       <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-screen overflow-y-auto">
-        <h2 className="text-xl font-bold mb-4">Nouvelle Demande de Conteneur</h2>
+        <h2 className="text-xl font-bold mb-4">{translate('modal.newRequest')}</h2>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Country Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Pays
+              {translate('modal.country')}
             </label>
             {countriesLoading ? (
-              <div className="text-sm text-gray-500">Chargement des pays...</div>
+              <div className="text-sm text-gray-500">{translate('modal.loadingCountries')}</div>
             ) : (
               <select
                 name="country"
@@ -240,7 +242,7 @@ const CreateRequestModal = ({ isOpen, onClose, onSuccess }) => {
                 required
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">-- Sélectionner pays --</option>
+                <option value="">{translate('modal.selectCountry')}</option>
                 {countries.map((c) => (
                   <option key={c.iso2 || c.code} value={c.nameFr || c.name}>
                     {c.flagEmoji ? `${c.flagEmoji} ` : ''}{c.nameFr || c.name}
@@ -253,10 +255,10 @@ const CreateRequestModal = ({ isOpen, onClose, onSuccess }) => {
           {/* Port Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Port de Chargement
+              {translate('modal.loadingPort')}
             </label>
             {portsLoading ? (
-              <div className="text-sm text-gray-500">Chargement des ports...</div>
+              <div className="text-sm text-gray-500">{translate('modal.loadingPorts')}</div>
             ) : (
               <select
                 name="loadingLocation"
@@ -266,7 +268,7 @@ const CreateRequestModal = ({ isOpen, onClose, onSuccess }) => {
                 disabled={!selectedCountry || ports.length === 0}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">-- Sélectionner port --</option>
+                <option value="">{translate('modal.selectPort')}</option>
                 {ports.map((p) => (
                   <option key={p.id} value={p.nomPort || p.nom}>
                     {p.nomPort || p.nom}
@@ -280,7 +282,7 @@ const CreateRequestModal = ({ isOpen, onClose, onSuccess }) => {
           {/* Container Type */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Type de Conteneur
+              {translate('modal.containerType')}
             </label>
             <select
               name="containerType"
@@ -297,7 +299,7 @@ const CreateRequestModal = ({ isOpen, onClose, onSuccess }) => {
           {/* Cargo Type */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Type de Cargaison
+              {translate('modal.cargoType')}
             </label>
             <select
               name="cargoType"
@@ -314,7 +316,7 @@ const CreateRequestModal = ({ isOpen, onClose, onSuccess }) => {
           {/* Required Date */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Date Requise
+              {translate('modal.requiredDate')}
             </label>
             <input
               type="date"
@@ -330,7 +332,7 @@ const CreateRequestModal = ({ isOpen, onClose, onSuccess }) => {
           {/* Size */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Taille
+              {translate('modal.size')}
             </label>
             <select
               name="size"
@@ -338,9 +340,9 @@ const CreateRequestModal = ({ isOpen, onClose, onSuccess }) => {
               onChange={handleInputChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="STANDARD">Standard</option>
-              <option value="HIGH_CUBE">High Cube</option>
-              <option value="REEFER">Reefer</option>
+              <option value="STANDARD">{translate('modal.standard')}</option>
+              <option value="HIGH_CUBE">{translate('modal.highCube')}</option>
+              <option value="REEFER">{translate('modal.reefer')}</option>
             </select>
           </div>
 
@@ -351,14 +353,14 @@ const CreateRequestModal = ({ isOpen, onClose, onSuccess }) => {
               onClick={onClose}
               className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
             >
-              Annuler
+              {translate('common.cancel')}
             </button>
             <button
               type="submit"
               disabled={loading}
               className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
             >
-              {loading ? 'Création...' : 'Créer la demande'}
+              {loading ? translate('modal.creating') : translate('modal.createRequest')}
             </button>
           </div>
         </form>

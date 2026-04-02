@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+import { LanguageSelector } from '../components/ui/LanguageSelector';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -9,6 +11,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,14 +33,17 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="relative min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="absolute top-4 right-4">
+        <LanguageSelector variant="light" />
+      </div>
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Connexion Smart Export
+            {t('login.title')}
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Accédez à votre plateforme d'exportation
+            {t('login.subtitle')}
           </p>
         </div>
         
@@ -70,7 +76,7 @@ const Login = () => {
                 autoComplete="current-password"
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Mot de passe"
+                placeholder={t('register.passwordSection')}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -83,7 +89,7 @@ const Login = () => {
                 to="/forgot-password"
                 className="font-medium text-indigo-600 hover:text-indigo-500"
               >
-                Mot de passe oublié?
+                {t('login.forgotPassword')}
               </Link>
             </div>
             <div className="text-sm">
@@ -91,7 +97,7 @@ const Login = () => {
                 to="/register"
                 className="font-medium text-indigo-600 hover:text-indigo-500"
               >
-                S'inscrire
+                {t('login.register')}
               </Link>
             </div>
           </div>
@@ -102,7 +108,7 @@ const Login = () => {
               disabled={loading}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
             >
-              {loading ? 'Connexion...' : 'Se connecter'}
+              {loading ? t('login.connecting') : t('login.connect')}
             </button>
           </div>
         </form>

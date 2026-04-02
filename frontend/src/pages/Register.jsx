@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import authService from '../services/authService';
+import { useLanguage } from '../context/LanguageContext';
+import { LanguageSelector } from '../components/ui/LanguageSelector';
 
 const Register = () => {
+  const { t } = useLanguage();
   // Informations personnelles
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -131,14 +134,17 @@ const Register = () => {
   const labelClasses = "block text-sm font-medium text-gray-700";
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="relative min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="absolute top-4 right-4">
+        <LanguageSelector variant="light" />
+      </div>
       <div className="max-w-2xl w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Inscription Smart Export
+            {t('register.title')}
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Créez votre compte pour accéder à la plateforme
+            {t('register.subtitle')}
           </p>
         </div>
         
@@ -151,11 +157,11 @@ const Register = () => {
           
           {/* Informations personnelles */}
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Informations personnelles</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">{t('register.personalInfo')}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="firstName" className={labelClasses}>
-                  Prénom *
+                  {t('register.firstName')} *
                 </label>
                 <input
                   id="firstName"
@@ -163,7 +169,7 @@ const Register = () => {
                   type="text"
                   required
                   className={inputClasses}
-                  placeholder="Votre prénom"
+                  placeholder={t('register.firstName')}
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                 />
@@ -171,7 +177,7 @@ const Register = () => {
 
               <div>
                 <label htmlFor="lastName" className={labelClasses}>
-                  Nom *
+                  {t('register.lastName')} *
                 </label>
                 <input
                   id="lastName"
@@ -179,7 +185,7 @@ const Register = () => {
                   type="text"
                   required
                   className={inputClasses}
-                  placeholder="Votre nom"
+                  placeholder={t('register.lastName')}
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                 />
@@ -204,7 +210,7 @@ const Register = () => {
 
               <div>
                 <label htmlFor="phone" className={labelClasses}>
-                  Téléphone
+                  {t('register.phone')}
                 </label>
                 <input
                   id="phone"
@@ -219,7 +225,7 @@ const Register = () => {
 
               <div>
                 <label htmlFor="birthDate" className={labelClasses}>
-                  Date de naissance
+                  {t('register.birthDate')}
                 </label>
                 <input
                   id="birthDate"
@@ -235,11 +241,11 @@ const Register = () => {
 
           {/* Informations professionnelles */}
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Informations professionnelles</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">{t('register.professionalInfo')}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="companyName" className={labelClasses}>
-                  Nom de l'entreprise
+                  {t('register.company')}
                 </label>
                 <input
                   id="companyName"
@@ -254,7 +260,7 @@ const Register = () => {
 
               <div>
                 <label htmlFor="country" className={labelClasses}>
-                  Pays
+                  {t('register.country')}
                 </label>
                 <select
                   id="country"
@@ -274,7 +280,7 @@ const Register = () => {
 
               <div>
                 <label htmlFor="role" className={labelClasses}>
-                  Type de compte *
+                  {t('register.role')} *
                 </label>
                 <select
                   id="role"
@@ -293,11 +299,11 @@ const Register = () => {
 
           {/* Mot de passe */}
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Mot de passe</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">{t('register.passwordSection')}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="password" className={labelClasses}>
-                  Mot de passe *
+                  {t('register.passwordSection')} *
                 </label>
                 <input
                   id="password"
@@ -313,7 +319,7 @@ const Register = () => {
 
               <div>
                 <label htmlFor="confirmPassword" className={labelClasses}>
-                  Confirmer le mot de passe *
+                  {t('register.confirmPassword')} *
                 </label>
                 <input
                   id="confirmPassword"
@@ -321,7 +327,7 @@ const Register = () => {
                   type="password"
                   required
                   className={inputClasses}
-                  placeholder="Confirmer le mot de passe"
+                  placeholder={t('register.confirmPassword')}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                 />
@@ -334,7 +340,7 @@ const Register = () => {
               to="/login"
               className="font-medium text-indigo-600 hover:text-indigo-500"
             >
-              Déjà un compte? Se connecter
+              {t('register.hasAccount')}
             </Link>
           </div>
 
@@ -344,7 +350,7 @@ const Register = () => {
               disabled={loading}
               className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition-colors"
             >
-              {loading ? 'Inscription...' : 'S\'inscrire'}
+              {loading ? t('register.creating') : t('register.createAccount')}
             </button>
           </div>
         </form>

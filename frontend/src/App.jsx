@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { ToastProvider } from './components/ui/Toast'
 import { MainLayout } from './components/layout/MainLayout'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { LanguageProvider } from './context/LanguageContext'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import Home from './pages/Home'
 import About from './pages/About'
@@ -28,26 +29,23 @@ import VesselTrackingPage from './pages/vessels/VesselTrackingPage'
 
 function HomeRedirect() {
   const { user } = useAuth();
-  
   if (user?.role === 'ADMIN') {
     return <Navigate to="/admin/dashboard" replace />;
-  } else if (user?.role === 'IMPORTATEUR' || user?.role === 'EXPORTATEUR') {
-    return <Navigate to="/containers/marketplace" replace />;
-  } else {
-    return (
-      <MainLayout>
-        <Home />
-      </MainLayout>
-    );
   }
+  return (
+    <MainLayout>
+      <Home />
+    </MainLayout>
+  );
 }
 
 function App() {
   return (
-    <Router>
-      <AuthProvider>
-        <ToastProvider>
-          <Routes>
+    <LanguageProvider>
+      <Router>
+        <AuthProvider>
+          <ToastProvider>
+            <Routes>
             {/* Routes publiques */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
@@ -167,7 +165,8 @@ function App() {
         </ToastProvider>
       </AuthProvider>
     </Router>
-  )
+  </LanguageProvider>
+)
 }
 
 export default App

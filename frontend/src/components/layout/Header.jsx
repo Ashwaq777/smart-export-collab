@@ -3,6 +3,8 @@ import { Link, useLocation } from 'react-router-dom'
 import { Ship, Anchor, Menu, X, UserCircle, LogOut, ChevronDown } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import NotificationBell from '../notifications/NotificationBell'
+import { useLanguage } from '../../context/LanguageContext'
+import { LanguageSelector } from '../ui/LanguageSelector'
 
 export const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false)
@@ -10,6 +12,9 @@ export const Header = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const location = useLocation()
   const { user, logout } = useAuth()
+  const { t } = useLanguage()
+
+  // Suppression du menu langue manuel - utilise LanguageSelector
 
   useEffect(() => {
     const handleScroll = () => {
@@ -20,18 +25,18 @@ export const Header = () => {
   }, [])
 
   const navLinks = [
-    { path: '/', label: 'Home' },
-    ...(user?.role !== 'ADMIN' ? [{ path: '/calculator', label: 'Calculator' }] : []),
-    ...(user?.role !== 'ADMIN' ? [{ path: '/traceability', label: 'Traçabilité' }] : []),
+    { path: '/', label: t('nav.home') },
+    ...(user?.role !== 'ADMIN' ? [{ path: '/calculator', label: t('nav.calculator') }] : []),
+    ...(user?.role !== 'ADMIN' ? [{ path: '/traceability', label: t('nav.traceability') }] : []),
     ...(user?.role !== 'ADMIN' ? [
-      { path: '/containers/marketplace', label: 'Marketplace' },
-      { path: '/containers/transactions', label: 'Transactions' },
-      { path: '/containers/eir-documents', label: 'Documents EIR' },
-      { path: '/vessels', label: 'Tracking Navires' }
+      { path: '/containers/marketplace', label: t('nav.marketplace') },
+      { path: '/containers/transactions', label: t('nav.transactions') },
+      { path: '/containers/eir-documents', label: t('nav.documents') },
+      { path: '/vessels', label: t('nav.tracking') }
     ] : []),
-    { path: '/support', label: 'Support' },
-    { path: '/about', label: 'About Us' },
-    ...(user?.role === 'ADMIN' ? [{ path: '/admin/dashboard', label: 'Admin' }] : []),
+    { path: '/support', label: t('nav.support') },
+    { path: '/about', label: t('nav.about') },
+    ...(user?.role === 'ADMIN' ? [{ path: '/admin/dashboard', label: t('nav.admin') }] : []),
   ]
 
   const handleLogout = () => {
@@ -49,6 +54,7 @@ export const Header = () => {
     }
     return 'U'
   }
+
 
   return (
     <header
@@ -98,13 +104,15 @@ export const Header = () => {
             ))}
           </nav>
 
+          <LanguageSelector variant="dark" />
+
           {/* CTA Button */}
           <div className="hidden md:flex items-center gap-3">
             <Link
               to="/calculator"
               className="bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-white px-6 py-2.5 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
             >
-              Start Simulation
+              {t('nav.simulation')}
             </Link>
 
             {user && <NotificationBell />}
@@ -132,7 +140,7 @@ export const Header = () => {
                       className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-accent-500 transition-colors"
                     >
                       <UserCircle className="w-4 h-4" />
-                      Mon Profil
+                      {t('nav.profile')}
                     </Link>
                     <button
                       type="button"
@@ -140,7 +148,7 @@ export const Header = () => {
                       className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-red-600 transition-colors text-left"
                     >
                       <LogOut className="w-4 h-4" />
-                      Déconnexion
+                      {t('nav.logout')}
                     </button>
                   </div>
                 )}
@@ -192,7 +200,7 @@ export const Header = () => {
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="bg-gradient-to-r from-accent-500 to-accent-600 text-white px-6 py-2.5 rounded-lg font-semibold text-center shadow-lg"
               >
-                Start Simulation
+                {t('nav.simulation')}
               </Link>
 
               {user ? (

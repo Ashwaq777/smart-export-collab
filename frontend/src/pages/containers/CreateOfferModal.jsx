@@ -383,7 +383,7 @@ const CreateOfferModal = ({ isOpen, onClose, onSuccess }) => {
                 color: '#16a34a',
                 marginTop: '4px', margin: 0
               }}>
-                ✅ {selectedFiles.length} photo(s) sélectionnée(s)
+                {selectedFiles.length} photo(s) sélectionnée(s)
               </p>
             )}
           </div>

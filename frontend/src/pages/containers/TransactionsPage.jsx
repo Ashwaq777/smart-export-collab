@@ -31,11 +31,11 @@ export default function TransactionsPage() {
   };
 
   const workflowSteps = [
-    { key: 'AT_PROVIDER', label: '🏭 ' + t('transactions.status.AT_PROVIDER') },
-    { key: 'IN_TRANSIT', label: '🚛 ' + t('transactions.status.IN_TRANSIT') },
-    { key: 'DELIVERED_TO_EXPORTER', label: '📦 ' + t('transactions.status.DELIVERED') },
-    { key: 'LOADING', label: '⚓ ' + t('transactions.status.LOADING') },
-    { key: 'COMPLETED', label: '✅ ' + t('transactions.status.COMPLETED') },
+    { key: 'AT_PROVIDER', label: t('transactions.status.AT_PROVIDER') },
+    { key: 'IN_TRANSIT', label: t('transactions.status.IN_TRANSIT') },
+    { key: 'DELIVERED_TO_EXPORTER', label: t('transactions.status.DELIVERED') },
+    { key: 'LOADING', label: t('transactions.status.LOADING') },
+    { key: 'COMPLETED', label: t('transactions.status.COMPLETED') },
   ];
 
   const getNextStatuses = (current) => {
@@ -81,7 +81,7 @@ export default function TransactionsPage() {
     try {
       setUploadingEir(txId);
       await containerService.uploadEir(txId, file);
-      alert('✅ EIR uploadé avec succès !');
+      alert('EIR uploadé avec succès !');
       loadTransactions();
     } catch (err) {
       alert('Erreur: ' + (err.response?.data?.message || err.message));
@@ -193,34 +193,28 @@ export default function TransactionsPage() {
     <div style={{ background: '#F8FAFC', minHeight: '100vh' }}>
       {/* Header */}
       <div style={{
-        background: 'linear-gradient(135deg, #0B1F3A 0%, #0E3A5D 50%, #1CA7C7 100%)',
-        padding: '48px 32px',
-        marginBottom: '32px'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{
-            width: '56px', height: '56px', borderRadius: '16px',
-            background: 'rgba(255,255,255,0.15)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center'
-          }}>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-              <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
-              <line x1="1" y1="10" x2="23" y2="10"/>
-            </svg>
-          </div>
-          <div>
-            <h1 style={{
-              fontSize: '32px', fontWeight: '800', color: 'white',
-              margin: 0, letterSpacing: '-0.5px'
-            }}>{t('transactions.title')}</h1>
-            <p style={{ fontSize: '16px', color: 'rgba(255,255,255,0.75)', margin: '4px 0 0' }}>
-              {isProvider 
-                ? "Suivez et gérez vos échanges de conteneurs"
-                : t('transactions.subtitle')}
-            </p>
-          </div>
-        </div>
-      </div>
+  background: 'linear-gradient(135deg, #0B1F3A 0%, #1CA7C7 100%)',
+  padding: '40px 32px',
+  width: '100%',
+  margin: 0
+}}>
+  <h1 style={{
+    color: 'white',
+    fontSize: '32px',
+    fontWeight: '700',
+    margin: 0,
+    lineHeight: '1.2'
+  }}>
+    {t('transactions.title')}
+  </h1>
+  <p style={{
+    color: 'rgba(255,255,255,0.8)',
+    margin: '8px 0 0 0',
+    fontSize: '16px'
+  }}>
+    {t('transactions.subtitle')}
+  </p>
+</div>
 
       <div style={{ padding: '0 32px' }}>
 
@@ -229,7 +223,7 @@ export default function TransactionsPage() {
           background: 'white', padding: '3rem', borderRadius: '12px',
           border: '2px dashed #d1d5db', textAlign: 'center'
         }}>
-          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📋</div>
+          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>�</div>
           <h3 style={{ color: '#6b7280', marginBottom: '0.5rem' }}>
             Aucune transaction
           </h3>
@@ -284,7 +278,7 @@ export default function TransactionsPage() {
                       background: '#eff6ff'
                     }}
                   >
-                    🚢 {t('transactions.viewOffer')}
+                    {t('transactions.viewOffer')}
                   </a>
                 )}
               </div>
@@ -343,7 +337,7 @@ export default function TransactionsPage() {
                       {tx.eirDocumentPath ? (
                         <>
                           <span style={{ fontSize: '12px', color: '#16a34a' }}>
-                            ✅ {t('transactions.eirAvailable')}
+                            {t('transactions.eirAvailable')}
                           </span>
                           <button
                             onClick={() => handleDownloadEir(tx.id)}
@@ -356,7 +350,7 @@ export default function TransactionsPage() {
                               cursor: 'pointer', fontSize: '12px'
                             }}
                           >
-                            📥 Voir
+                            Voir
                           </button>
                         </>
                       ) : (
@@ -372,7 +366,7 @@ export default function TransactionsPage() {
                         borderRadius: '6px', cursor: 'pointer',
                         fontSize: '12px', fontWeight: '500'
                       }}>
-                        {uploadingEir === tx.id ? '⏳ Upload...' : '📤 ' + t('transactions.uploadEir')}
+                        {uploadingEir === tx.id ? 'Upload...' : t('transactions.uploadEir')}
                         <input
                           type="file"
                           accept=".pdf,.doc,.docx"
@@ -395,7 +389,7 @@ export default function TransactionsPage() {
                     {tx.eirDocumentPath ? (
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <span style={{ fontSize: '12px', color: '#16a34a' }}>
-                          ✅ {t('transactions.eirAvailable')}
+                          {t('transactions.eirAvailable')}
                         </span>
                         <button
                           onClick={() => handleDownloadEir(tx.id)}
@@ -409,12 +403,12 @@ export default function TransactionsPage() {
                             fontWeight: '500'
                           }}
                         >
-                          📥 {t('transactions.downloadEir')}
+                          {t('transactions.downloadEir')}
                         </button>
                       </div>
                     ) : (
                       <span style={{ fontSize: '12px', color: '#f59e0b' }}>
-                        ⏳ {t('transactions.waitingEir')}
+                        {t('transactions.waitingEir')}
                       </span>
                     )}
                   </div>

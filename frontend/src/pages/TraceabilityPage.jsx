@@ -29,11 +29,11 @@ const sel = {...inp,cursor:'pointer'}
 const lbl = {display:'block',marginBottom:'6px',fontWeight:'600',
   color:'#1B2A4A',fontSize:'13px'}
 const sec = {background:'white',borderRadius:'12px',padding:'24px',
-  marginBottom:'20px',boxShadow:'0 2px 8px rgba(0,0,0,0.08)'}
+  marginBottom:'24px',boxShadow:'0 2px 8px rgba(0,0,0,0.08)',width:'100%',maxWidth:'100%'}
 const secT = {color:'#1B2A4A',fontSize:'16px',fontWeight:'700',
   marginBottom:'20px',paddingBottom:'10px',
   borderBottom:'2px solid #C9A84C',margin:'0 0 20px 0'}
-const grid2 = {display:'grid',gridTemplateColumns:'1fr 1fr',gap:'16px'}
+const grid2 = {display:'grid',gridTemplateColumns:'1fr 1fr',gap:'20px'}
 const grid3 = {display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:'16px'}
 const fld = (label, key, form, set, type='text', opts=null) => (
   <div key={key}>
@@ -122,11 +122,11 @@ export default function TraceabilityPage() {
       })
       const text = await r.text()
       if(!r.ok) throw new Error(text)
-      showMsg('✅ Enregistrement créé avec succès!')
+      showMsg('Enregistrement créé avec succès!')
       setForm(INITIAL)
       setTab('records')
       setTimeout(loadRecords, 500)
-    } catch(e) { showMsg('❌ Erreur: '+e.message, false) }
+    } catch(e) { showMsg('Erreur: '+e.message, false) }
     setLoading(false)
   }
 
@@ -143,7 +143,7 @@ export default function TraceabilityPage() {
       document.body.appendChild(a); a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
-    } catch(e) { showMsg('❌ Export: '+e.message, false) }
+    } catch(e) { showMsg('Export: '+e.message, false) }
   }
 
   // Fonctions pour la gestion de la sélection
@@ -172,7 +172,7 @@ export default function TraceabilityPage() {
   // Export Excel sélectif
   const handleSelectiveExport = () => {
     if (selectedRecords.size === 0) {
-      showMsg('❌ Veuillez sélectionner au moins un enregistrement', false)
+      showMsg('Veuillez sélectionner au moins un enregistrement', false)
       return
     }
 
@@ -246,9 +246,9 @@ export default function TraceabilityPage() {
       const fileName = `trace_export_${dateStr}_${timeStr}.xlsx`
       
       XLSX.writeFile(wb, fileName)
-      showMsg(`✅ Export réussi — ${selectedRecords.size} enregistrements exportés`)
+      showMsg(`Export réussi — ${selectedRecords.size} enregistrements exportés`)
     } catch (e) {
-      showMsg('❌ Erreur lors de l\'export: ' + e.message, false)
+      showMsg('Erreur lors de l\'export: ' + e.message, false)
     }
   }
 
@@ -269,9 +269,9 @@ export default function TraceabilityPage() {
       )
       setHistory(updatedHistory)
       setEditHistoryModal(null)
-      showMsg('✅ Trace modifiée avec succès')
+      showMsg('Trace modifiée avec succès')
     } catch (e) {
-      showMsg('❌ Erreur lors de la modification: ' + e.message, false)
+      showMsg('Erreur lors de la modification: ' + e.message, false)
     }
   }
 
@@ -281,9 +281,9 @@ export default function TraceabilityPage() {
       const updatedHistory = history.filter(h => h.id !== deleteHistoryModal.id)
       setHistory(updatedHistory)
       setDeleteHistoryModal(null)
-      showMsg('✅ Trace supprimée avec succès')
+      showMsg('Trace supprimée avec succès')
     } catch (e) {
-      showMsg('❌ Erreur lors de la suppression: ' + e.message, false)
+      showMsg('Erreur lors de la suppression: ' + e.message, false)
     }
   }
 
@@ -293,13 +293,13 @@ export default function TraceabilityPage() {
       // Validation du type de fichier
       const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword', 'image/jpeg', 'image/png']
       if (!allowedTypes.includes(file.type)) {
-        showMsg('❌ Type de fichier non autorisé. Formats acceptés : PDF, Word, JPG, PNG', false)
+        showMsg('Type de fichier non autorisé. Formats acceptés : PDF, Word, JPG, PNG', false)
         return
       }
       
       // Validation de la taille (10MB)
       if (file.size > 10 * 1024 * 1024) {
-        showMsg('❌ Le fichier dépasse la taille maximale de 10MB', false)
+        showMsg('Le fichier dépasse la taille maximale de 10MB', false)
         return
       }
       
@@ -313,13 +313,13 @@ export default function TraceabilityPage() {
       // Validation du type de fichier (uniquement images)
       const allowedTypes = ['image/jpeg', 'image/png']
       if (!allowedTypes.includes(file.type)) {
-        showMsg('❌ Type de fichier non autorisé. Formats acceptés : JPG, PNG uniquement', false)
+        showMsg('Type de fichier non autorisé. Formats acceptés : JPG, PNG uniquement', false)
         return
       }
       
       // Validation de la taille (10MB)
       if (file.size > 10 * 1024 * 1024) {
-        showMsg('❌ Le fichier dépasse la taille maximale de 10MB', false)
+        showMsg('Le fichier dépasse la taille maximale de 10MB', false)
         return
       }
       
@@ -336,7 +336,7 @@ export default function TraceabilityPage() {
 
   const handleUploadDocuments = async (recordId) => {
     if (!documentFile && !signatureFile) {
-      showMsg('❌ Veuillez sélectionner au moins un fichier', false)
+      showMsg('Veuillez sélectionner au moins un fichier', false)
       return
     }
 
@@ -370,13 +370,13 @@ export default function TraceabilityPage() {
       setDocumentPreview('')
       setSignaturePreview('')
       
-      showMsg('✅ Documents uploadés avec succès!')
+      showMsg('Documents uploadés avec succès!')
       
       // Recharger les enregistrements pour voir les mises à jour
       setTimeout(loadRecords, 500)
       
     } catch (e) {
-      showMsg('❌ Erreur lors de l\'upload: ' + e.message, false)
+      showMsg('Erreur lors de l\'upload: ' + e.message, false)
     } finally {
       setUploading(false)
     }
@@ -418,10 +418,12 @@ export default function TraceabilityPage() {
   }
 
   const tabStyle = (t) => ({
-    padding:'12px 24px', border:'none', cursor:'pointer',
-    borderBottom: tab===t ? '3px solid #C9A84C' : '3px solid transparent',
-    background:'transparent', fontSize:'15px', fontWeight: tab===t?'700':'400',
-    color: tab===t?'#1B2A4A':'#666'
+    padding:'14px 32px', border:'1px solid #e5e7eb', cursor:'pointer',
+    background: tab===t ? 'white' : '#f9fafb', 
+    fontSize:'15px', fontWeight: tab===t?'600':'400',
+    color: tab===t?'#1B2A4A':'#666',
+    borderRadius: '8px',
+    marginRight: '4px'
   })
 
   const btnPrimary = {background:'#1B2A4A',color:'white',border:'none',
@@ -430,30 +432,53 @@ export default function TraceabilityPage() {
   const btnGold = {...btnPrimary,background:'#C9A84C'}
 
   return (
-    <div style={{minHeight:'100vh',background:'#F0F2F5',
-  padding:'24px',paddingTop:'90px'}}>
-      <div style={{maxWidth:'1100px',margin:'0 auto'}}>
+    <div style={{minHeight:'100vh',background:'#F0F2F5'}}>
+      {/* Header */}
+      <div style={{
+  background: 'linear-gradient(135deg, #0B1F3A 0%, #1CA7C7 100%)',
+  padding: '40px 48px',
+  width: '100%',
+  margin: 0
+}}>
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+    <div>
+      <h1 style={{
+        color: 'white',
+        fontSize: '32px',
+        fontWeight: '700',
+        margin: 0,
+        lineHeight: '1.2'
+      }}>
+        {translate('traceability.title')}
+      </h1>
+      <p style={{
+        color: 'rgba(255,255,255,0.8)',
+        margin: '8px 0 0 0',
+        fontSize: '16px'
+      }}>
+        {translate('traceability.subtitle')}
+      </p>
+    </div>
+    <button
+      onClick={() => setTab('nouveau')}
+      style={{
+        background: '#C9A84C',
+        color: 'white',
+        border: 'none',
+        borderRadius: '8px',
+        padding: '10px 20px',
+        fontWeight: '600',
+        cursor: 'pointer',
+        fontSize: '14px'
+      }}
+    >
+      + {translate('traceability.new')}
+    </button>
+  </div>
+</div>
 
-        {/* Header */}
-        <div style={{background:'linear-gradient(135deg,#1B2A4A,#2D4A7A)',
-          borderRadius:'12px',padding:'24px 32px',marginBottom:'24px',
-          display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-          <div>
-            <h1 style={{color:'white',margin:0,fontSize:'26px'}}>
-              🌿 {translate('traceability.title')}
-            </h1>
-            <p style={{color:'#C9A84C',margin:'4px 0 0',fontSize:'14px'}}>
-              {translate('traceability.subtitle')}
-            </p>
-          </div>
-          <button onClick={()=>{setTab('nouveau');setForm(INITIAL)}}
-            style={{background:'#C9A84C',color:'white',border:'none',
-              padding:'12px 24px',borderRadius:'8px',cursor:'pointer',
-              fontSize:'15px',fontWeight:'700',
-              boxShadow:'0 4px 12px rgba(201,168,76,0.4)'}}>
-            ✚ {translate('traceability.new')}
-          </button>
-        </div>
+      <div style={{padding:'0 48px'}}>
+        <div style={{maxWidth:'100%',width:'100%',margin:'0 auto'}}>
 
         {/* Message */}
         {msg && (
@@ -469,16 +494,16 @@ export default function TraceabilityPage() {
         {/* Tabs */}
         <div style={{background:'white',borderRadius:'12px',
           marginBottom:'24px',boxShadow:'0 2px 8px rgba(0,0,0,0.08)',
-          display:'flex',borderBottom:'1px solid #eee'}}>
+          padding:'16px',display:'flex'}}>
           <button style={tabStyle('nouveau')} onClick={()=>setTab('nouveau')}>
-            ➕ {translate('traceability.newForm')}
+            {translate('traceability.newForm')}
           </button>
           <button style={tabStyle('records')} 
             onClick={()=>{setTab('records');loadRecords()}}>
-            📋 {translate('traceability.records')}
+            {translate('traceability.records')}
           </button>
           <button style={tabStyle('historique')} onClick={()=>setTab('historique')}>
-            📜 {translate('traceability.history')}
+            {translate('traceability.history')}
           </button>
         </div>
 
@@ -486,9 +511,7 @@ export default function TraceabilityPage() {
         {tab==='nouveau' && (
           <div>
             {/* A - Metadata */}
-            <div style={{background:'white',borderRadius:'12px',padding:'24px',
-              marginBottom:'20px',boxShadow:'0 2px 8px rgba(0,0,0,0.08)',
-              borderLeft:'4px solid #C9A84C'}}>
+            <div style={sec}>
               <h3 style={{color:'#1B2A4A',fontSize:'16px',fontWeight:'700',
                 margin:'0 0 20px 0',paddingBottom:'10px',
                 borderBottom:'2px solid #C9A84C'}}>
@@ -540,7 +563,7 @@ export default function TraceabilityPage() {
                   <div style={{padding:'10px 12px',background:'#d4edda',
                     borderRadius:'8px',fontSize:'13px',color:'#155724',
                     border:'1px solid #c3e6cb',fontWeight:'600'}}>
-                    ✅ FSMA 204 + UE
+                    FSMA 204 + UE
                   </div>
                 </div>
               </div>
@@ -622,8 +645,7 @@ export default function TraceabilityPage() {
             </div>
 
             {/* H - Liaison Traçabilité */}
-            <div style={{background:'white',borderRadius:'12px',padding:'24px',
-              marginBottom:'20px',boxShadow:'0 2px 8px rgba(0,0,0,0.08)'}}>
+            <div style={sec}>
               <h3 style={{color:'#1B2A4A',fontSize:'16px',fontWeight:'700',
                 margin:'0 0 20px 0',paddingBottom:'10px',
                 borderBottom:'2px solid #C9A84C'}}>
@@ -658,9 +680,7 @@ export default function TraceabilityPage() {
             </div>
 
             {/* I - Validation & Conformité */}
-            <div style={{background:'white',borderRadius:'12px',padding:'24px',
-              marginBottom:'20px',boxShadow:'0 2px 8px rgba(0,0,0,0.08)',
-              border:'2px solid #C9A84C'}}>
+            <div style={{...sec,border:'2px solid #C9A84C'}}>
               <h3 style={{color:'#1B2A4A',fontSize:'16px',fontWeight:'700',
                 margin:'0 0 20px 0',paddingBottom:'10px',
                 borderBottom:'2px solid #C9A84C'}}>
@@ -728,16 +748,14 @@ export default function TraceabilityPage() {
                         '#666',
                       transform: form.statut===s ? 'scale(1.02)' : 'scale(1)',
                       transition:'all 0.2s'}}>
-                    {s==='BROUILLON'?'📝':s==='VALIDÉ'?'✅':'🔒'} {s}
+                    {s==='BROUILLON'?'Brouillon':s==='VALIDÉ'?'Validé':'Verrouillé'} {s}
                   </div>
                 ))}
               </div>
             </div>
 
             {/* J - Documents & Signature officielle */}
-            <div style={{background:'white',borderRadius:'12px',padding:'24px',
-              marginBottom:'20px',boxShadow:'0 2px 8px rgba(0,0,0,0.08)',
-              border:'2px solid #28a745'}}>
+            <div style={{...sec,border:'2px solid #28a745'}}>
               <h3 style={{color:'#1B2A4A',fontSize:'16px',fontWeight:'700',
                 margin:'0 0 20px 0',paddingBottom:'10px',
                 borderBottom:'2px solid #28a745'}}>
@@ -774,7 +792,7 @@ export default function TraceabilityPage() {
                     {documentPreview ? (
                       <div>
                         <div style={{fontSize:'14px',color:'#28a745',fontWeight:'600',marginBottom:'8px'}}>
-                          ✅ {documentPreview}
+                          {documentPreview}
                         </div>
                         <div style={{fontSize:'12px',color:'#666'}}>
                           {(documentFile?.size / 1024 / 1024).toFixed(2)} MB
@@ -828,7 +846,7 @@ export default function TraceabilityPage() {
                           style={{maxWidth:'100px',maxHeight:'60px',border:'1px solid #ddd',borderRadius:'4px'}}
                         />
                         <div style={{fontSize:'12px',color:'#28a745',fontWeight:'600',marginTop:'8px'}}>
-                          ✅ Signature officielle du responsable
+                          Signature officielle du responsable
                         </div>
                       </div>
                     ) : (
@@ -849,7 +867,7 @@ export default function TraceabilityPage() {
               {/* Instructions */}
               <div style={{background:'#e8f5e8',borderRadius:'8px',padding:'16px',marginTop:'16px'}}>
                 <div style={{fontSize:'13px',color:'#155724',lineHeight:'1.5'}}>
-                  <strong>📋 Instructions :</strong><br/>
+                  <strong>Instructions :</strong><br/>
                   • Le document principal peut être un contrat, certificat, ou tout document officiel<br/>
                   • La signature doit être une image claire et lisible de la signature du responsable<br/>
                   • Les fichiers seront automatiquement associés à cet enregistrement de traçabilité<br/>
@@ -861,10 +879,10 @@ export default function TraceabilityPage() {
             <div style={{textAlign:'right',marginBottom:'32px'}}>
               <button onClick={()=>setForm(INITIAL)}
                 style={{...btnPrimary,background:'#6c757d',marginRight:'12px'}}>
-                🔄 Réinitialiser
+                Réinitialiser
               </button>
               <button onClick={handleSubmit} disabled={loading} style={btnPrimary}>
-                {loading ? '⏳ ' + translate('traceability.saving') : '💾 ' + translate('traceability.save')}
+                {loading ? translate('traceability.saving') : translate('traceability.save')}
               </button>
             </div>
           </div>
@@ -896,10 +914,10 @@ export default function TraceabilityPage() {
               </div>
               <div style={{marginTop:'16px',display:'flex',gap:'12px',alignItems:'center'}}>
                 <button onClick={loadRecords} style={btnPrimary}>
-                  {loading?'⏳ Chargement...':'🔄 ' + translate('traceability.loadFilter')}
+                  {loading?'Chargement...':translate('traceability.loadFilter')}
                 </button>
                 <button onClick={handleExport} style={btnGold}>
-                  📥 {translate('traceability.exportAll')}
+                  {translate('traceability.exportAll')}
                 </button>
                 <button 
                   onClick={handleSelectiveExport} 
@@ -921,7 +939,7 @@ export default function TraceabilityPage() {
             {/* Table */}
             <div style={sec}>
               <h3 style={{...secT,marginBottom:'16px'}}>
-                📋 {translate('traceability.records')} ({records.length})
+                {translate('traceability.records')} ({records.length})
               </h3>
               {records.length===0 ? (
                 <div style={{textAlign:'center',padding:'40px',color:'#666'}}>
@@ -932,8 +950,8 @@ export default function TraceabilityPage() {
                 <div style={{overflowX:'auto'}}>
                   <table style={{width:'100%',borderCollapse:'collapse'}}>
                     <thead>
-                      <tr style={{background:'#1B2A4A'}}>
-                        <th style={{padding:'14px 16px',color:'white',
+                      <tr style={{background:'#0B1F3A'}}>
+                        <th style={{padding:'12px 16px',color:'white',
                           textAlign:'center',fontSize:'13px',fontWeight:'600',width:'50px'}}>
                           <input 
                             type="checkbox"
@@ -944,7 +962,7 @@ export default function TraceabilityPage() {
                         </th>
                         {['Identifiant',translate('traceability.producer'),'Parcelle','Date Récolte',
                           'Destination','Statut','Actions'].map(h=>(
-                          <th key={h} style={{padding:'14px 16px',color:'white',
+                          <th key={h} style={{padding:'12px 16px',color:'white',
                             textAlign:'left',fontSize:'13px',fontWeight:'600'}}>
                             {h}
                           </th>
@@ -954,11 +972,10 @@ export default function TraceabilityPage() {
                     <tbody>
                       {records.map((r,i)=>(
                         <tr key={r.id} style={{
-                          background: selectedRecords.has(r.id) ? '#E6F7FF' : (i%2===0?'white':'#F8F9FA'),
-                          borderBottom:'1px solid #E8ECF0',
-                          borderLeft: selectedRecords.has(r.id) ? '3px solid #0e7fa3' : 'none'
+                          background: i%2===0?'white':'#F4F7FB',
+                          borderBottom:'1px solid #e5e7eb'
                         }}>
-                          <td style={{padding:'14px 16px',textAlign:'center'}}>
+                          <td style={{padding:'12px 16px',textAlign:'center'}}>
                             <input 
                               type="checkbox"
                               checked={selectedRecords.has(r.id)}
@@ -966,17 +983,17 @@ export default function TraceabilityPage() {
                               style={{width:'18px',height:'18px',cursor:'pointer',accentColor:'#0e7fa3'}}
                             />
                           </td>
-                          <td style={{padding:'14px 16px',fontSize:'12px',
+                          <td style={{padding:'12px 16px',fontSize:'12px',
                             color:'#666',fontFamily:'monospace'}}>
                             {r.identifiant||('REC-'+r.id)}
                           </td>
-                          <td style={{padding:'14px 16px',fontWeight:'500'}}>
+                          <td style={{padding:'12px 16px',fontWeight:'500'}}>
                             {r.producteur||'-'}
                           </td>
-                          <td style={{padding:'14px 16px'}}>{r.parcelle||'-'}</td>
-                          <td style={{padding:'14px 16px'}}>{r.dateRecolte||'-'}</td>
-                          <td style={{padding:'14px 16px'}}>{r.destination||'-'}</td>
-                          <td style={{padding:'14px 16px'}}>
+                          <td style={{padding:'12px 16px'}}>{r.parcelle||'-'}</td>
+                          <td style={{padding:'12px 16px'}}>{r.dateRecolte||'-'}</td>
+                          <td style={{padding:'12px 16px'}}>{r.destination||'-'}</td>
+                          <td style={{padding:'12px 16px'}}>
                             <span style={{padding:'4px 12px',borderRadius:'20px',
                               fontSize:'12px',fontWeight:'600',
                               background:r.statut==='VALIDÉ'?'#d4edda':
@@ -986,7 +1003,7 @@ export default function TraceabilityPage() {
                               {r.statut||'BROUILLON'}
                             </span>
                           </td>
-                          <td style={{padding:'14px 16px'}}>
+                          <td style={{padding:'12px 16px'}}>
                             <div style={{display:'flex',gap:'8px',alignItems:'center',flexWrap:'wrap'}}>
                               {/* Icônes de statut de documents */}
                               {r.documentFileName && (
@@ -1006,7 +1023,7 @@ export default function TraceabilityPage() {
                                   border:'none',padding:'6px 14px',
                                   borderRadius:'6px',cursor:'pointer',
                                   fontSize:'12px',fontWeight:'600'}}>
-                                📜 {translate('traceability.history')}
+                                {translate('traceability.history')}
                               </button>
                               
                               {/* Bouton Upload Documents */}
@@ -1028,7 +1045,7 @@ export default function TraceabilityPage() {
                                   border:'none',padding:'6px 14px',
                                   borderRadius:'6px',cursor:'pointer',
                                   fontSize:'12px',fontWeight:'600'}}>
-                                📄 Docs
+                                Docs
                               </button>
                               
                               {/* Actions de téléchargement */}
@@ -1066,7 +1083,7 @@ export default function TraceabilityPage() {
               {selRecord && (
                 <div id={`upload-section-${selRecord.id}`} style={sec}>
                   <h3 style={secT}>
-                    📄 Upload Documents - {selRecord.identifiant||'Record '+selRecord.id}
+                    Upload Documents - {selRecord.identifiant||'Record '+selRecord.id}
                   </h3>
                   
                   <div style={grid2}>
@@ -1098,7 +1115,7 @@ export default function TraceabilityPage() {
                         />
                         {documentPreview ? (
                           <div style={{fontSize:'13px',color:'#28a745',fontWeight:'600'}}>
-                            ✅ {documentPreview}
+                            {documentPreview}
                           </div>
                         ) : (
                           <div style={{fontSize:'13px',color:'#666'}}>
@@ -1142,7 +1159,7 @@ export default function TraceabilityPage() {
                               style={{maxWidth:'80px',maxHeight:'50px',border:'1px solid #ddd',borderRadius:'4px'}}
                             />
                             <div style={{fontSize:'12px',color:'#28a745',fontWeight:'600',marginTop:'4px'}}>
-                              ✅ Signature chargée
+                              Signature chargée
                             </div>
                           </div>
                         ) : (
@@ -1165,7 +1182,7 @@ export default function TraceabilityPage() {
                         cursor: (!documentFile && !signatureFile) ? 'not-allowed' : 'pointer'
                       }}
                     >
-                      {uploading ? '⏳ Upload...' : '📤 Uploader les fichiers'}
+                      {uploading ? 'Upload...' : 'Uploader les fichiers'}
                     </button>
                     
                     <button 
@@ -1178,26 +1195,26 @@ export default function TraceabilityPage() {
                       }}
                       style={{...btnPrimary,background:'#6c757d'}}
                     >
-                      ❌ {translate('traceability.cancel')}
+                      {translate('traceability.cancel')}
                     </button>
                   </div>
 
                   {/* Statut actuel des documents */}
                   <div style={{marginTop:'16px',padding:'12px',background:'#f8f9fa',borderRadius:'6px'}}>
                     <div style={{fontSize:'13px',fontWeight:'600',color:'#1B2A4A',marginBottom:'8px'}}>
-                      📋 Statut actuel :
+                      Statut actuel :
                     </div>
                     <div style={{display:'flex',gap:'16px',fontSize:'12px'}}>
                       <div>
                         Document : {selRecord.documentFileName ? 
-                          <span style={{color:'#28a745',fontWeight:'600'}}>✅ {selRecord.documentFileName}</span> : 
-                          <span style={{color:'#dc3545'}}>❌ Non uploadé</span>
+                          <span style={{color:'#28a745',fontWeight:'600'}}>{selRecord.documentFileName}</span> : 
+                          <span style={{color:'#dc3545'}}>Non uploadé</span>
                         }
                       </div>
                       <div>
                         Signature : {selRecord.signatureFileName ? 
-                          <span style={{color:'#28a745',fontWeight:'600'}}>✅ {selRecord.signatureFileName}</span> : 
-                          <span style={{color:'#dc3545'}}>❌ Non uploadée</span>
+                          <span style={{color:'#28a745',fontWeight:'600'}}>{selRecord.signatureFileName}</span> : 
+                          <span style={{color:'#dc3545'}}>Non uploadée</span>
                         }
                       </div>
                     </div>
@@ -1218,11 +1235,11 @@ export default function TraceabilityPage() {
         {tab==='historique' && (
           <div style={sec}>
             <h3 style={secT}>
-              📜 {translate('traceability.history')} {selRecord ? `— ${selRecord.identifiant||'Record '+selRecord.id}` : ''}
+              {translate('traceability.history')} {selRecord ? `— ${selRecord.identifiant||'Record '+selRecord.id}` : ''}
             </h3>
             {!selRecord ? (
               <div style={{textAlign:'center',padding:'40px',color:'#666'}}>
-                <div style={{fontSize:'48px',marginBottom:'12px'}}>📜</div>
+                <div style={{fontSize:'48px',marginBottom:'12px'}}>�</div>
                 <p>Sélectionnez un enregistrement depuis l'onglet "Enregistrements"
                   et cliquez sur "Historique".</p>
                 <button onClick={()=>setTab('records')} style={btnPrimary}>
@@ -1234,51 +1251,76 @@ export default function TraceabilityPage() {
                 <p>{translate('traceability.noHistory')}</p>
               </div>
             ) : (
-              <div style={{position:'relative',paddingLeft:'20px'}}>
-                {history.map((h,i)=>(
-                  <div key={h.id||i} style={{display:'flex',
-                    marginBottom:'24px',position:'relative'}}>
-                    <div style={{display:'flex',flexDirection:'column',
-                      alignItems:'center',marginRight:'20px',flexShrink:0}}>
-                      <div style={{width:'40px',height:'40px',borderRadius:'50%',
-                        background:'#C9A84C',color:'white',display:'flex',
-                        alignItems:'center',justifyContent:'center',
-                        fontWeight:'bold',fontSize:'14px',
-                        boxShadow:'0 2px 8px rgba(201,168,76,0.4)'}}>
-                        v{h.version||i+1}
-                      </div>
-                      {i<history.length-1 && (
-                        <div style={{width:'2px',flex:1,background:'#E8ECF0',
-                          minHeight:'30px',marginTop:'4px'}}/>
-                      )}
-                    </div>
-                    <div style={{flex:1,background:'#F8F9FA',borderRadius:'10px',
-                      padding:'16px',border:'1px solid #E8ECF0'}}>
-                      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:'8px'}}>
-                        <div style={{fontWeight:'700',color:'#1B2A4A',
-                          fontSize:'15px'}}>
+              <div style={{overflowX:'auto'}}>
+                <table style={{width:'100%',borderCollapse:'collapse'}}>
+                  <thead>
+                    <tr style={{background:'#0B1F3A'}}>
+                      <th style={{padding:'12px 16px',color:'white',
+                        textAlign:'left',fontSize:'13px',fontWeight:'600'}}>
+                        Version
+                      </th>
+                      <th style={{padding:'12px 16px',color:'white',
+                        textAlign:'left',fontSize:'13px',fontWeight:'600'}}>
+                        Date
+                      </th>
+                      <th style={{padding:'12px 16px',color:'white',
+                        textAlign:'left',fontSize:'13px',fontWeight:'600'}}>
+                        Modification
+                      </th>
+                      <th style={{padding:'12px 16px',color:'white',
+                        textAlign:'left',fontSize:'13px',fontWeight:'600'}}>
+                        Auteur
+                      </th>
+                      <th style={{padding:'12px 16px',color:'white',
+                        textAlign:'center',fontSize:'13px',fontWeight:'600'}}>
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {history.map((h,i)=>(
+                      <tr key={h.id||i} style={{
+                        background: i%2===0?'white':'#F4F7FB',
+                        borderBottom:'1px solid #e5e7eb'
+                      }}>
+                        <td style={{padding:'12px 16px'}}>
+                          <span style={{display:'inline-flex',alignItems:'center',justifyContent:'center',
+                            width:'32px',height:'32px',borderRadius:'50%',
+                            background:'#C9A84C',color:'white',fontSize:'12px',
+                            fontWeight:'bold'}}>
+                            v{h.version||i+1}
+                          </span>
+                        </td>
+                        <td style={{padding:'12px 16px',fontSize:'13px',color:'#666'}}>
+                          {h.date ? new Date(h.date).toLocaleString('fr-FR') : '-'}
+                        </td>
+                        <td style={{padding:'12px 16px',fontSize:'14px'}}>
                           {h.changeDescription||'Modification effectuée'}
-                        </div>
-                        <div style={{display:'flex',gap:'8px'}}>
-                          <button
-                            onClick={() => handleEditHistory(h)}
-                            style={{
-                              background:'#0e7fa3',
-                              color:'white',
-                              border:'none',
-                              padding:'6px 8px',
-                              borderRadius:'4px',
-                              cursor:'pointer',
-                              display:'flex',
-                              alignItems:'center',
-                              justifyContent:'center',
-                              transition:'all 0.2s'
-                            }}
-                            title="Modifier">
-                            <Pencil size={14} />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteHistory(h)}
+                        </td>
+                        <td style={{padding:'12px 16px',fontSize:'14px'}}>
+                          {h.author||'-'}
+                        </td>
+                        <td style={{padding:'12px 16px',textAlign:'center'}}>
+                          <div style={{display:'flex',gap:'8px',justifyContent:'center'}}>
+                            <button
+                              onClick={() => handleEditHistory(h)}
+                              style={{
+                                background:'#0e7fa3',
+                                color:'white',
+                                border:'none',
+                                padding:'6px 8px',
+                                borderRadius:'4px',
+                                cursor:'pointer',
+                                display:'flex',
+                                alignItems:'center',
+                                justifyContent:'center',
+                                transition:'all 0.2s'
+                              }}
+                              title="Modifier">
+                              <Pencil size={14} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteHistory(h)}
                             style={{
                               background:'#dc2626',
                               color:'white',
@@ -1292,20 +1334,14 @@ export default function TraceabilityPage() {
                               transition:'all 0.2s'
                             }}
                             title="Supprimer">
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      </div>
-                      <div style={{color:'#666',fontSize:'13px',
-                        display:'flex',gap:'16px',flexWrap:'wrap'}}>
-                        <span>👤 {h.modifiedBy||'Système'}</span>
-                        <span>🕐 {h.modifiedAt ?
-                          new Date(h.modifiedAt).toLocaleString('fr-FR') : ''}</span>
-                        <span>📋 Version {h.version||i+1}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>
@@ -1445,6 +1481,7 @@ export default function TraceabilityPage() {
             </div>
           </div>
         )}
+        </div>
       </div>
     </div>
   )

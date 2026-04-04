@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import containerService from '../../services/containerService';
 
 export default function OfferDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [offer, setOffer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -53,7 +55,7 @@ export default function OfferDetailPage() {
           gap: '6px'
         }}
       >
-        ← Retour au marketplace
+        Retour au marketplace
       </button>
 
       <div style={{ 
@@ -82,7 +84,7 @@ export default function OfferDetailPage() {
                 }}
               />
             ) : (
-              <div style={{ fontSize: '80px' }}>📦</div>
+              <div style={{ fontSize: '80px' }}>�</div>
             )}
           </div>
 
@@ -142,14 +144,14 @@ export default function OfferDetailPage() {
               gap: '1rem'
             }}>
               {[
-                ['📦 Type', offer.containerType],
-                ['🚛 Cargaison', offer.cargoType],
-                ['📍 Port', offer.portName || offer.location],
-                ['📅 Disponible', offer.availableDate],
-                ['🔢 Numéro', offer.containerNumber || 'N/A'],
-                ['🔧 État', offer.technicalCondition || 'N/A'],
-                ['📆 Année', offer.yearOfManufacture || 'N/A'],
-                ['✅ Statut', offer.status],
+                ['Type', offer.containerType],
+                ['Cargaison', offer.cargoType],
+                ['Port', offer.portName || offer.location],
+                ['Disponible', offer.availableDate],
+                ['Numéro', offer.containerNumber || 'N/A'],
+                ['État', offer.technicalCondition || 'N/A'],
+                ['Année', offer.yearOfManufacture || 'N/A'],
+                ['Statut', offer.status],
               ].map(([label, value]) => (
                 <div key={label} style={{
                   padding: '12px',
@@ -195,7 +197,7 @@ export default function OfferDetailPage() {
               alignItems: 'center',
               gap: '6px'
             }}>
-              ✅ Conteneur disponible
+              Conteneur disponible
             </div>
 
             <div style={{
@@ -213,24 +215,27 @@ export default function OfferDetailPage() {
               </div>
             </div>
 
-            <button
-              onClick={() => navigate(
-                `/containers/marketplace/${id}/request`)}
-              style={{
-                width: '100%',
-                padding: '14px',
-                background: '#1d4ed8',
-                color: 'white',
-                border: 'none',
-                borderRadius: '10px',
-                cursor: 'pointer',
-                fontWeight: '600',
-                fontSize: '15px',
-                marginBottom: '10px'
-              }}
-            >
-              📩 Envoyer une demande
-            </button>
+            {/* Bouton "Envoyer une demande" - uniquement pour les exportateurs */}
+            {user?.role === 'EXPORTATEUR' && (
+              <button
+                onClick={() => navigate(
+                  `/containers/marketplace/${id}/request`)}
+                style={{
+                  width: '100%',
+                  padding: '14px',
+                  background: '#1d4ed8',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '15px',
+                  marginBottom: '10px'
+                }}
+              >
+                📩 Envoyer une demande
+              </button>
+            )}
 
             <button
               onClick={() => navigate(

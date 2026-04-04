@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import { Ship, Anchor, Users, CreditCard, MapPin, Package, BarChart2, Globe, DollarSign, MessageSquare } from "lucide-react"
 import api from '../services/api'
 import AdminContainerManager from '../components/admin/AdminContainerManager'
+import { LanguageSelector } from '../components/ui/LanguageSelector'
 
 const TOKEN = () => localStorage.getItem('token') || ''
 const NAVY = '#0B1F3A';
@@ -19,6 +20,21 @@ export default function AdminDashboard() {
   const { t: translate } = useLanguage()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('overview')
+
+  // Translation maps for dynamic values - moved after state initialization
+  const getPriorityMap = () => ({
+    LOW: translate('admin.claimsManagement.priority.low'),
+    MEDIUM: translate('admin.claimsManagement.priority.medium'),
+    HIGH: translate('admin.claimsManagement.priority.high'),
+    URGENT: translate('admin.claimsManagement.priority.urgent')
+  })
+
+  const getStatusMap = () => ({
+    OPEN: translate('admin.claimsManagement.statusOptions.open'),
+    IN_PROGRESS: translate('admin.claimsManagement.statusOptions.inProgress'),
+    RESOLVED: translate('admin.claimsManagement.statusOptions.resolved'),
+    CLOSED: translate('admin.claimsManagement.statusOptions.closed')
+  })
 
   const [users, setUsers] = useState([])
   const [userSearch, setUserSearch] = useState('')
@@ -81,7 +97,7 @@ export default function AdminDashboard() {
         pendingTickets: statsData.pendingTickets || 0
       })
     } catch(e) { 
-      showMsg('Erreur chargement users: '+e.message, false)
+      showMsg(translate('admin.alerts.error') + ' chargement users: '+e.message, false)
       setUsers([])
     }
     setUserLoading(false)
@@ -187,26 +203,26 @@ export default function AdminDashboard() {
   const updateUserRole = async (userId, role) => {
     try {
       await api.put(`/admin/users/${userId}/role`, {role})
-      showMsg('Role mis a jour')
+      showMsg(translate('admin.alerts.roleUpdated'))
       loadUsers()
-    } catch(e) { showMsg('Erreur: '+e.message, false) }
+    } catch(e) { showMsg(translate('admin.alerts.error') + ': '+e.message, false) }
   }
 
   const updateUserStatus = async (userId, status) => {
     try {
       await api.put(`/admin/users/${userId}/status?status=${status}`)
-      showMsg('Statut mis a jour')
+      showMsg(translate('admin.alerts.statusUpdated'))
       loadUsers()
-    } catch(e) { showMsg('Erreur: '+e.message, false) }
+    } catch(e) { showMsg(translate('admin.alerts.error') + ': '+e.message, false) }
   }
 
   const deleteUser = async (userId, email) => {
-    if(!window.confirm('Supprimer ' + email + ' ?')) return
+    if(!window.confirm(translate('admin.users.actions.confirmDelete') + ' ' + email + ' ?')) return
     try {
       await api.delete(`/admin/users/${userId}`)
-      showMsg('Utilisateur supprime')
+      showMsg(translate('admin.alerts.userDeleted'))
       loadUsers()
-    } catch(e) { showMsg('Erreur: '+e.message, false) }
+    } catch(e) { showMsg(translate('admin.alerts.error') + ': '+e.message, false) }
   }
 
   const blockUser = async (userId, currentStatus) => {
@@ -289,7 +305,7 @@ export default function AdminDashboard() {
     { key: 'users', label: translate('admin.users'), icon: Users },
     { 
       key: 'containers', 
-      label: 'Marketplace', 
+      label: translate('admin.sidebar.marketplace'), 
       icon: () => (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
           <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
@@ -322,7 +338,7 @@ export default function AdminDashboard() {
     { key: 'ports', label: translate('admin.ports'), icon: MapPin },
     { 
       key: 'rates', 
-      label: 'Taux de change', 
+      label: translate('admin.sidebar.exchangeRates'), 
       icon: () => (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
           <line x1="12" y1="1" x2="12" y2="23"/>
@@ -466,7 +482,7 @@ export default function AdminDashboard() {
                 fontWeight: '500',
                 lineHeight: '1.2'
               }}>
-                Administration
+                {translate('admin.sidebar.administration')}
               </div>
             </div>
           </div>
@@ -577,7 +593,7 @@ export default function AdminDashboard() {
               e.target.style.background = 'rgba(255,255,255,0.1)'
             }}
           >
-            Déconnexion
+            {translate('admin.sidebar.logout')}
           </button>
         </div>
       </div>
@@ -605,21 +621,25 @@ export default function AdminDashboard() {
               color: '#0B1F3A',
               margin: '0 0 0.25rem 0'
             }}>
-              {sidebarItems.find(item => item.key === activeTab)?.label || 'Admin Dashboard'}
+              {translate('admin.header.title')}
             </h1>
             <p style={{
               fontSize: '0.8125rem',
               color: '#64748B',
               margin: 0
             }}>
-              Gestion de la plateforme Smart Export Global
+              {translate('admin.header.subtitle')}
             </p>
           </div>
           <div style={{
             fontSize: '0.8125rem',
             color: '#64748B',
-            fontWeight: '500'
+            fontWeight: '500',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1rem'
           }}>
+            <LanguageSelector variant="dark" />
             {currentDate}
           </div>
         </div>
@@ -653,11 +673,11 @@ export default function AdminDashboard() {
             }}>
               {[
                 { label: translate('admin.totalUsers'), value: stats.totalUsers, color: '#0B1F3A', bgColor: '#EFF6FF', icon: Users },
-                { label: 'Utilisateurs actifs', value: stats.activeUsers, color: '#0B1F3A', bgColor: '#DCFCE7', icon: Users },
-                { label: 'Importateurs', value: users.filter(u => u.role === 'IMPORTATEUR').length, color: '#0B1F3A', bgColor: '#EFF6FF', icon: Package },
-                { label: 'Exportateurs', value: users.filter(u => u.role === 'EXPORTATEUR').length, color: '#0B1F3A', bgColor: '#F0FDFA', icon: Package },
+                { label: translate('admin.activeUsers'), value: stats.activeUsers, color: '#0B1F3A', bgColor: '#DCFCE7', icon: Users },
+                { label: translate('admin.stats.importers'), value: users.filter(u => u.role === 'IMPORTATEUR').length, color: '#0B1F3A', bgColor: '#EFF6FF', icon: Package },
+                { label: translate('admin.stats.exporters'), value: users.filter(u => u.role === 'EXPORTATEUR').length, color: '#0B1F3A', bgColor: '#F0FDFA', icon: Package },
                 { label: translate('admin.activeOffers'), value: stats.activeOffers, color: '#0B1F3A', bgColor: '#DCFCE7', icon: Package },
-                { label: 'Matches total', value: stats.totalMatches, color: '#0B1F3A', bgColor: '#EDE9FE', icon: Users },
+                { label: translate('admin.totalMatches'), value: stats.totalMatches, color: '#0B1F3A', bgColor: '#EDE9FE', icon: Users },
                 { label: translate('admin.transactions'), value: stats.totalTransactions, color: '#0B1F3A', bgColor: '#EFF6FF', icon: CreditCard },
                 { label: translate('admin.pendingTickets'), value: stats.pendingTickets, color: '#0B1F3A', bgColor: '#FEE2E2', icon: MessageSquare }
               ].map((metric, index) => {
@@ -695,7 +715,7 @@ export default function AdminDashboard() {
                         fontSize: '0.75rem',
                         fontWeight: '500'
                       }}>
-                        ↑ actif
+                        {translate('admin.stats.active')}
                       </div>
                     </div>
                     <div style={{
@@ -716,103 +736,6 @@ export default function AdminDashboard() {
                   </div>
                 )
               })}
-            </div>
-
-            {/* Recent Transactions */}
-            <div style={{
-              background: 'white',
-              border: '1px solid #E2E8F0',
-              borderRadius: '12px',
-              padding: '1.5rem',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
-            }}>
-              <h2 style={{
-                fontSize: '1rem',
-                fontWeight: '600',
-                color: '#0B1F3A',
-                margin: '0 0 1rem 0'
-              }}>
-                Transactions récentes
-              </h2>
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr style={{ background: '#0B1F3A' }}>
-                      {['ID', 'Client', 'Type', 'Montant', 'Statut', 'Date'].map(header => (
-                        <th key={header} style={{
-                          padding: '0.75rem 1rem',
-                          textAlign: 'left',
-                          fontSize: '0.75rem',
-                          fontWeight: '600',
-                          color: 'white',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.05em'
-                        }}>
-                          {header}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recentTransactions.map((tx, index) => (
-                      <tr key={tx.id || index} style={{
-                        background: index % 2 === 0 ? 'white' : '#F8FAFC',
-                        borderBottom: '1px solid #E2E8F0'
-                      }}>
-                        <td style={{
-                          padding: '0.75rem 1rem',
-                          fontSize: '0.875rem',
-                          color: '#1E293B',
-                          fontWeight: '500'
-                        }}>
-                          #{tx.id || index + 1}
-                        </td>
-                        <td style={{
-                          padding: '0.75rem 1rem',
-                          fontSize: '0.875rem',
-                          color: '#1E293B'
-                        }}>
-                          {tx.client || 'Client anonyme'}
-                        </td>
-                        <td style={{
-                          padding: '0.75rem 1rem',
-                          fontSize: '0.875rem',
-                          color: '#1E293B'
-                        }}>
-                          {tx.type || 'Standard'}
-                        </td>
-                        <td style={{
-                          padding: '0.75rem 1rem',
-                          fontSize: '0.875rem',
-                          color: '#1E293B',
-                          fontWeight: '500'
-                        }}>
-                          {tx.amount || '0'} €
-                        </td>
-                        <td style={{ padding: '0.75rem 1rem' }}>
-                          <span style={{
-                            padding: '0.25rem 0.75rem',
-                            borderRadius: '9999px',
-                            fontSize: '0.6875rem',
-                            fontWeight: '600',
-                            background: '#DCFCE7',
-                            color: '#15803D'
-                          }}>
-                            {tx.status || 'COMPLETED'}
-                          </span>
-                        </td>
-                        <td style={{
-                          padding: '0.75rem 1rem',
-                          fontSize: '0.875rem',
-                          color: '#64748B'
-                        }}>
-                          {tx.date ? new Date(tx.date).toLocaleDateString('fr-FR') : 'N/A'}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
             </div>
           </div>
         )}
@@ -841,7 +764,7 @@ export default function AdminDashboard() {
                 }}
                 value={userSearch}
                 onChange={e => setUserSearch(e.target.value)}
-                placeholder={translate('admin.search') + ' par email ou rôle...'}
+                placeholder={translate('admin.usersManagement.search')}
               />
               <button
                 onClick={loadUsers}
@@ -856,7 +779,7 @@ export default function AdminDashboard() {
                   fontWeight: '500'
                 }}
               >
-                Actualiser
+                {translate('admin.usersManagement.refresh')}
               </button>
             </div>
 
@@ -880,7 +803,7 @@ export default function AdminDashboard() {
                         textTransform: 'uppercase',
                         letterSpacing: '0.05em'
                       }}>
-                        Avatar + Nom
+                        {translate('admin.usersManagement.columns.avatarName')}
                       </th>
                       <th style={{
                         padding: '0.75rem 1rem',
@@ -891,7 +814,7 @@ export default function AdminDashboard() {
                         textTransform: 'uppercase',
                         letterSpacing: '0.05em'
                       }}>
-                        Email
+                        {translate('admin.usersManagement.columns.email')}
                       </th>
                       <th style={{
                         padding: '0.75rem 1rem',
@@ -902,7 +825,7 @@ export default function AdminDashboard() {
                         textTransform: 'uppercase',
                         letterSpacing: '0.05em'
                       }}>
-                        Rôle
+                        {translate('admin.role')}
                       </th>
                       <th style={{
                         padding: '0.75rem 1rem',
@@ -913,7 +836,7 @@ export default function AdminDashboard() {
                         textTransform: 'uppercase',
                         letterSpacing: '0.05em'
                       }}>
-                        Statut
+                        {translate('admin.status')}
                       </th>
                       <th style={{
                         padding: '0.75rem 1rem',
@@ -924,7 +847,7 @@ export default function AdminDashboard() {
                         textTransform: 'uppercase',
                         letterSpacing: '0.05em'
                       }}>
-                        Entreprise
+                        {translate('admin.usersManagement.columns.company')}
                       </th>
                       <th style={{
                         padding: '0.75rem 1rem',
@@ -935,7 +858,7 @@ export default function AdminDashboard() {
                         textTransform: 'uppercase',
                         letterSpacing: '0.05em'
                       }}>
-                        Pays
+                        {translate('admin.usersManagement.columns.country')}
                       </th>
                       <th style={{
                         padding: '0.75rem 1rem',
@@ -946,7 +869,7 @@ export default function AdminDashboard() {
                         textTransform: 'uppercase',
                         letterSpacing: '0.05em'
                       }}>
-                        Actions
+                        {translate('admin.usersManagement.columns.actions')}
                       </th>
                     </tr>
                   </thead>
@@ -1037,14 +960,14 @@ export default function AdminDashboard() {
                           fontSize: '0.875rem',
                           color: '#374151'
                         }}>
-                          {user.companyName || 'Non renseigné'}
+                          {user.companyName || translate('admin.usersManagement.notSpecified')}
                         </td>
                         <td style={{
                           padding: '1rem',
                           fontSize: '0.875rem',
                           color: '#374151'
                         }}>
-                          {user.country || 'Non renseigné'}
+                          {user.country || translate('admin.usersManagement.notSpecified')}
                         </td>
                         <td style={{
                           padding: '1rem'
@@ -1074,7 +997,7 @@ export default function AdminDashboard() {
                                 e.target.style.color = '#0B3D5C'
                               }}
                             >
-                              Détail
+                              {translate('admin.usersManagement.actions.detail')}
                             </button>
                           </div>
                         </td>
@@ -1090,7 +1013,7 @@ export default function AdminDashboard() {
                 fontSize: '0.8125rem',
                 color: '#64748B'
               }}>
-                {filteredUsers.length} utilisateur(s) affiché(s) sur {users.length}
+                {filteredUsers.length} {translate('admin.usersManagement.results')} {users.length}
               </div>
             </div>
           </div>
@@ -1122,7 +1045,7 @@ export default function AdminDashboard() {
                 }}
                 value={countrySearch}
                 onChange={e => setCountrySearch(e.target.value)}
-                placeholder="Rechercher un pays..."
+                placeholder={translate('admin.countriesManagement.search')}
               />
               <select
                 value={selectedCurrency}
@@ -1154,7 +1077,7 @@ export default function AdminDashboard() {
                   fontWeight: '500'
                 }}
               >
-                Actualiser
+                {translate('admin.countriesManagement.refresh')}
               </button>
             </div>
 
@@ -1169,7 +1092,7 @@ export default function AdminDashboard() {
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ background: '#0B3D5C' }}>
-                      {['Drapeau', 'Code', 'Pays', 'Région', 'Devise', 'Douane %', 'TVA %', 'Parafiscal %', `Frais (${selectedCurrency})`, 'Actions'].map(header => (
+                      {[translate('admin.countriesManagement.columns.flag'), translate('admin.countriesManagement.columns.code'), translate('admin.countriesManagement.columns.name'), translate('admin.countriesManagement.columns.region'), translate('admin.countriesManagement.columns.currency'), translate('admin.countriesManagement.columns.customsDuty'), translate('admin.countriesManagement.columns.vat'), translate('admin.countriesManagement.columns.parafiscal'), translate('admin.countriesManagement.columns.fees') + ` (${selectedCurrency})`, translate('admin.countriesManagement.columns.actions')].map(header => (
                         <th key={header} style={{
                           padding: '0.75rem 1rem',
                           textAlign: 'left',
@@ -1268,7 +1191,7 @@ export default function AdminDashboard() {
                               e.target.style.color = '#0B3D5C'
                             }}
                           >
-                            Modifier
+                            {translate('admin.countriesManagement.edit')}
                           </button>
                         </td>
                       </tr>
@@ -1313,7 +1236,7 @@ export default function AdminDashboard() {
                 }}
                 value={portSearch || ''}
                 onChange={e => setPortSearch(e.target.value)}
-                placeholder="Rechercher port ou pays..."
+                placeholder={translate('admin.portsManagement.search')}
               />
               <button
                 onClick={loadPorts}
@@ -1328,7 +1251,7 @@ export default function AdminDashboard() {
                   fontWeight: '500'
                 }}
               >
-                Actualiser
+                {translate('admin.portsManagement.refresh')}
               </button>
             </div>
 
@@ -1343,7 +1266,7 @@ export default function AdminDashboard() {
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ background: '#0B3D5C' }}>
-                      {['Nom', 'Pays', 'Code', 'Frais', 'Type', 'Actions'].map(header => (
+                      {[translate('admin.portsManagement.columns.name'), translate('admin.portsManagement.columns.country'), translate('admin.portsManagement.columns.code'), translate('admin.portsManagement.columns.fees'), translate('admin.portsManagement.columns.type'), translate('admin.portsManagement.columns.actions')].map(header => (
                         <th key={header} style={{
                           padding: '0.75rem 1rem',
                           textAlign: 'left',
@@ -1419,7 +1342,7 @@ export default function AdminDashboard() {
                               e.target.style.color = '#0B3D5C'
                             }}
                           >
-                            Modifier
+                            {translate('admin.portsManagement.edit')}
                           </button>
                         </td>
                       </tr>
@@ -1455,7 +1378,7 @@ export default function AdminDashboard() {
                 }}
                 value={rateSearch}
                 onChange={e => setRateSearch(e.target.value)}
-                placeholder="Rechercher une devise..."
+                placeholder={translate('admin.exchangeRates.searchPlaceholder')}
               />
               <button
                 onClick={loadRates}
@@ -1470,7 +1393,7 @@ export default function AdminDashboard() {
                   fontWeight: '500'
                 }}
               >
-                Actualiser
+                {translate('admin.exchangeRates.refresh')}
               </button>
             </div>
 
@@ -1485,7 +1408,7 @@ export default function AdminDashboard() {
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ background: '#0B3D5C' }}>
-                      {['Devise', 'Code', 'Taux vs USD', 'Symbole', 'Mise à jour', 'Actions'].map(header => (
+                      {[translate('admin.exchangeRates.columns.currency'), translate('admin.exchangeRates.columns.code'), translate('admin.exchangeRates.columns.rateVsUsd'), translate('admin.exchangeRates.columns.symbol'), translate('admin.exchangeRates.columns.updatedAt'), translate('admin.exchangeRates.columns.actions')].map(header => (
                         <th key={header} style={{
                           padding: '0.75rem 1rem',
                           textAlign: 'left',
@@ -1548,7 +1471,7 @@ export default function AdminDashboard() {
                           </td>
                           <td style={{ padding: '1rem' }}>
                             <button
-                              onClick={() => showMsg('Modifier taux: ' + rate.code)}
+                              onClick={() => showMsg(translate('admin.exchangeRates.actions.edit') + ' ' + rate.code)}
                               style={{
                                 padding: '0.375rem 0.75rem',
                                 background: 'transparent',
@@ -1568,7 +1491,7 @@ export default function AdminDashboard() {
                                 e.target.style.color = '#0B3D5C'
                               }}
                             >
-                              Modifier
+                              {translate('admin.exchangeRates.actions.edit')}
                             </button>
                           </td>
                         </tr>
@@ -1599,7 +1522,7 @@ export default function AdminDashboard() {
                 color: '#0B1F3A',
                 margin: '0 0 1rem 0'
               }}>
-                Transactions récentes
+                {translate('admin.recentTransactions')}
               </h2>
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -1692,13 +1615,13 @@ export default function AdminDashboard() {
                 color: '#0B1F3A',
                 margin: '0 0 1rem 0'
               }}>
-                Réclamations
+                {translate('admin.claimsManagement.title')}
               </h2>
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ background: '#0B1F3A' }}>
-                      {['Utilisateur', 'Sujet', 'Catégorie', 'Priorité', 'Statut', 'Date', 'Actions'].map(header => (
+                      {[translate('admin.claimsManagement.columns.user'), translate('admin.claimsManagement.columns.subject'), translate('admin.claimsManagement.columns.category'), translate('admin.claimsManagement.columns.priority'), translate('admin.claimsManagement.columns.status'), translate('admin.claimsManagement.columns.date'), translate('admin.claimsManagement.columns.actions')].map(header => (
                         <th key={header} style={{
                           padding: '0.75rem 1rem',
                           textAlign: 'left',
@@ -1750,7 +1673,7 @@ export default function AdminDashboard() {
                             background: getPriorityColor(claim.priority || 'LOW').bg,
                             color: getPriorityColor(claim.priority || 'LOW').text
                           }}>
-                            {claim.priority || 'LOW'}
+                            {getPriorityMap()[claim.priority] || getPriorityMap().LOW}
                           </span>
                         </td>
                         <td style={{ padding: '0.75rem 1rem' }}>
@@ -1762,7 +1685,7 @@ export default function AdminDashboard() {
                             background: getStatusColor(claim.status || 'OPEN').bg,
                             color: getStatusColor(claim.status || 'OPEN').text
                           }}>
-                            {claim.status || 'OPEN'}
+                            {getStatusMap()[claim.status] || getStatusMap().OPEN}
                           </span>
                         </td>
                         <td style={{
@@ -1797,7 +1720,7 @@ export default function AdminDashboard() {
                               e.target.style.background = '#0B1F3A'
                             }}
                           >
-                            Répondre
+                            {translate('admin.claimsManagement.actions.respond')}
                           </button>
                         </td>
                       </tr>
@@ -1836,7 +1759,7 @@ export default function AdminDashboard() {
                 fontSize: '1.125rem',
                 fontWeight: '600'
               }}>
-                Répondre à la réclamation
+                {translate('admin.claimsManagement.modal.title')}
               </h3>
               
               <div style={{ marginBottom: '1rem' }}>
@@ -1847,7 +1770,7 @@ export default function AdminDashboard() {
                   color: '#374151',
                   fontSize: '0.875rem'
                 }}>
-                  Sujet
+                  {translate('admin.claimsManagement.modal.subject')}
                 </label>
                 <div style={{
                   padding: '0.5rem 0.75rem',
@@ -1868,7 +1791,7 @@ export default function AdminDashboard() {
                   color: '#374151',
                   fontSize: '0.875rem'
                 }}>
-                  Réponse
+                  {translate('admin.claimsManagement.modal.response')}
                 </label>
                 <textarea
                   style={{
@@ -1884,7 +1807,7 @@ export default function AdminDashboard() {
                   }}
                   value={claimResponse}
                   onChange={e => setClaimResponse(e.target.value)}
-                  placeholder="Tapez votre réponse..."
+                  placeholder={translate('admin.claimsManagement.modal.placeholder')}
                 />
               </div>
               
@@ -1896,7 +1819,7 @@ export default function AdminDashboard() {
                   color: '#374151',
                   fontSize: '0.875rem'
                 }}>
-                  Statut
+                  {translate('admin.status')}
                 </label>
                 <select
                   style={{
@@ -1911,10 +1834,10 @@ export default function AdminDashboard() {
                   value={claimStatus}
                   onChange={e => setClaimStatus(e.target.value)}
                 >
-                  <option value="OPEN">Ouvert</option>
-                  <option value="IN_PROGRESS">En cours</option>
-                  <option value="RESOLVED">Résolu</option>
-                  <option value="CLOSED">Fermé</option>
+                  <option value="OPEN">{translate('admin.claimsManagement.statusOptions.open')}</option>
+                  <option value="IN_PROGRESS">{translate('admin.claimsManagement.statusOptions.inProgress')}</option>
+                  <option value="RESOLVED">{translate('admin.claimsManagement.statusOptions.resolved')}</option>
+                  <option value="CLOSED">{translate('admin.claimsManagement.statusOptions.closed')}</option>
                 </select>
               </div>
               
@@ -1948,7 +1871,7 @@ export default function AdminDashboard() {
                     fontWeight: '500'
                   }}
                 >
-                  Envoyer
+                  {translate('admin.claimsManagement.modal.send')}
                 </button>
                 <button
                   onClick={() => setShowClaimModal(false)}
@@ -1963,7 +1886,7 @@ export default function AdminDashboard() {
                     fontWeight: '500'
                   }}
                 >
-                  Annuler
+                  {translate('admin.claimsManagement.modal.cancel')}
                 </button>
               </div>
             </div>
@@ -2145,7 +2068,7 @@ export default function AdminDashboard() {
                     color: '#64748B',
                     marginBottom: '0.25rem'
                   }}>
-                    Rôle
+                    {translate('admin.role')}
                   </label>
                   <div style={{
                     padding: '0.5rem 0.75rem',
@@ -2175,7 +2098,7 @@ export default function AdminDashboard() {
                     color: '#64748B',
                     marginBottom: '0.25rem'
                   }}>
-                    Statut du compte
+                    {translate('admin.status')} du compte
                   </label>
                   <div style={{
                     padding: '0.5rem 0.75rem',

@@ -110,35 +110,28 @@ export default function EirDocumentsPage() {
     <div style={{ background: '#F8FAFC', minHeight: '100vh' }}>
       {/* Header */}
       <div style={{
-        background: 'linear-gradient(135deg, #0B1F3A 0%, #0E3A5D 50%, #1CA7C7 100%)',
-        padding: '48px 32px',
-        marginBottom: '32px'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{
-            width: '56px', height: '56px', borderRadius: '16px',
-            background: 'rgba(255,255,255,0.15)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center'
-          }}>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-              <polyline points="14,2 14,8 20,8"/>
-              <line x1="16" y1="13" x2="8" y2="13"/>
-              <line x1="16" y1="17" x2="8" y2="17"/>
-              <polyline points="10,9 9,9 8,9"/>
-            </svg>
-          </div>
-          <div>
-            <h1 style={{
-              fontSize: '32px', fontWeight: '800', color: 'white',
-              margin: 0, letterSpacing: '-0.5px'
-            }}>{translate('eir.title')}</h1>
-            <p style={{ fontSize: '16px', color: 'rgba(255,255,255,0.75)', margin: '4px 0 0' }}>
-              {translate('eir.subtitle')}
-            </p>
-          </div>
-        </div>
-      </div>
+  background: 'linear-gradient(135deg, #0B1F3A 0%, #1CA7C7 100%)',
+  padding: '40px 32px',
+  width: '100%',
+  margin: 0
+}}>
+  <h1 style={{
+    color: 'white',
+    fontSize: '32px',
+    fontWeight: '700',
+    margin: 0,
+    lineHeight: '1.2'
+  }}>
+    {translate('eir.title')}
+  </h1>
+  <p style={{
+    color: 'rgba(255,255,255,0.8)',
+    margin: '8px 0 0 0',
+    fontSize: '16px'
+  }}>
+    {translate('eir.subtitle')}
+  </p>
+</div>
 
       <div style={{ padding: '0 32px' }}>
 

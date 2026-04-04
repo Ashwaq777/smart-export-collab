@@ -21,7 +21,7 @@ export const LanguageSelector = ({ variant = 'dark' }) => {
         onClick={() => setOpen(!open)}
         className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
           isDark
-            ? 'bg-white/10 hover:bg-white/20 text-white'
+            ? 'bg-white/10 hover:bg-white/20 text-[#0B1F3A]'
             : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
         }`}
       >

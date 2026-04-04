@@ -1,17 +1,14 @@
-import React from 'react'
 import { Header } from './Header'
 import { Footer } from './Footer'
 
-export const MainLayout = ({ children, showHeader = true, showFooter = true }) => {
+export const MainLayout = ({ children }) => {
   return (
-    <div className="min-h-screen bg-maritime-cream">
-      {showHeader && <Header />}
-      
-      <main className="min-h-screen pt-20">
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <Header />
+      <main style={{ marginTop: '64px', flex: 1, padding: 0, margin: 0 }}>
         {children}
       </main>
-
-      {showFooter && <Footer />}
+      <Footer />
     </div>
   )
 }

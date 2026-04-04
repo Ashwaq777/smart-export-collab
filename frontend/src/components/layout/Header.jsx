@@ -59,173 +59,98 @@ export const Header = () => {
   return (
     <header
       style={{ position: 'relative', zIndex: 100 }}
-      className={`fixed top-0 left-0 right-0 transition-all duration-300 z-50 min-h-[64px] ${
+      className={`fixed top-0 left-0 right-0 transition-all duration-300 z-50 h-16 ${
         isScrolled
-          ? 'bg-[#0B1F3A] shadow-lg py-3'
-          : 'bg-gradient-to-r from-[#0B1F3A] to-[#1CA7C7] py-4'
+          ? 'bg-[#0B1F3A] shadow-lg'
+          : 'bg-gradient-to-r from-[#0B1F3A] to-[#1CA7C7]'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="flex items-center justify-between min-h-[64px]">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 group mr-16">
-            <div className="relative">
-              <div className="w-14 h-14 bg-gradient-to-br from-maritime-navy via-maritime-deepBlue to-accent-500 rounded-xl flex items-center justify-center shadow-xl group-hover:shadow-2xl transition-all duration-300 group-hover:scale-105 border-2 border-accent-500/20">
-                <Ship className="w-7 h-7 text-white drop-shadow-lg" />
-              </div>
-              <div className="absolute -bottom-1.5 -right-1.5 w-6 h-6 bg-gradient-to-br from-accent-500 to-accent-600 rounded-full flex items-center justify-center shadow-lg border-2 border-white">
-                <Anchor className="w-3.5 h-3.5 text-white" />
-              </div>
+      <div className="h-16 flex items-center gap-6 px-4">
+        {/* Logo */}
+        <Link to="/" className="flex items-center gap-3 group">
+          <div className="relative">
+            <div className="w-8 h-8 bg-gradient-to-br from-maritime-navy via-maritime-deepBlue to-accent-500 rounded-xl flex items-center justify-center shadow-xl group-hover:shadow-2xl transition-all duration-300 group-hover:scale-105 border-2 border-accent-500/20">
+              <Ship className="w-4 h-4 text-white drop-shadow-lg" />
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-white leading-tight tracking-tight">
-                Smart Export
-              </h1>
-              <p className="text-xs font-medium text-white/80 leading-tight">
-                Global Maritime Trade
-              </p>
+            <div className="absolute -bottom-1.5 -right-1.5 w-4 h-4 bg-gradient-to-br from-accent-500 to-accent-600 rounded-full flex items-center justify-center shadow-lg border-2 border-white">
+              <Anchor className="w-3 h-3 text-white" />
             </div>
-          </Link>
+          </div>
+          <div>
+            <h1 className="text-sm font-bold text-white leading-tight tracking-tight">
+              Smart Export
+            </h1>
+          </div>
+        </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <Link
-                key={link.path + (link.hash || '')}
-                to={link.path + (link.hash || '')}
-                className={`text-sm font-semibold transition-colors duration-200 ${
-                  location.pathname === link.path && !link.hash
-                    ? 'text-white'
-                    : 'text-white/80 hover:text-white'
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-
-          <LanguageSelector variant="dark" />
-
-          {/* CTA Button */}
-          <div className="hidden md:flex items-center gap-3">
+        {/* Desktop Navigation */}
+        <nav className="hidden md:flex items-center gap-6 flex-1">
+          {navLinks.map((link) => (
             <Link
-              to="/calculator"
-              className="bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-white px-6 py-2.5 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+              key={link.path + (link.hash || '')}
+              to={link.path + (link.hash || '')}
+              className={`text-sm font-semibold transition-colors duration-200 whitespace-nowrap ${
+                location.pathname === link.path && !link.hash
+                  ? 'text-white'
+                  : 'text-white/80 hover:text-white'
+              }`}
             >
-              {t('nav.simulation')}
+              {link.label}
             </Link>
+          ))}
+        </nav>
 
-            {user && <NotificationBell />}
+          {/* User Actions */}
+        <div className="hidden md:flex items-center gap-4">
+          <LanguageSelector variant="dark" />
+          {user && <NotificationBell />}
 
-            {user ? (
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-gray-200 text-gray-700 hover:text-maritime-navy hover:border-accent-500 transition-colors"
-                  title="Menu utilisateur"
-                >
-                  <div className="w-8 h-8 bg-accent-500 text-white rounded-full flex items-center justify-center text-sm font-semibold">
-                    {getUserInitials()}
-                  </div>
-                  <ChevronDown className={`w-4 h-4 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
-                </button>
-
-                {/* Dropdown Menu */}
-                {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
-                    <Link
-                      to="/profile"
-                      onClick={() => setIsUserMenuOpen(false)}
-                      className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-accent-500 transition-colors"
-                    >
-                      <UserCircle className="w-4 h-4" />
-                      {t('nav.profile')}
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={handleLogout}
-                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-red-600 transition-colors text-left"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      {t('nav.logout')}
-                    </button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <Link
-                to="/login"
-                className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-gray-200 text-gray-700 hover:text-accent-500 hover:border-accent-500 transition-colors"
+          {user ? (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-gray-200 text-gray-700 hover:text-maritime-navy hover:border-accent-500 transition-colors"
+                title="Menu utilisateur"
               >
-                <UserCircle className="w-5 h-5" />
-                <span className="text-sm font-semibold">Login</span>
-              </Link>
-            )}
-          </div>
+                <div className="w-8 h-8 bg-accent-500 text-white rounded-full flex items-center justify-center text-xs font-semibold">
+                  {getUserInitials()}
+                </div>
+                <ChevronDown className={`w-4 h-4 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
 
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2 text-maritime-navy"
-          >
-            {isMobileMenuOpen ? (
-              <X className="w-6 h-6" />
-            ) : (
-              <Menu className="w-6 h-6" />
-            )}
-          </button>
-        </div>
-
-        {/* Mobile Menu */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden mt-4 pb-4 border-t border-gray-200 pt-4">
-            <nav className="flex flex-col gap-4">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.path + (link.hash || '')}
-                  to={link.path + (link.hash || '')}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={`text-sm font-semibold transition-colors duration-200 ${
-                    location.pathname === link.path && !link.hash
-                      ? 'text-accent-500'
-                      : 'text-gray-700 hover:text-accent-500'
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              ))}
-              <Link
-                to="/calculator"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="bg-gradient-to-r from-accent-500 to-accent-600 text-white px-6 py-2.5 rounded-lg font-semibold text-center shadow-lg"
-              >
-                {t('nav.simulation')}
-              </Link>
-
-              {user ? (
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg border border-gray-200 text-gray-700 font-semibold"
-                >
-                  <UserCircle className="w-5 h-5" />
-                  <span>Logout ({user.role})</span>
-                  <LogOut className="w-4 h-4" />
-                </button>
-              ) : (
-                <Link
-                  to="/login"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg border border-gray-200 text-gray-700 font-semibold"
-                >
-                  <UserCircle className="w-5 h-5" />
-                  <span>Login</span>
-                </Link>
+              {/* Dropdown Menu */}
+              {isUserMenuOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                  <Link
+                    to="/profile"
+                    onClick={() => setIsUserMenuOpen(false)}
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-accent-500 transition-colors"
+                  >
+                    <UserCircle className="w-4 h-4" />
+                    {t('nav.profile')}
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-red-600 transition-colors text-left"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    {t('nav.logout')}
+                  </button>
+                </div>
               )}
-            </nav>
-          </div>
-        )}
+            </div>
+          ) : (
+            <Link
+              to="/login"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-gray-200 text-gray-700 hover:text-accent-500 hover:border-accent-500 transition-colors"
+            >
+              <UserCircle className="w-5 h-5" />
+              <span className="text-xs font-semibold">Login</span>
+            </Link>
+          )}
+        </div>
       </div>
     </header>
   )

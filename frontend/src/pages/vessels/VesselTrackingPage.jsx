@@ -180,16 +180,37 @@ export default function VesselTrackingPage() {
   const mapZoom = vesselPos ? 5 : 2;
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-      {/* Header */}
-      <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: '700', margin: 0 }}>
-          🚢 Suivi de Navire en Temps Réel
-        </h1>
-        <p style={{ color: '#6b7280', marginTop: '4px' }}>
-          Powered by MarineAsia API — entrez un numéro IMO pour localiser un navire
-        </p>
-      </div>
+    <div>
+      {/* Bandeau bleu gradient avec titre */}
+      <div style={{
+  background: 'linear-gradient(135deg, #0B1F3A 0%, #1CA7C7 100%)',
+  padding: '40px 32px',
+  width: '100%',
+  margin: 0
+}}>
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+    <div>
+      <h1 style={{
+        color: 'white',
+        fontSize: '32px',
+        fontWeight: '700',
+        margin: 0,
+        lineHeight: '1.2'
+      }}>
+        🚢 Suivi de Navire en Temps Réel
+      </h1>
+      <p style={{
+        color: 'rgba(255,255,255,0.8)',
+        margin: '8px 0 0 0',
+        fontSize: '16px'
+      }}>
+        Powered by MarineAsia API — entrez un numéro IMO pour localiser un navire
+      </p>
+    </div>
+  </div>
+</div>
+
+      <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
 
       <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr', gap: '1.5rem' }}>
         
@@ -477,6 +498,7 @@ export default function VesselTrackingPage() {
             )}
           </MapContainer>
         </div>
+      </div>
       </div>
     </div>
   );

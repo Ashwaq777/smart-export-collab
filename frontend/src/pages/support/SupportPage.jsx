@@ -89,7 +89,7 @@ export default function SupportPage() {
           relatedOfferId: ''
         });
         loadData();
-        alert('✅ Ticket créé ! Vous recevrez '
+        alert('Ticket créé ! Vous recevrez '
           + 'une confirmation par email.');
       } else {
         const err = await res.json();
@@ -121,7 +121,7 @@ export default function SupportPage() {
         setSelectedTicket(null);
         setResponseText('');
         loadData();
-        alert('✅ Réponse envoyée au client par email');
+        alert('Réponse envoyée au client par email');
       }
     } catch(e) {
       alert('Erreur: ' + e.message);
@@ -147,44 +147,39 @@ export default function SupportPage() {
   };
 
   const categoryLabels = {
-    RECLAMATION: '⚠️ Réclamation',
-    PROBLEME_TECHNIQUE: '🔧 Problème technique',
-    QUESTION_GENERALE: '❓ Question générale',
-    FRAUDE: '🚨 Fraude',
-    AUTRE: '📝 Autre'
+    RECLAMATION: 'Réclamation',
+    PROBLEME_TECHNIQUE: 'Problème technique',
+    QUESTION_GENERALE: 'Question générale',
+    FRAUDE: 'Fraude',
+    AUTRE: 'Autre'
   };
 
   return (
     <div style={{ background: '#F8FAFC', minHeight: '100vh' }}>
       {/* Header */}
       <div style={{
-        background: 'linear-gradient(135deg, #0B1F3A 0%, #0E3A5D 50%, #1CA7C7 100%)',
-        padding: '48px 32px',
-        marginBottom: '32px'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{
-            width: '56px', height: '56px', borderRadius: '16px',
-            background: 'rgba(255,255,255,0.15)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center'
-          }}>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-              <line x1="8" y1="10" x2="16" y2="10"/>
-              <line x1="8" y1="14" x2="14" y2="14"/>
-            </svg>
-          </div>
-          <div>
-            <h1 style={{
-              fontSize: '32px', fontWeight: '800', color: 'white',
-              margin: 0, letterSpacing: '-0.5px'
-            }}>{t('support.title')}</h1>
-            <p style={{ fontSize: '16px', color: 'rgba(255,255,255,0.75)', margin: '4px 0 0' }}>
-              {t('support.subtitle')}
-            </p>
-          </div>
-        </div>
-      </div>
+  background: 'linear-gradient(135deg, #0B1F3A 0%, #1CA7C7 100%)',
+  padding: '40px 32px',
+  width: '100%',
+  margin: 0
+}}>
+  <h1 style={{
+    color: 'white',
+    fontSize: '32px',
+    fontWeight: '700',
+    margin: 0,
+    lineHeight: '1.2'
+  }}>
+    {t('support.title')}
+  </h1>
+  <p style={{
+    color: 'rgba(255,255,255,0.8)',
+    margin: '8px 0 0 0',
+    fontSize: '16px'
+  }}>
+    {t('support.subtitle')}
+  </p>
+</div>
 
       <div style={{ padding: '0 32px' }}>
         <div style={{
@@ -316,19 +311,19 @@ export default function SupportPage() {
                 }}
               >
                 <option value="RECLAMATION">
-                  ⚠️ Réclamation
+                  Réclamation
                 </option>
                 <option value="PROBLEME_TECHNIQUE">
-                  🔧 Problème technique
+                  Problème technique
                 </option>
                 <option value="QUESTION_GENERALE">
-                  ❓ Question générale
+                  Question générale
                 </option>
                 <option value="FRAUDE">
-                  🚨 Fraude
+                  Fraude
                 </option>
                 <option value="AUTRE">
-                  📝 Autre
+                  Autre
                 </option>
               </select>
             </div>
@@ -720,7 +715,7 @@ export default function SupportPage() {
                         fontWeight: '500'
                       }}
                     >
-                      💬 {t('support.reply')}
+                      {t('support.reply')}
                     </button>
                   )}
                 </div>

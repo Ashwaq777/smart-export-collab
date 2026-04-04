@@ -202,7 +202,7 @@ export default function MarketplacePage() {
         const toAdd = newMatches.filter(m => !existingIds.has(m.id));
         return [...prev, ...toAdd];
       });
-      alert(`✅ ${newMatches.length} ${translate('marketplace.matchesFound')}`);
+      alert(`${newMatches.length} ${translate('marketplace.matchesFound')}`);
     } else {
       // Même si 0 nouveaux matches, charger les matches existants
       const matchesRes = await fetch(
@@ -235,7 +235,7 @@ export default function MarketplacePage() {
   const handleConfirmMatch = async (matchId) => {
     try {
       await containerService.confirmMatch(matchId);
-      alert('✅ Match confirmé ! La transaction a été créée.');
+      alert('Match confirmé ! La transaction a été créée.');
       loadAll(); // Reload to update match status
     } catch (e) {
       alert('Erreur: ' + (e.response?.data?.message || e.message));
@@ -254,7 +254,7 @@ export default function MarketplacePage() {
         method: 'PATCH',
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      alert(accepted ? '✅ Demande acceptée !' : '❌ Demande refusée');
+      alert(accepted ? 'Demande acceptée !' : 'Demande refusée');
       loadAll();
     } catch (e) { alert('Erreur: ' + e.message); }
   };
@@ -277,30 +277,37 @@ export default function MarketplacePage() {
   const tabs = isImportateur ? importateurTabs : exportateurTabs;
 
   const statCards = [
-    { label: translate('marketplace.myOffers'), value: myOffers.length, color: '#1d4ed8', bg: '#dbeafe', icon: '📦' },
-    { label: translate('marketplace.myRequests'), value: myRequests.length, color: '#16a34a', bg: '#d1fae5', icon: '🔍' },
-    { label: 'Correspondances', value: dashboard.totalMatches || 0, color: '#d97706', bg: '#fef3c7', icon: '🤝' },
-    { label: 'Transactions', value: dashboard.completedTransactions || 0, color: '#7c3aed', bg: '#ede9fe', icon: '📋' },
+    { label: translate('marketplace.myOffers'), value: myOffers.length, color: '#1d4ed8', bg: '#dbeafe', icon: '' },
+    { label: translate('marketplace.myRequests'), value: myRequests.length, color: '#16a34a', bg: '#d1fae5', icon: '' },
+    { label: 'Transactions', value: dashboard.completedTransactions || 0, color: '#7c3aed', bg: '#ede9fe', icon: '' },
   ];
 
   return (
     <div>
       {/* Bandeau bleu gradient avec titre */}
-      <div className="bg-gradient-to-r from-[#0B1F3A] to-[#1CA7C7] py-12 px-6">
-        <div className="max-w-7xl mx-auto flex items-center gap-4">
-          <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-              <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
-              <line x1="12" y1="22.08" x2="12" y2="12"/>
-            </svg>
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold text-white">{translate('marketplace.title')}</h1>
-            <p className="text-white/80 mt-1">{translate('marketplace.subtitle')}</p>
-          </div>
-        </div>
-      </div>
+      <div style={{
+  background: 'linear-gradient(135deg, #0B1F3A 0%, #1CA7C7 100%)',
+  padding: '40px 32px',
+  width: '100%',
+  margin: 0
+}}>
+  <h1 style={{
+    color: 'white',
+    fontSize: '32px',
+    fontWeight: '700',
+    margin: 0,
+    lineHeight: '1.2'
+  }}>
+    {translate('marketplace.title')}
+  </h1>
+  <p style={{
+    color: 'rgba(255,255,255,0.8)',
+    margin: '8px 0 0 0',
+    fontSize: '16px'
+  }}>
+    {translate('marketplace.subtitle')}
+  </p>
+</div>
 
       {/* Contenu principal */}
       <div style={{ padding: '2rem', 
@@ -403,7 +410,7 @@ export default function MarketplacePage() {
                   background: 'white', borderRadius: '12px',
                   border: '1px dashed #d1d5db'
                 }}>
-                  <div style={{ fontSize: '48px' }}>📦</div>
+                  <div style={{ fontSize: '48px' }}>�</div>
                   <h3>{translate('marketplace.noContainerAvailable')}</h3>
                   <p style={{ color: '#6b7280' }}>
                     Revenez plus tard ou modifiez vos filtres
@@ -504,8 +511,8 @@ export default function MarketplacePage() {
                             color: r.status === 'ACCEPTED' ? '#166534' : 
                                    r.status === 'REJECTED' ? '#DC2626' : '#92400E'
                           }}>
-                            {r.status === 'ACCEPTED' ? '✅ ' + translate('marketplace.accepted') : 
-                             r.status === 'REJECTED' ? '❌ ' + translate('marketplace.rejected') : '⏳ ' + translate('marketplace.pending')}
+                            {r.status === 'ACCEPTED' ? translate('marketplace.accepted') : 
+                             r.status === 'REJECTED' ? translate('marketplace.rejected') : translate('marketplace.pending')}
                           </div>
                         </div>
                       </div>
@@ -553,7 +560,7 @@ export default function MarketplacePage() {
             <div>
               {myRequests.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '3rem', background: 'white', borderRadius: '12px', border: '1px dashed #d1d5db' }}>
-                  <div style={{ fontSize: '48px' }}>🎯</div>
+                  <div style={{ fontSize: '48px' }}>📋</div>
                   <h3>{translate('marketplace.noMatchRequest')}</h3>
                   <p style={{ color: '#6b7280' }}>{translate('marketplace.noMatchRequestDesc')}</p>
                 </div>
@@ -731,7 +738,7 @@ export default function MarketplacePage() {
                             fontSize: '12px',
                             fontWeight: '600'
                           }}>
-                            {`🎯 ${Math.round(match.compatibilityScore || 0)}%`} {translate('marketplace.compatible')}
+                            {`${Math.round(match.compatibilityScore || 0)}%`} {translate('marketplace.compatible')}
                           </div>
                           <span style={{
                             fontSize: '11px',
@@ -740,16 +747,16 @@ export default function MarketplacePage() {
                             alignItems: 'center',
                             gap: '4px'
                           }}>
-                            📍 {Math.round(match.distanceKm || 0)} km
+                            {Math.round(match.distanceKm || 0)} km
                           </span>
                           <span style={{
                             fontSize: '12px', padding: '4px 10px', borderRadius: '99px',
                             background: match.status === 'CONFIRMED' ? '#d1fae5' : '#fef3c7',
                             color: match.status === 'CONFIRMED' ? '#065f46' : '#92400e'
                           }}>
-                            {match.status === 'CONFIRMED' ? '✅ Confirmé' : 
-                             match.status === 'ACCEPTED_BY_SEEKER' ? '✅ Accepté par vous' :
-                             match.status === 'ACCEPTED_BY_PROVIDER' ? '✅ Accepté par provider' : '⏳ ' + translate('marketplace.pending')}
+                            {match.status === 'CONFIRMED' ? 'Confirmé' : 
+                             match.status === 'ACCEPTED_BY_SEEKER' ? 'Accepté par vous' :
+                             match.status === 'ACCEPTED_BY_PROVIDER' ? 'Accepté par provider' : translate('marketplace.pending')}
                           </span>
                         </div>
                       </div>
@@ -810,13 +817,13 @@ export default function MarketplacePage() {
               background: 'white', borderRadius: '12px',
               border: '1px dashed #d1d5db'
             }}>
-              <div style={{ fontSize: '48px' }}>📦</div>
+              <div style={{ fontSize: '48px' }}>�</div>
               <h3>Aucun conteneur disponible</h3>
               <p style={{ color: '#6b7280' }}>
                 Revenez plus tard ou modifiez vos filtres
               </p>
             </div>
-          ) : !isImportateur && (
+          ) : isImportateur && (
             <div style={{
               display: 'grid',
               gridTemplateColumns: 
@@ -827,6 +834,8 @@ export default function MarketplacePage() {
                 <OfferCard
                   key={offer.id}
                   offer={offer}
+                  user={user}
+                  isImportateur={isImportateur}
                   onClick={() => navigate(
                     `/containers/marketplace/${offer.id}`)}
                 />
@@ -889,7 +898,7 @@ export default function MarketplacePage() {
             <div>
               {myOffers.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '3rem', background: 'white', borderRadius: '12px', border: '1px dashed #d1d5db' }}>
-                  <div style={{ fontSize: '48px' }}>📦</div>
+                  <div style={{ fontSize: '48px' }}>�</div>
                   <h3>{translate('marketplace.noOfferPublished')}</h3>
                   <p style={{ color: '#6b7280' }}>Publiez votre premier conteneur vide</p>
                 </div>
@@ -940,13 +949,13 @@ export default function MarketplacePage() {
                               background: '#0D9488', color: 'white', fontSize: '10px',
                               padding: '2px 6px', borderRadius: '4px', fontWeight: '600'
                             }}>
-                              {`🎯 ${Math.round(matchScores[offer.id] || 0)}%`} {translate('marketplace.compatible')}
+                              {`${Math.round(matchScores[offer.id] || 0)}%`} {translate('marketplace.compatible')}
                             </div>
                           )}
                         </div>
                         
                         <div style={{ fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
-                          📍 {offer.location}
+                          {offer.location}
                         </div>
                         
                         <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '12px' }}>
@@ -1118,7 +1127,7 @@ export default function MarketplacePage() {
                             fontSize: '12px',
                             fontWeight: '600'
                           }}>
-                            {`🎯 ${Math.round(match.compatibilityScore || 0)}%`} {translate('marketplace.compatible')}
+                            {`${Math.round(match.compatibilityScore || 0)}%`} {translate('marketplace.compatible')}
                           </div>
                           <span style={{
                             fontSize: '11px',
@@ -1127,16 +1136,16 @@ export default function MarketplacePage() {
                             alignItems: 'center',
                             gap: '4px'
                           }}>
-                            📍 {Math.round(match.distanceKm || 0)} km
+                            {Math.round(match.distanceKm || 0)} km
                           </span>
                           <span style={{
                             fontSize: '12px', padding: '4px 10px', borderRadius: '99px',
                             background: match.status === 'CONFIRMED' ? '#d1fae5' : '#fef3c7',
                             color: match.status === 'CONFIRMED' ? '#065f46' : '#92400e'
                           }}>
-                            {match.status === 'CONFIRMED' ? '✅ Confirmé' : 
-                             match.status === 'ACCEPTED_BY_PROVIDER' ? '✅ Accepté par vous' :
-                             match.status === 'ACCEPTED_BY_SEEKER' ? '✅ Accepté par seeker' : '⏳ ' + translate('marketplace.pending')}
+                            {match.status === 'CONFIRMED' ? 'Confirmé' : 
+                             match.status === 'ACCEPTED_BY_PROVIDER' ? 'Accepté par vous' :
+                             match.status === 'ACCEPTED_BY_SEEKER' ? 'Accepté par seeker' : translate('marketplace.pending')}
                           </span>
                         </div>
                       </div>
@@ -1254,7 +1263,7 @@ export default function MarketplacePage() {
   );
 }
 
-function OfferCard({ offer, onClick }) {
+function OfferCard({ offer, onClick, user, isImportateur }) {
   const { t: translate } = useLanguage();
   const hasImages = offer.imageUrls?.length > 0;
   
@@ -1307,11 +1316,11 @@ function OfferCard({ offer, onClick }) {
             onError={e => {
               e.target.style.display = 'none';
               e.target.parentElement.innerHTML = 
-                '<div style="font-size:64px">📦</div>';
+                '<div style="font-size:64px">�</div>';
             }}
           />
         ) : (
-          <div style={{ fontSize: '64px' }}>📦</div>
+          <div style={{ fontSize: '64px' }}>�</div>
         )}
         <span style={{
           position: 'absolute',
@@ -1323,7 +1332,7 @@ function OfferCard({ offer, onClick }) {
           borderRadius: '99px'
         }}>
           {offer.status === 'AVAILABLE' 
-            ? '✅ ' + translate('marketplace.available') 
+            ? translate('marketplace.available') 
             : offer.status}
         </span>
       </div>
@@ -1358,7 +1367,7 @@ function OfferCard({ offer, onClick }) {
           display: 'flex', alignItems: 'center',
           gap: '4px'
         }}>
-          📍 {offer.location}
+          {offer.location}
         </p>
 
         {offer.description && (
@@ -1393,6 +1402,39 @@ function OfferCard({ offer, onClick }) {
             {translate('marketplace.viewDetails')} →
           </span>
         </div>
+
+        {/* Bouton "Envoyer une demande" - uniquement pour les importateurs sur les offres des autres */}
+        {isImportateur && offer.userId !== user?.id && (
+          <div style={{ padding: '0.75rem 1rem 1rem' }}>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                // Logique pour envoyer une demande
+                console.log('Envoyer une demande pour l\'offre:', offer.id);
+              }}
+              style={{
+                width: '100%',
+                padding: '10px',
+                background: '#0B1F3A',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'background 0.2s'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = '#1CA7C7';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = '#0B1F3A';
+              }}
+            >
+              {translate('marketplace.sendRequest')}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

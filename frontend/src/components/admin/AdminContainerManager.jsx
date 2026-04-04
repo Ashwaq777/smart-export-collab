@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Package, MapPin, User, Trash2, Eye, EyeOff } from 'lucide-react'
+import { useLanguage } from '../../context/LanguageContext'
 
 export default function AdminContainerManager() {
+  const { t: translate } = useLanguage()
   const [containers, setContainers] = useState([])
   const [stats, setStats] = useState({
     totalActive: 0,
@@ -59,7 +61,7 @@ export default function AdminContainerManager() {
   };
 
   const deactivateContainer = async (id) => {
-    if (!window.confirm('Désactiver ce conteneur ?')) return;
+    if (!window.confirm(translate('admin.marketplace.confirmDeactivate'))) return;
     
     try {
       const token = localStorage.getItem('token');
@@ -175,7 +177,7 @@ export default function AdminContainerManager() {
             color: '#64748B',
             fontWeight: '500'
           }}>
-            Offres actives
+            {translate('admin.marketplace.activeOffers')}
           </div>
         </div>
 
@@ -211,7 +213,7 @@ export default function AdminContainerManager() {
             color: '#64748B',
             fontWeight: '500'
           }}>
-            Offres inactives
+            {translate('admin.marketplace.inactiveOffers')}
           </div>
         </div>
 
@@ -222,7 +224,7 @@ export default function AdminContainerManager() {
             color: '#0B1F3A',
             marginBottom: '1rem'
           }}>
-            Répartition par type
+            {translate('admin.marketplace.byType')}
           </div>
           {Object.entries(stats.typeDistribution || {}).map(([type, count]) => (
             <div key={type} style={{
@@ -244,7 +246,7 @@ export default function AdminContainerManager() {
             color: '#0B1F3A',
             marginBottom: '1rem'
           }}>
-            Répartition par pays
+            {translate('admin.marketplace.byCountry')}
           </div>
           {Object.entries(stats.countryDistribution || {}).slice(0, 3).map(([country, count]) => (
             <div key={country} style={{
@@ -268,7 +270,7 @@ export default function AdminContainerManager() {
           color: '#0B1F3A',
           margin: '0 0 1rem 0'
         }}>
-          Liste des conteneurs
+          {translate('admin.marketplace.containerList')}
         </h2>
 
         {loading ? (
@@ -281,7 +283,7 @@ export default function AdminContainerManager() {
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr>
-                    {['ID', 'Type', 'Pays', 'Propriétaire', 'Email', 'Statut', 'Actions'].map(header => (
+                    {[translate('admin.marketplace.columns.id'), translate('admin.marketplace.columns.type'), translate('admin.marketplace.columns.country'), translate('admin.marketplace.columns.owner'), translate('admin.marketplace.columns.email'), translate('admin.marketplace.columns.status'), translate('admin.marketplace.columns.actions')].map(header => (
                       <th key={header} style={thSt}>{header}</th>
                     ))}
                   </tr>
@@ -334,7 +336,7 @@ export default function AdminContainerManager() {
                               fontSize: '0.75rem'
                             }}
                           >
-                            Désactiver
+                            {translate('admin.marketplace.actions.deactivate')}
                           </button>
                           <button
                             onClick={() => deleteContainer(container.id)}

@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function SendDirectRequestPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t: translate } = useLanguage();
 
   const [formData, setFormData] = useState({
     message: '',
@@ -85,7 +87,7 @@ export default function SendDirectRequestPage() {
           fontWeight: '600'
         }}
       >
-        Retour au Marketplace
+        {translate('requestForm.back')} au Marketplace
       </button>
     </div>
   );
@@ -110,7 +112,7 @@ export default function SendDirectRequestPage() {
           gap: '6px'
         }}
       >
-        ← Retour
+        ← {translate('requestForm.back')}
       </button>
 
       <div style={{
@@ -124,15 +126,14 @@ export default function SendDirectRequestPage() {
           fontWeight: '700',
           margin: '0 0 0.5rem'
         }}>
-          📩 Envoyer une demande
+          📩 {translate('requestForm.title')}
         </h2>
         <p style={{
           color: '#6b7280',
           fontSize: '14px',
           margin: '0 0 1.5rem'
         }}>
-          Le provider recevra un email avec 
-          votre demande
+          {translate('requestForm.subtitle')}
         </p>
 
         {error && (
@@ -157,15 +158,14 @@ export default function SendDirectRequestPage() {
             color: '#374151',
             marginBottom: '6px'
           }}>
-            Message * 
+            {translate('requestForm.message')} * 
           </label>
           <textarea
             value={formData.message}
             onChange={e => setFormData(p => ({
               ...p, message: e.target.value
             }))}
-            placeholder="Décrivez votre besoin, 
-la marchandise, les conditions..."
+            placeholder={translate('requestForm.messagePlaceholder')}
             rows={4}
             style={{
               width: '100%',
@@ -188,7 +188,7 @@ la marchandise, les conditions..."
             color: '#374151',
             marginBottom: '6px'
           }}>
-            Entreprise (optionnel)
+            {translate('requestForm.company')}
           </label>
           <input
             type="text"
@@ -196,7 +196,7 @@ la marchandise, les conditions..."
             onChange={e => setFormData(p => ({
               ...p, seekerCompany: e.target.value
             }))}
-            placeholder="Nom de votre entreprise"
+            placeholder={translate('requestForm.companyPlaceholder')}
             style={{
               width: '100%',
               padding: '10px 12px',
@@ -217,7 +217,7 @@ la marchandise, les conditions..."
             color: '#374151',
             marginBottom: '6px'
           }}>
-            Date souhaitée (optionnel)
+            {translate('requestForm.date')}
           </label>
           <input
             type="date"
@@ -255,7 +255,7 @@ la marchandise, les conditions..."
         >
           {loading 
             ? '⏳ Envoi en cours...' 
-            : '📩 Envoyer la demande'}
+            : `📩 ${translate('requestForm.submit')}`}
         </button>
       </div>
     </div>

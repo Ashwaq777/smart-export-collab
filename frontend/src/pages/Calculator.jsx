@@ -522,24 +522,33 @@ function Calculator() {
   }
 
   return (
-    <div className="maritime-calculator" style={{ marginTop: '70px' }}>
+    <div>
       {/* Header Section */}
-      <div className="calculator-header">
-        <div className="header-content">
-          <div className="header-icon">
-            <CalcIcon className="w-8 h-8" />
-          </div>
-          <div className="header-text">
-            <h1 className="header-title">
-              {translate('calculator.title')}
-            </h1>
-            <p className="header-subtitle">
-              {translate('calculator.subtitle')}
-            </p>
-          </div>
-        </div>
-        <div className="header-accent"></div>
-      </div>
+      <div style={{
+  background: 'linear-gradient(135deg, #0B1F3A 0%, #1CA7C7 100%)',
+  padding: '40px 32px',
+  width: '100%',
+  margin: 0
+}}>
+  <h1 style={{
+    color: 'white',
+    fontSize: '32px',
+    fontWeight: '700',
+    margin: 0,
+    lineHeight: '1.2'
+  }}>
+    {translate('calculator.title')}
+  </h1>
+  <p style={{
+    color: 'rgba(255,255,255,0.8)',
+    margin: '8px 0 0 0',
+    fontSize: '16px'
+  }}>
+    {translate('calculator.subtitle')}
+  </p>
+</div>
+
+      <div className="maritime-calculator" style={{ marginTop: '0px' }}>
 
       <div className="calculator-container">
         {/* Left Column - Form */}
@@ -1265,6 +1274,7 @@ function Calculator() {
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   )

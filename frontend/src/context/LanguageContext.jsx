@@ -67,7 +67,247 @@ const translations = {
       totalUsers: "Total Utilisateurs",
       activeOffers: "Offres Actives",
       transactions: "Transactions",
-      pendingTickets: "Tickets en attente"
+      pendingTickets: "Tickets en attente",
+      activeUsers: "Utilisateurs actifs",
+      blockedUsers: "Utilisateurs bloqués",
+      totalMatches: "Total Matchings",
+      recentTransactions: "Transactions récentes",
+      noTransactions: "Aucune transaction",
+      searchUser: "Rechercher utilisateur...",
+      role: "Rôle",
+      status: "Statut",
+      active: "Actif",
+      blocked: "Bloqué",
+      email: "Email",
+      name: "Nom",
+      portName: "Nom du port",
+      country: "Pays",
+      unlocode: "Code UNLOCODE",
+      portFees: "Frais portuaires",
+      addPort: "Ajouter un port",
+      editPort: "Modifier le port",
+      noClaims: "Aucune réclamation",
+      reply: "Répondre",
+      sendReply: "Envoyer la réponse",
+      replyPlaceholder: "Votre réponse...",
+      usersManagement: {
+        title: "Gestion des utilisateurs",
+        columns: {
+          avatarName: "Avatar + Nom",
+          email: "Email", 
+          role: "Rôle",
+          status: "Statut",
+          company: "Entreprise",
+          country: "Pays",
+          actions: "Actions",
+          createdAt: "Date création"
+        },
+        actions: {
+          detail: "Détail",
+          block: "Bloquer",
+          unblock: "Débloquer",
+          delete: "Supprimer",
+          confirmDelete: "Confirmer la suppression",
+          confirmBlock: "Confirmer le blocage"
+        },
+        search: "Rechercher par email ou rôle...",
+        refresh: "Actualiser",
+        results: "utilisateur(s) affiché(s) sur",
+        notSpecified: "Non renseigné"
+      },
+      stats: {
+        importers: "Importateurs",
+        exporters: "Exportateurs", 
+        active: "↑ actif"
+      },
+      sidebar: {
+        marketplace: "Marketplace",
+        exchangeRates: "Taux de change",
+        administration: "Administration",
+        logout: "Déconnexion"
+      },
+      header: {
+        title: "Admin Dashboard",
+        subtitle: "Gestion de la plateforme Smart Export Global"
+      },
+      countriesManagement: {
+        title: "Gestion des pays",
+        columns: {
+          flag: "Drapeau",
+          code: "Code",
+          name: "Pays", 
+          region: "Région",
+          currency: "Devise",
+          customsDuty: "Douane %",
+          vat: "TVA %",
+          parafiscal: "Parafiscal %",
+          fees: "Frais",
+          actions: "Actions"
+        },
+        search: "Rechercher un pays...",
+        refresh: "Actualiser",
+        edit: "Modifier",
+        form: {
+          customsDuty: "Droits Douane %",
+          vat: "TVA %",
+          parafiscal: "Taxe Parafiscale %",
+          portFees: "Frais Portuaires"
+        }
+      },
+      portsManagement: {
+        title: "Gestion des ports",
+        count: "ports",
+        columns: {
+          name: "Nom",
+          country: "Pays",
+          code: "Code", 
+          fees: "Frais",
+          type: "Type",
+          actions: "Actions"
+        },
+        search: "Rechercher port ou pays...",
+        refresh: "Actualiser",
+        edit: "Modifier",
+        form: {
+          portName: "Nom du port",
+          portCode: "Code port",
+          feesEur: "Frais EUR",
+          type: "Type"
+        }
+      },
+      rates: {
+        title: "Taux de change",
+        columns: {
+          currency: "Devise",
+          code: "Code",
+          rate: "Taux vs USD",
+          symbol: "Symbole",
+          updatedAt: "Mise à jour",
+          actions: "Actions"
+        },
+        search: "Rechercher une devise...",
+        refresh: "Actualiser",
+        edit: "Modifier"
+      },
+      transactionsList: {
+        title: "Transactions récentes",
+        columns: {
+          id: "ID",
+          client: "Client",
+          type: "Type",
+          amount: "Montant",
+          status: "Statut",
+          date: "Date",
+          provider: "Provider",
+          seeker: "Seeker"
+        },
+        completed: "COMPLETED",
+        na: "N/A"
+      },
+      claimsManagement: {
+        title: "Réclamations",
+        columns: {
+          user: "Utilisateur",
+          subject: "Sujet",
+          category: "Catégorie",
+          priority: "Priorité",
+          status: "Statut", 
+          date: "Date",
+          actions: "Actions"
+        },
+        actions: {
+          respond: "Répondre"
+        },
+        priority: {
+          low: "Faible",
+          medium: "Moyen",
+          high: "Élevé",
+          urgent: "Urgent"
+        },
+        modal: {
+          title: "Répondre à la réclamation",
+          subject: "Sujet",
+          response: "Réponse",
+          placeholder: "Tapez votre réponse...",
+          send: "Envoyer",
+          cancel: "Annuler"
+        },
+        statusOptions: {
+          open: "Ouvert",
+          inProgress: "En cours", 
+          resolved: "Résolu",
+          closed: "Fermé"
+        }
+      },
+      userDetail: {
+        title: "Détails de l'utilisateur",
+        fields: {
+          fullName: "Nom complet",
+          email: "Email",
+          phone: "Téléphone",
+          company: "Entreprise",
+          country: "Pays",
+          role: "Rôle",
+          accountStatus: "Statut du compte",
+          createdAt: "Date de création",
+          lastLogin: "Dernière connexion"
+        },
+        close: "Fermer"
+      },
+      modals: {
+        editCountry: "Modifier",
+        editPort: "Modifier Port",
+        save: "Enregistrer",
+        cancel: "Annuler"
+      },
+      alerts: {
+        roleUpdated: "Role mis a jour",
+        statusUpdated: "Statut mis a jour", 
+        userDeleted: "Utilisateur supprime",
+        countryUpdated: "Pays mis à jour",
+        portUpdated: "Port mis à jour",
+        responseSent: "Réponse envoyée",
+        error: "Erreur"
+      },
+      marketplace: {
+        title: "Marketplace",
+        activeOffers: "Offres actives",
+        inactiveOffers: "Offres inactives",
+        byType: "Répartition par type",
+        byCountry: "Répartition par pays",
+        containerList: "Liste des conteneurs",
+        columns: {
+          id: "ID",
+          type: "Type",
+          country: "Pays",
+          owner: "Propriétaire",
+          email: "Email",
+          status: "Statut",
+          actions: "Actions"
+        },
+        actions: {
+          deactivate: "Désactiver",
+          activate: "Activer",
+          delete: "Supprimer"
+        },
+        confirmDeactivate: "Désactiver ce conteneur ?"
+      },
+      exchangeRates: {
+        title: "Taux de change",
+        searchPlaceholder: "Rechercher une devise...",
+        refresh: "Actualiser",
+        columns: {
+          currency: "Devise",
+          code: "Code",
+          rateVsUsd: "Taux vs USD",
+          symbol: "Symbole",
+          updatedAt: "Mise à jour",
+          actions: "Actions"
+        },
+        actions: {
+          edit: "Modifier"
+        }
+      }
     },
     register: {
       title: 'Créer un compte', subtitle: 'Rejoignez Smart Export Global',
@@ -121,7 +361,19 @@ const translations = {
       noMatchesImporterDesc: 'Les correspondances apparaissent quand des exportateurs trouvent vos offres',
       directRequestTo: 'Demande directe à', noDate: 'Date non spécifiée',
       accepted: 'Acceptée', pending: 'En attente', rejected: 'Refusée',
-      details: 'Détails', offer: 'Offre', request: 'Demande'
+      details: 'Détails', offer: 'Offre', request: 'Demande',
+      sendRequest: 'Envoyer une demande'
+    },
+    requestForm: {
+      title: 'Envoyer une demande',
+      subtitle: 'Le provider recevra un email avec votre demande',
+      message: 'Message',
+      messagePlaceholder: 'Décrivez votre besoin, la marchandise, les conditions...',
+      company: 'Entreprise (optionnel)',
+      companyPlaceholder: 'Nom de votre entreprise',
+      date: 'Date souhaitée (optionnel)',
+      submit: 'Envoyer la demande',
+      back: 'Retour'
     },
     transactions: {
       title: 'Transactions', subtitle: 'Suivez vos échanges de conteneurs',
@@ -350,7 +602,247 @@ const translations = {
       totalUsers: "Total Users",
       activeOffers: "Active Offers",
       transactions: "Transactions",
-      pendingTickets: "Pending Tickets"
+      pendingTickets: "Pending Tickets",
+      activeUsers: "Active users",
+      blockedUsers: "Blocked users",
+      totalMatches: "Total Matches",
+      recentTransactions: "Recent transactions",
+      noTransactions: "No transactions",
+      searchUser: "Search user...",
+      role: "Role",
+      status: "Status",
+      active: "Active",
+      blocked: "Blocked",
+      email: "Email",
+      name: "Name",
+      portName: "Port name",
+      country: "Country",
+      unlocode: "UNLOCODE",
+      portFees: "Port fees",
+      addPort: "Add port",
+      editPort: "Edit port",
+      noClaims: "No claims",
+      reply: "Reply",
+      sendReply: "Send reply",
+      replyPlaceholder: "Your reply...",
+      usersManagement: {
+        title: "User Management",
+        columns: {
+          avatarName: "Avatar + Name",
+          email: "Email", 
+          role: "Role",
+          status: "Status",
+          company: "Company",
+          country: "Country",
+          actions: "Actions",
+          createdAt: "Creation Date"
+        },
+        actions: {
+          detail: "Detail",
+          block: "Block",
+          unblock: "Unblock",
+          delete: "Delete",
+          confirmDelete: "Confirm deletion",
+          confirmBlock: "Confirm block"
+        },
+        search: "Search by email or role...",
+        refresh: "Refresh",
+        results: "user(s) shown out of",
+        notSpecified: "Not specified"
+      },
+      stats: {
+        importers: "Importers",
+        exporters: "Exporters", 
+        active: "↑ active"
+      },
+      sidebar: {
+        marketplace: "Marketplace",
+        exchangeRates: "Exchange Rates",
+        administration: "Administration",
+        logout: "Logout"
+      },
+      header: {
+        title: "Admin Dashboard",
+        subtitle: "Smart Export Global Platform Management"
+      },
+      countriesManagement: {
+        title: "Country Management",
+        columns: {
+          flag: "Flag",
+          code: "Code",
+          name: "Country", 
+          region: "Region",
+          currency: "Currency",
+          customsDuty: "Customs %",
+          vat: "VAT %",
+          parafiscal: "Parafiscal %",
+          fees: "Fees",
+          actions: "Actions"
+        },
+        search: "Search a country...",
+        refresh: "Refresh",
+        edit: "Edit",
+        form: {
+          customsDuty: "Customs Duty %",
+          vat: "VAT %",
+          parafiscal: "Parafiscal Tax %",
+          portFees: "Port Fees"
+        }
+      },
+      portsManagement: {
+        title: "Port Management",
+        count: "ports",
+        columns: {
+          name: "Name",
+          country: "Country",
+          code: "Code", 
+          fees: "Fees",
+          type: "Type",
+          actions: "Actions"
+        },
+        search: "Search port or country...",
+        refresh: "Refresh",
+        edit: "Edit",
+        form: {
+          portName: "Port Name",
+          portCode: "Port Code",
+          feesEur: "Fees EUR",
+          type: "Type"
+        }
+      },
+      rates: {
+        title: "Exchange Rates",
+        columns: {
+          currency: "Currency",
+          code: "Code",
+          rate: "Rate vs USD",
+          symbol: "Symbol",
+          updatedAt: "Updated",
+          actions: "Actions"
+        },
+        search: "Search a currency...",
+        refresh: "Refresh",
+        edit: "Edit"
+      },
+      transactionsList: {
+        title: "Recent Transactions",
+        columns: {
+          id: "ID",
+          client: "Client",
+          type: "Type",
+          amount: "Amount",
+          status: "Status",
+          date: "Date",
+          provider: "Provider",
+          seeker: "Seeker"
+        },
+        completed: "COMPLETED",
+        na: "N/A"
+      },
+      claimsManagement: {
+        title: "Claims",
+        columns: {
+          user: "User",
+          subject: "Subject",
+          category: "Category",
+          priority: "Priority",
+          status: "Status", 
+          date: "Date",
+          actions: "Actions"
+        },
+        actions: {
+          respond: "Respond"
+        },
+        priority: {
+          low: "Low",
+          medium: "Medium",
+          high: "High",
+          urgent: "Urgent"
+        },
+        modal: {
+          title: "Respond to Claim",
+          subject: "Subject",
+          response: "Response",
+          placeholder: "Type your response...",
+          send: "Send",
+          cancel: "Cancel"
+        },
+        statusOptions: {
+          open: "Open",
+          inProgress: "In Progress", 
+          resolved: "Resolved",
+          closed: "Closed"
+        }
+      },
+      userDetail: {
+        title: "User Details",
+        fields: {
+          fullName: "Full Name",
+          email: "Email",
+          phone: "Phone",
+          company: "Company",
+          country: "Country",
+          role: "Role",
+          accountStatus: "Account Status",
+          createdAt: "Creation Date",
+          lastLogin: "Last Login"
+        },
+        close: "Close"
+      },
+      modals: {
+        editCountry: "Edit",
+        editPort: "Edit Port",
+        save: "Save",
+        cancel: "Cancel"
+      },
+      alerts: {
+        roleUpdated: "Role updated",
+        statusUpdated: "Status updated", 
+        userDeleted: "User deleted",
+        countryUpdated: "Country updated",
+        portUpdated: "Port updated",
+        responseSent: "Response sent",
+        error: "Error"
+      },
+      marketplace: {
+        title: "Marketplace",
+        activeOffers: "Active Offers",
+        inactiveOffers: "Inactive Offers",
+        byType: "Distribution by Type",
+        byCountry: "Distribution by Country",
+        containerList: "Container List",
+        columns: {
+          id: "ID",
+          type: "Type",
+          country: "Country",
+          owner: "Owner",
+          email: "Email",
+          status: "Status",
+          actions: "Actions"
+        },
+        actions: {
+          deactivate: "Deactivate",
+          activate: "Activate",
+          delete: "Delete"
+        },
+        confirmDeactivate: "Deactivate this container?"
+      },
+      exchangeRates: {
+        title: "Exchange Rates",
+        searchPlaceholder: "Search currency...",
+        refresh: "Refresh",
+        columns: {
+          currency: "Currency",
+          code: "Code",
+          rateVsUsd: "Rate vs USD",
+          symbol: "Symbol",
+          updatedAt: "Updated At",
+          actions: "Actions"
+        },
+        actions: {
+          edit: "Edit"
+        }
+      }
     },
     register: {
       title: 'Create an account', subtitle: 'Join Smart Export Global',
@@ -402,7 +894,19 @@ const translations = {
       noMatchesImporterDesc: 'Matches appear when exporters find your offers',
       directRequestTo: 'Direct request to', noDate: 'No date specified',
       accepted: 'Accepted', pending: 'Pending', rejected: 'Rejected',
-      details: 'Details', offer: 'Offer', request: 'Request'
+      details: 'Details', offer: 'Offer', request: 'Request',
+      sendRequest: 'Send Request'
+    },
+    requestForm: {
+      title: 'Send a Request',
+      subtitle: 'The provider will receive an email with your request',
+      message: 'Message',
+      messagePlaceholder: 'Describe your needs, merchandise, conditions...',
+      company: 'Company (optional)',
+      companyPlaceholder: 'Your company name',
+      date: 'Desired date (optional)',
+      submit: 'Send Request',
+      back: 'Back'
     },
     transactions: {
       title: 'My Transactions', loading: 'Loading...', noTransactions: 'No transactions',
@@ -634,7 +1138,247 @@ const translations = {
       totalUsers: "Total Usuarios",
       activeOffers: "Ofertas Activas",
       transactions: "Transacciones",
-      pendingTickets: "Tickets pendientes"
+      pendingTickets: "Tickets pendientes",
+      activeUsers: "Usuarios activos",
+      blockedUsers: "Usuarios bloqueados",
+      totalMatches: "Total Coincidencias",
+      recentTransactions: "Transacciones recientes",
+      noTransactions: "Sin transacciones",
+      searchUser: "Buscar usuario...",
+      role: "Rol",
+      status: "Estado",
+      active: "Activo",
+      blocked: "Bloqueado",
+      email: "Correo",
+      name: "Nombre",
+      portName: "Nombre del puerto",
+      country: "País",
+      unlocode: "UNLOCODE",
+      portFees: "Tasas portuarias",
+      addPort: "Agregar puerto",
+      editPort: "Editar puerto",
+      noClaims: "Sin reclamaciones",
+      reply: "Responder",
+      sendReply: "Enviar respuesta",
+      replyPlaceholder: "Tu respuesta...",
+      usersManagement: {
+        title: "Gestión de Usuarios",
+        columns: {
+          avatarName: "Avatar + Nombre",
+          email: "Email", 
+          role: "Rol",
+          status: "Estado",
+          company: "Empresa",
+          country: "País",
+          actions: "Acciones",
+          createdAt: "Fecha Creación"
+        },
+        actions: {
+          detail: "Detalle",
+          block: "Bloquear",
+          unblock: "Desbloquear",
+          delete: "Eliminar",
+          confirmDelete: "Confirmar eliminación",
+          confirmBlock: "Confirmar bloqueo"
+        },
+        search: "Buscar por email o rol...",
+        refresh: "Actualizar",
+        results: "usuario(s) mostrado(s) de",
+        notSpecified: "No especificado"
+      },
+      stats: {
+        importers: "Importadores",
+        exporters: "Exportadores", 
+        active: "↑ activo"
+      },
+      sidebar: {
+        marketplace: "Marketplace",
+        exchangeRates: "Tasa de Cambio",
+        administration: "Administración",
+        logout: "Cerrar sesión"
+      },
+      header: {
+        title: "Panel de Administración",
+        subtitle: "Gestión de la Plataforma Smart Export Global"
+      },
+      countriesManagement: {
+        title: "Gestión de Países",
+        columns: {
+          flag: "Bandera",
+          code: "Código",
+          name: "País", 
+          region: "Región",
+          currency: "Divisa",
+          customsDuty: "Aduanas %",
+          vat: "IVA %",
+          parafiscal: "Parafiscal %",
+          fees: "Tarifas",
+          actions: "Acciones"
+        },
+        search: "Buscar un país...",
+        refresh: "Actualizar",
+        edit: "Modificar",
+        form: {
+          customsDuty: "Derechos Aduana %",
+          vat: "IVA %",
+          parafiscal: "Tasa Parafiscal %",
+          portFees: "Tarifas Portuarias"
+        }
+      },
+      portsManagement: {
+        title: "Gestión de Puertos",
+        count: "puertos",
+        columns: {
+          name: "Nombre",
+          country: "País",
+          code: "Código", 
+          fees: "Tarifas",
+          type: "Tipo",
+          actions: "Acciones"
+        },
+        search: "Buscar puerto o país...",
+        refresh: "Actualizar",
+        edit: "Modificar",
+        form: {
+          portName: "Nombre del puerto",
+          portCode: "Código puerto",
+          feesEur: "Tarifas EUR",
+          type: "Tipo"
+        }
+      },
+      rates: {
+        title: "Tasa de Cambio",
+        columns: {
+          currency: "Divisa",
+          code: "Código",
+          rate: "Tasa vs USD",
+          symbol: "Símbolo",
+          updatedAt: "Actualizado",
+          actions: "Acciones"
+        },
+        search: "Buscar una divisa...",
+        refresh: "Actualizar",
+        edit: "Modificar"
+      },
+      transactionsList: {
+        title: "Transacciones Recientes",
+        columns: {
+          id: "ID",
+          client: "Cliente",
+          type: "Tipo",
+          amount: "Monto",
+          status: "Estado",
+          date: "Fecha",
+          provider: "Proveedor",
+          seeker: "Solicitante"
+        },
+        completed: "COMPLETADO",
+        na: "N/D"
+      },
+      claimsManagement: {
+        title: "Reclamaciones",
+        columns: {
+          user: "Usuario",
+          subject: "Asunto",
+          category: "Categoría",
+          priority: "Prioridad",
+          status: "Estado", 
+          date: "Fecha",
+          actions: "Acciones"
+        },
+        actions: {
+          respond: "Responder"
+        },
+        priority: {
+          low: "Baja",
+          medium: "Media",
+          high: "Alta",
+          urgent: "Urgente"
+        },
+        modal: {
+          title: "Responder a Reclamación",
+          subject: "Asunto",
+          response: "Respuesta",
+          placeholder: "Escriba su respuesta...",
+          send: "Enviar",
+          cancel: "Cancelar"
+        },
+        statusOptions: {
+          open: "Abierto",
+          inProgress: "En Progreso", 
+          resolved: "Resuelto",
+          closed: "Cerrado"
+        }
+      },
+      userDetail: {
+        title: "Detalles del Usuario",
+        fields: {
+          fullName: "Nombre Completo",
+          email: "Email",
+          phone: "Teléfono",
+          company: "Empresa",
+          country: "País",
+          role: "Rol",
+          accountStatus: "Estado de Cuenta",
+          createdAt: "Fecha Creación",
+          lastLogin: "Último Acceso"
+        },
+        close: "Cerrar"
+      },
+      modals: {
+        editCountry: "Modificar",
+        editPort: "Modificar Puerto",
+        save: "Guardar",
+        cancel: "Cancelar"
+      },
+      alerts: {
+        roleUpdated: "Rol actualizado",
+        statusUpdated: "Estado actualizado", 
+        userDeleted: "Usuario eliminado",
+        countryUpdated: "País actualizado",
+        portUpdated: "Puerto actualizado",
+        responseSent: "Respuesta enviada",
+        error: "Error"
+      },
+      marketplace: {
+        title: "Marketplace",
+        activeOffers: "Ofertas activas",
+        inactiveOffers: "Ofertas inactivas",
+        byType: "Distribución por tipo",
+        byCountry: "Distribución por país",
+        containerList: "Lista de contenedores",
+        columns: {
+          id: "ID",
+          type: "Tipo",
+          country: "País",
+          owner: "Propietario",
+          email: "Email",
+          status: "Estado",
+          actions: "Acciones"
+        },
+        actions: {
+          deactivate: "Desactivar",
+          activate: "Activar",
+          delete: "Eliminar"
+        },
+        confirmDeactivate: "¿Desactivar este contenedor?"
+      },
+      exchangeRates: {
+        title: "Tasa de Cambio",
+        searchPlaceholder: "Buscar divisa...",
+        refresh: "Actualizar",
+        columns: {
+          currency: "Divisa",
+          code: "Código",
+          rateVsUsd: "Tasa vs USD",
+          symbol: "Símbolo",
+          updatedAt: "Actualización",
+          actions: "Acciones"
+        },
+        actions: {
+          edit: "Modificar"
+        }
+      }
     },
     register: {
       title: 'Crear una cuenta', subtitle: 'Únete a Smart Export Global',
@@ -686,7 +1430,19 @@ const translations = {
       noMatchesImporterDesc: 'Las coincidencias aparecen cuando los exportadores encuentran tus ofertas',
       directRequestTo: 'Solicitud directa a', noDate: 'Fecha no especificada',
       accepted: 'Aceptada', pending: 'Pendiente', rejected: 'Rechazada',
-      details: 'Detalles', offer: 'Oferta', request: 'Solicitud'
+      details: 'Detalles', offer: 'Oferta', request: 'Solicitud',
+      sendRequest: 'Enviar solicitud'
+    },
+    requestForm: {
+      title: 'Enviar una solicitud',
+      subtitle: 'El proveedor recibirá un correo con su solicitud',
+      message: 'Mensaje',
+      messagePlaceholder: 'Describa su necesidad, mercancía, condiciones...',
+      company: 'Empresa (opcional)',
+      companyPlaceholder: 'Nombre de su empresa',
+      date: 'Fecha deseada (opcional)',
+      submit: 'Enviar solicitud',
+      back: 'Volver'
     },
     transactions: {
       title: 'Mis Transacciones', loading: 'Cargando...', noTransactions: 'No hay transacciones',

@@ -439,7 +439,20 @@ const translations = {
       profitAnalysis: "Pour analyse de rentabilité",
       sellingPrice: "Prix de vente prévisionnel (optionnel)",
       unitType: "Type Unité",
-      unitTypePlaceholder: "Type Unité (ex: conteneur 40)"
+      unitTypePlaceholder: "Type Unité (ex: conteneur 40)",
+      paysDepart: "Pays de départ",
+      portDepart: "Port de départ"
+    },
+    carbon: {
+      checkbox: "Ajouter le calcul carbone",
+      title: "Empreinte Carbone",
+      co2: "Empreinte CO₂",
+      equation: "Détail du calcul",
+      cbam: "Taxe CBAM estimée",
+      loading: "Calcul en cours...",
+      error: "Erreur lors du calcul carbone",
+      formula: "Formule",
+      download: "Télécharger le certificat carbone"
     },
     traceability: {
       title: 'Traçabilité', subtitle: 'Suivez vos expéditions en temps réel',
@@ -975,7 +988,20 @@ const translations = {
       unitTypePlaceholder: 'Unit Type (ex: 40ft container)',
       valuePlaceholder: '0.00',
       transportPlaceholder: 'Ex: 500', downloadReport: 'Download PDF Report',
+      paysDepart: 'Country of departure',
+      portDepart: 'Departure port',
       readyTitle: 'Ready to Calculate?', readyText: 'Fill in the form to see your complete import cost breakdown'
+    },
+    carbon: {
+      checkbox: "Add carbon calculation",
+      title: "Carbon Footprint",
+      co2: "CO₂ Footprint",
+      equation: "Calculation detail",
+      cbam: "Estimated CBAM Tax",
+      loading: "Calculating...",
+      error: "Error during carbon calculation",
+      formula: "Formula",
+      download: "Download carbon certificate"
     },
     traceability: {
       title: 'Traceability', subtitle: 'Track your shipments in real time',
@@ -1511,7 +1537,20 @@ const translations = {
       unitTypePlaceholder: 'Tipo Unidad (ej: contenedor 40)',
       valuePlaceholder: '0.00',
       transportPlaceholder: 'Ej: 500', downloadReport: 'Descargar reporte PDF',
+      paysDepart: 'País de salida',
+      portDepart: 'Puerto de salida',
       readyTitle: '¿Listo para calcular?', readyText: 'Complete el formulario para ver su desglose completo de costos de importación'
+    },
+    carbon: {
+      checkbox: "Añadir cálculo de carbono",
+      title: "Huella de Carbono",
+      co2: "Huella CO₂",
+      equation: "Detalle del cálculo",
+      cbam: "Impuesto CBAM estimado",
+      loading: "Calculando...",
+      error: "Error en el cálculo de carbono",
+      formula: "Fórmula",
+      download: "Descargar certificado de carbono"
     },
     traceability: {
       title: 'Trazabilidad', subtitle: 'Siga sus envíos en tiempo real',

@@ -2,8 +2,6 @@ package com.smartexport.platform.repository;
 
 import com.smartexport.platform.entity.Port;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -16,10 +14,4 @@ public interface PortRepository extends JpaRepository<Port, Long> {
     List<Port> findByTypePort(String typePort);
     
     List<Port> findByPaysAndTypePort(String pays, String typePort);
-    
-    @Query("SELECT p FROM Port p WHERE " +
-           "LOWER(p.nomPort) LIKE LOWER(CONCAT('%', :name, '%')) " +
-           "OR LOWER(p.pays) LIKE LOWER(CONCAT('%', :name, '%')) " +
-           "ORDER BY p.nomPort ASC")
-    List<Port> findByNameContainingIgnoreCase(@Param("name") String name);
 }

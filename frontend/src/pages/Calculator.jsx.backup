@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import { Calculator as CalcIcon, Download, AlertCircle } from 'lucide-react'
-import jsPDF from 'jspdf'
 import { tarifService, portService, calculationService, pdfService } from '../services/api'
 import { countriesService } from '../services/countriesApi'
 import { worldPortsService } from '../services/worldPortsApi'
@@ -33,19 +32,12 @@ function Calculator() {
   const [portMessage, setPortMessage] = useState(null)
   const [portsLoading, setPortsLoading] = useState(false)
   
+  // State pour le nom du port de départ sélectionné
+  const [portDepartNom, setPortDepartNom] = useState('');
+  
   // States pour le port de départ indépendant
   const [paysDepart, setPaysDepart] = useState('');
   const [portDepartId, setPortDepartId] = useState('');
-  const [portDepartNom, setPortDepartNom] = useState('');
-  
-  // State pour le nom du port destination
-  const [portDestNom, setPortDestNom] = useState('');
-  
-  // States carbon
-  const [carbonEnabled, setCarbonEnabled] = useState(false);
-  const [carbonData, setCarbonData] = useState(null);
-  const [carbonLoading, setCarbonLoading] = useState(false);
-  const [carbonError, setCarbonError] = useState(null);
   
   // States séparés pour les ports importateur
   const [portsOrigine, setPortsOrigine] = useState([]);
@@ -69,6 +61,7 @@ function Calculator() {
     // Champs exportateur (existant)
     paysDestination: '',
     portId: '',
+    portDepartId: '', // Nouveau champ pour le port de départ
     coutTransport: '',
     assurance: '',
     
@@ -89,6 +82,12 @@ function Calculator() {
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  
+  // Carbon calculation states
+  const [carbonEnabled, setCarbonEnabled] = useState(false);
+  const [carbonData, setCarbonData] = useState(null);
+  const [carbonLoading, setCarbonLoading] = useState(false);
+  const [carbonError, setCarbonError] = useState(null);
 
   useEffect(() => {
     loadCategories()
@@ -300,9 +299,6 @@ function Calculator() {
       // Charger les ports depuis le service mondial avec couverture 100% (use normalized name)
       const portsResult = await worldPortsService.getPortsByCountry(normalizedCountry, countryData)
       
-      console.log('portsResult for', country, ':', portsResult.hasPorts, portsResult.ports?.length)
-      console.log('First port structure:', JSON.stringify(portsResult.ports[0]));
-      
       if (portsResult.hasPorts && portsResult.ports.length > 0) {
         // Utiliser les ports réels de la base UNCTAD avec frais calculés
         const portsWithFees = portsResult.ports.map((port, index) => {
@@ -335,7 +331,6 @@ function Calculator() {
       }
     } catch (err) {
       console.error('❌ [Calculator] Error loading ports from API:', err)
-      console.error('❌ [Calculator] Error stack:', err.stack)
       setPortsOrigine([])
       setPortsOrigineMessage('Erreur lors du chargement des ports origine')
     } finally {
@@ -401,6 +396,14 @@ function Calculator() {
       setPortsDestinationLoading(false)
     }
   }
+
+  // Filtrage des ports de départ indépendant
+  const portsDepartFiltres = paysDepart
+    ? ports.filter(p =>
+        p.pays && 
+        p.pays.toLowerCase().includes(paysDepart.toLowerCase())
+      )
+    : [];
 
   const handleInputChange = async (e) => {
     const { name, value } = e.target
@@ -546,82 +549,26 @@ function Calculator() {
     setCarbonData(null);
     try {
       const token = localStorage.getItem('token');
-      const poids = parseFloat(
-        formData.poidsNet || formData.poidsBrut || 1
-      );
       
-      // Lire directement les options sélectionnées dans les selects
-      const allSelects = Array.from(document.querySelectorAll('select'));
-      let originValue = '';
-      let destValue = '';
-
-      allSelects.forEach(sel => {
-        const opt = sel.options[sel.selectedIndex];
-        if (!opt || !opt.value) return;
-        // Nettoyer le texte : supprimer emoji, " | prix"
-        const rawText = opt.text
-          .replace(/[\u{1F1E0}-\u{1F1FF}]{2}/gu, '') // supprimer drapeaux
-          .replace(/\s*\|.*$/, '')                    // supprimer "| 2715 USD"
-          .trim();
-        // Extraire nom port : supprimer préfixes "Port of/de/du"
-        // et supprimer suffixe " - Ville" SEULEMENT si pas le seul token
-        let portName = rawText
-          .replace(/^Port of /i, '')
-          .replace(/^Port de /i, '')
-          .replace(/^Port du /i, '')
-          .replace(/^Port d['']/i, '')
-          .trim();
-        // Supprimer " - ville" seulement si le nom a plus d'un mot
-        if (portName.includes(' - ')) {
-          const beforeDash = portName.split(' - ')[0].trim();
-          if (beforeDash.length > 2) portName = beforeDash;
-        }
-
-        // Select port départ (index 2, pas de name)
-        if (!sel.name && opt.value === String(portDepartId) && portDepartId) {
-          originValue = portName;
-        }
-        // Select port destination (name="portId")
-        if (sel.name === 'portId' && opt.value) {
-          destValue = portName;
-        }
-      });
-
-      if (!originValue) originValue = paysDepart || 'Casablanca';
-      if (!destValue) destValue = formData.paysDestination || '';
-
-      console.log('Carbon origin:', originValue, 'dest:', destValue);
+      // Logique améliorée pour origin/destination
+      let origin, destination;
       
-      // Récupérer coords port départ
-      const portDepart = portsOrigine.find(
-        p => String(p.id) === String(portDepartId)
-      );
-
-      // Récupérer coords port destination  
-      const portDest = ports.find(
-        p => String(p.id) === String(formData.portId)
-      );
-
-      // Chercher les coordonnées dans tous les formats possibles
-      const getCoords = (port) => {
-        if (!port) return null;
-        if (port.coordinates?.lat && port.coordinates?.lng) 
-          return {lat: port.coordinates.lat, lng: port.coordinates.lng};
-        if (port.coordinates?.lat && port.coordinates?.lon) 
-          return {lat: port.coordinates.lat, lng: port.coordinates.lon};
-        if (port.lat && port.lon) 
-          return {lat: port.lat, lng: port.lon};
-        if (port.lat && port.lng) 
-          return {lat: port.lat, lng: port.lng};
-        if (port.latitude && port.longitude) 
-          return {lat: port.latitude, lng: port.longitude};
-        return null;
-      };
-      const originCoords = getCoords(portDepart);
-      const destCoords = getCoords(portDest);
+      if (isImportateur) {
+        // Pour importateur: utiliser le pays d'origine ou le port d'embarquement
+        origin = formData.portEmbarquement || formData.paysOrigine;
+        destination = formData.portDechargement || formData.paysDestination;
+      } else {
+        // Pour exportateur: trouver le nom du port à partir du portId
+        if (formData.portDepartId && ports.length > 0) {
+          const selectedPort = ports.find(p => p.id === formData.portDepartId);
+          origin = selectedPort ? (selectedPort.nomPort || selectedPort.nom || selectedPort.name) : 'Casablanca';
+        } else {
+          origin = portDepartNom || 'Casablanca'; // utiliser le state portDepartNom
+        }
+        destination = formData.paysDestination;
+      }
       
-      console.log('portDepart object:', JSON.stringify(portDepart));
-      console.log('originCoords:', originCoords, 'destCoords:', destCoords);
+      const weightTon = parseFloat(formData.poidsNet || formData.poidsBrut || 0) / 1000;
       
       const response = await fetch('/api/v1/carbon/calculate', {
         method: 'POST',
@@ -630,14 +577,10 @@ function Calculator() {
           'Authorization': `Bearer ${token}` 
         },
         body: JSON.stringify({
-          origin: originValue,
-          destination: destValue,
-          weightTon: poids / 1000,
-          transportMode: 'maritime',
-          originLat: originCoords?.lat || null,
-          originLng: originCoords?.lng || null,
-          destLat: destCoords?.lat || null,
-          destLng: destCoords?.lng || null
+          origin,
+          destination,
+          weightTon,
+          transportMode: 'maritime'
         })
       });
       if (!response.ok) throw new Error('API error');
@@ -650,161 +593,39 @@ function Calculator() {
     }
   };
 
-  const generateCarbonPDF = () => {
-    if (!carbonData) return;
-    const doc = new jsPDF();
-    const W = doc.internal.pageSize.getWidth();
-    const H = doc.internal.pageSize.getHeight();
-    const m = 20;
-    doc.setFillColor(11, 31, 58);
-    doc.rect(0, 0, W, 42, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.text('CERTIFICAT CARBONE EXPORT', W/2, 18, {align:'center'});
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Smart Export Global', W/2, 30, {align:'center'});
-    doc.setDrawColor(28, 167, 199);
-    doc.setLineWidth(2);
-    doc.line(m, 38, W-m, 38);
-    let y = 54;
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(11, 31, 58);
-    doc.text("Détails de l'expédition", m, y);
-    y += 5;
-    doc.setDrawColor(220,220,220);
-    doc.setLineWidth(0.4);
-    doc.line(m, y, W-m, y);
-    y += 8;
-    const details = [
-      ['Origine', portDepartNom || 'N/A'],
-      ['Destination', formData.paysDestination || 'N/A'],
-      ['Poids', (parseFloat(formData.poidsNet||formData.poidsBrut||0)/1000)+' t'],
-      ['Mode', 'Maritime'],
-      ['Distance', carbonData.distanceKm+' km'],
-    ];
-    doc.setFontSize(9);
-    details.forEach(([label, val]) => {
-      doc.setFont('helvetica','bold');
-      doc.setTextColor(71,85,105);
-      doc.text(label+' :', m, y);
-      doc.setFont('helvetica','normal');
-      doc.setTextColor(30,30,30);
-      doc.text(String(val), m+48, y);
-      y += 8;
-    });
-    y += 4;
-    doc.setFontSize(11);
-    doc.setFont('helvetica','bold');
-    doc.setTextColor(11,31,58);
-    doc.text('Résultats', m, y);
-    y += 5;
-    doc.setDrawColor(220,220,220);
-    doc.setLineWidth(0.4);
-    doc.line(m, y, W-m, y);
-    y += 8;
-    doc.setFillColor(224,242,254);
-    doc.roundedRect(m, y, W-m*2, 18, 2, 2, 'F');
-    doc.setFontSize(10);
-    doc.setFont('helvetica','bold');
-    doc.setTextColor(11,31,58);
-    doc.text('Empreinte CO\u2082 totale', m+4, y+7);
-    doc.setFontSize(12);
-    doc.setTextColor(28,167,199);
-    doc.text(carbonData.co2Kg+' kg CO\u2082', W-m-4, y+11, {align:'right'});
-    y += 26;
-    doc.setFontSize(9);
-    doc.setFont('helvetica','normal');
-    doc.setTextColor(100,116,139);
-    doc.text('Soit '+carbonData.co2Tonnes+' tonnes de CO\u2082', m, y);
-    y += 12;
-    doc.setFontSize(11);
-    doc.setFont('helvetica','bold');
-    doc.setTextColor(11,31,58);
-    doc.text('Méthodologie', m, y);
-    y += 5;
-    doc.setDrawColor(220,220,220);
-    doc.setLineWidth(0.4);
-    doc.line(m, y, W-m, y);
-    y += 8;
-    doc.setFontSize(9);
-    doc.setFont('helvetica','normal');
-    doc.setTextColor(71,85,105);
-    doc.text('Formule : '+carbonData.formulaDisplay, m, y);
-    y += 7;
-    doc.setFillColor(241,245,249);
-    doc.roundedRect(m, y, W-m*2, 12, 2, 2, 'F');
-    doc.setFont('courier','normal');
-    doc.setFontSize(8);
-    doc.setTextColor(11,31,58);
-    doc.text(carbonData.equation, m+3, y+8);
-    y += 20;
-    doc.setFontSize(11);
-    doc.setFont('helvetica','bold');
-    doc.setTextColor(11,31,58);
-    doc.text('Informations financières', m, y);
-    y += 5;
-    doc.setDrawColor(220,220,220);
-    doc.setLineWidth(0.4);
-    doc.line(m, y, W-m, y);
-    y += 8;
-    doc.setFontSize(9);
-    doc.setFont('helvetica','normal');
-    doc.setTextColor(71,85,105);
-    doc.text('Taxe CBAM estimée :', m, y);
-    doc.setFont('helvetica','bold');
-    doc.setFontSize(12);
-    doc.setTextColor(28,167,199);
-    doc.text(carbonData.cbamTaxEur+' \u20ac', W-m, y+2, {align:'right'});
-    y += 10;
-    doc.setFontSize(8);
-    doc.setFont('helvetica','italic');
-    doc.setTextColor(148,163,184);
-    doc.text('Valeur indicative. Source : EU ETS. 85 \u20ac/tonne CO\u2082.', m, y);
-    doc.setFillColor(11,31,58);
-    doc.rect(0, H-16, W, 16, 'F');
-    doc.setTextColor(255,255,255);
-    doc.setFontSize(7);
-    doc.setFont('helvetica','normal');
-    const now = new Date().toLocaleDateString('fr-FR',{
-      day:'2-digit',month:'2-digit',year:'numeric',
-      hour:'2-digit',minute:'2-digit'
-    });
-    doc.text('Généré le '+now, m, H-6);
-    doc.text('smart-export-global.com', W-m, H-6, {align:'right'});
-    doc.save('certificat-carbone-export.pdf');
-  };
-
   useEffect(() => {
     if (carbonEnabled) {
-      const poids = parseFloat(
-        formData.poidsNet || formData.poidsBrut || 0
-      );
-      if (!formData.paysDestination) {
+      // Récupérer les valeurs réelles au moment du clic
+      let portOrigin, portDest;
+      const poids = parseFloat(formData.poidsNet || formData.poidsBrut || 0);
+      
+      if (isImportateur) {
+        portOrigin = formData.portEmbarquement || formData.paysOrigine;
+        portDest = formData.portDechargement || formData.paysDestination;
+      } else {
+        if (formData.portDepartId && ports.length > 0) {
+          const selectedPort = ports.find(p => p.id === formData.portDepartId);
+          portOrigin = selectedPort ? (selectedPort.nomPort || selectedPort.nom || selectedPort.name) : 'Casablanca';
+        } else {
+          portOrigin = portDepartNom || 'Casablanca';
+        }
+        portDest = formData.paysDestination;
+      }
+      
+      if (!portDest || poids <= 0) {
         setCarbonError(
-          'Veuillez sélectionner une destination avant d\'activer le calcul carbone.'
+          'Veuillez remplir le formulaire et calculer avant d\'activer le calcul carbone.'
         );
         return;
       }
+      
       calculateCarbon();
-    } else {
+    }
+    if (!carbonEnabled) {
       setCarbonData(null);
       setCarbonError(null);
     }
-  }, [carbonEnabled, portDepartId, paysDepart]);
-
-  useEffect(() => {
-    if (formData.portId && ports.length > 0) {
-      const found = ports.find(
-        p => String(p.id) === String(formData.portId)
-      );
-      setPortDestNom(found ? (found.nomPort || found.nom || found.name) : '');
-    } else {
-      setPortDestNom('');
-    }
-  }, [formData.portId, ports]);
+  }, [carbonEnabled, formData.poidsNet, formData.poidsBrut, formData.paysDestination, formData.paysOrigine, formData.portDepartId, formData.portEmbarquement, formData.portDechargement, portDepartNom]);
 
   return (
     <div>
@@ -1035,77 +856,6 @@ function Calculator() {
                       </select>
                     </div>
 
-                    {/* Pays de départ */}
-                    <div className="form-group">
-                      <label className="form-label">
-                        {translate('calculator.paysDepart')}
-                      </label>
-                      <select
-                        value={paysDepart}
-                        onChange={(e) => {
-                          setPaysDepart(e.target.value);
-                          setPortDepartId('');
-                          setPortDepartNom('');
-                          loadPortsByOrigine(e.target.value);
-                        }}
-                        className="form-select"
-                      >
-                        <option value="">-- Pays de départ --</option>
-                        {maritimeCountries.map((c) => (
-                          <option key={c.code} value={c.name}>
-                            {c.flagEmoji ? `${c.flagEmoji} ` : ''}{c.nameFr || c.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Port de départ */}
-                    <div className="form-group">
-                      <label className="form-label">
-                        {translate('calculator.portDepart')}
-                      </label>
-                      {portsOrigineLoading ? (
-                        <div className="loading-text">Chargement des ports...</div>
-                      ) : (
-                        <select
-                          value={portDepartId}
-                          onChange={(e) => {
-                            const found = portsOrigine.find(
-                              p => String(p.id) === String(e.target.value)
-                            );
-                            setPortDepartId(e.target.value);
-                            setPortDepartNom(found ? (found.nomPort || found.nom) : '');
-                          }}
-                          disabled={!paysDepart || portsOrigine.length === 0}
-                          style={{
-                        width: '100%',
-                        padding: '10px 12px',
-                        border: '2px solid #CBD5E0',
-                        borderRadius: '8px',
-                        backgroundColor: '#FFFFFF',
-                        color: '#2D3748',
-                        fontSize: '14px',
-                        display: 'block',
-                        marginTop: '4px'
-                      }}
-                        >
-                          <option value="">{translate('calculator.selectPort')}</option>
-                          {portsOrigine.map((p) => (
-                            <option key={p.id} value={p.id}>
-                              {p.nomPort || p.nom || p.name}
-                              {p.ville ? ` - ${p.ville}` : ''}
-                              {p.fraisPortuaires ? ` | ${p.fraisPortuaires} USD` : ''}
-                            </option>
-                          ))}
-                        </select>
-                      )}
-                      {portsOrigineMessage && (
-                        <div className="form-warning">
-                          {portsOrigineMessage}
-                        </div>
-                      )}
-                    </div>
-
                     <div className="form-group">
                       <label className="form-label">
                         {translate('calculator.destination')}
@@ -1147,6 +897,61 @@ function Calculator() {
                           </option>
                         ))}
                       </select>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">
+                        {translate('calculator.portDepart')}
+                      </label>
+                      {portsLoading ? (
+                        <div className="loading-text">Chargement des ports...</div>
+                      ) : (
+                        <select
+                          name="portDepartId"
+                          value={formData.portDepartId}
+                          onChange={(e) => {
+                            const selectedPortId = e.target.value;
+                            setFormData({
+                              ...formData, 
+                              portDepartId: selectedPortId
+                            });
+                            
+                            // Mettre à jour le nom du port sélectionné
+                            if (selectedPortId && ports.length > 0) {
+                              const selectedPort = ports.find(p => p.id === selectedPortId);
+                              setPortDepartNom(selectedPort ? (selectedPort.nomPort || selectedPort.nom || selectedPort.name) : '');
+                            } else {
+                              setPortDepartNom('');
+                            }
+                          }}
+                          disabled={!formData.paysDestination || ports.length === 0}
+                          style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '2px solid #CBD5E0',
+                        borderRadius: '8px',
+                        backgroundColor: '#FFFFFF',
+                        color: '#2D3748',
+                        fontSize: '14px',
+                        display: 'block',
+                        marginTop: '4px'
+                      }}
+                        >
+                          <option value="">{translate('calculator.selectPort')}</option>
+                          {ports.map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.nomPort || p.nom || p.name}
+                              {p.ville ? ` - ${p.ville}` : ''}
+                              {p.fraisPortuaires ? ` | ${p.fraisPortuaires} USD` : ''}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                      {portMessage && (
+                        <div className="form-warning">
+                          {portMessage}
+                        </div>
+                      )}
                     </div>
 
                     <div className="form-group">
@@ -1593,25 +1398,6 @@ function Calculator() {
               >
                 {loading ? translate('calculator.loading') : translate('calculator.calculate')}
               </button>
-
-              {/* Checkbox carbon */}
-              <div style={{marginTop:'16px',display:'flex',
-                alignItems:'center',gap:'10px'}}>
-                <input
-                  type="checkbox"
-                  id="carbonToggle"
-                  checked={carbonEnabled}
-                  onChange={(e) => setCarbonEnabled(e.target.checked)}
-                  style={{width:'18px',height:'18px',
-                    accentColor:'#1CA7C7',cursor:'pointer'}}
-                />
-                <label htmlFor="carbonToggle" style={{
-                  color:'#0B1F3A',fontWeight:'500',
-                  cursor:'pointer',fontSize:'0.95rem'
-                }}>
-                  {translate('carbon.checkbox')}
-                </label>
-              </div>
             </form>
           </div>
         </div>
@@ -1634,85 +1420,123 @@ function Calculator() {
                 <Download className="button-icon" />
                 {translate('calculator.downloadReport')}
               </button>
-
-              {/* Encart résultat carbon */}
-              {carbonEnabled && (
-                <div style={{marginTop:'20px',border:'1px solid #1CA7C7',
-                  borderRadius:'12px',overflow:'hidden'}}>
-                  <div style={{
-                    background:'linear-gradient(135deg,#0B1F3A 0%,#1CA7C7 100%)',
-                    padding:'16px 20px',color:'white',
-                    fontWeight:'600',fontSize:'1rem'
-                  }}>
-                    {translate('carbon.title')}
-                  </div>
-                  <div style={{padding:'20px',background:'#f8fafc'}}>
-                    {carbonLoading && (
-                      <p style={{color:'#64748b',textAlign:'center'}}>
-                        {translate('carbon.loading')}
-                      </p>
-                    )}
-                    {carbonError && (
-                      <p style={{color:'#dc2626',textAlign:'center'}}>
-                        {carbonError}
-                      </p>
-                    )}
-                    {carbonData && !carbonLoading && (
-                      <div style={{display:'flex',flexDirection:'column',gap:'14px'}}>
-                        <div style={{display:'flex',justifyContent:'space-between',
-                          alignItems:'center'}}>
-                          <span style={{color:'#475569',fontWeight:'500'}}>
-                            {translate('carbon.co2')}
-                          </span>
-                          <span style={{color:'#0B1F3A',fontWeight:'700',
-                            fontSize:'1.1rem'}}>
-                            {carbonData.co2Kg} kg CO₂
-                          </span>
-                        </div>
-                        <div style={{borderTop:'1px solid #e2e8f0'}}/>
-                        <div>
-                          <p style={{color:'#475569',fontWeight:'500',
-                            marginBottom:'6px'}}>
-                            {translate('carbon.equation')}
-                          </p>
-                          <p style={{background:'#e0f2fe',borderRadius:'8px',
-                            padding:'10px 14px',color:'#0B1F3A',
-                            fontFamily:'monospace',fontSize:'0.9rem'}}>
-                            {carbonData.equation}
-                          </p>
-                        </div>
-                        <div style={{borderTop:'1px solid #e2e8f0'}}/>
-                        <div style={{display:'flex',justifyContent:'space-between',
-                          alignItems:'center'}}>
-                          <span style={{color:'#475569',fontWeight:'500'}}>
-                            {translate('carbon.cbam')}
-                          </span>
-                          <span style={{color:'#1CA7C7',fontWeight:'700',
-                            fontSize:'1.1rem'}}>
-                            {carbonData.cbamTaxEur} €
-                          </span>
-                        </div>
-                        <div style={{background:'#f1f5f9',borderRadius:'8px',
-                          padding:'10px 14px',color:'#64748b',fontSize:'0.82rem'}}>
-                          {translate('carbon.formula')} : {carbonData.formulaDisplay}
-                        </div>
-                        <button
-                          onClick={generateCarbonPDF}
-                          style={{marginTop:'4px',width:'100%',padding:'11px',
-                            background:'linear-gradient(135deg,#0B1F3A 0%,#1CA7C7 100%)',
-                            color:'white',border:'none',borderRadius:'8px',
-                            fontWeight:'600',fontSize:'0.88rem',
-                            cursor:'pointer',letterSpacing:'0.4px'}}
-                        >
-                          {translate('carbon.download')}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
             </div>
           )}
+
+          {/* Carbon Calculation Section - Moved outside result block */}
+          <div style={{ marginTop: '24px' }}>
+            <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <input
+                type="checkbox"
+                id="carbonToggle"
+                checked={carbonEnabled}
+                onChange={(e) => setCarbonEnabled(e.target.checked)}
+                style={{ width: '18px', height: '18px', accentColor: '#1CA7C7', cursor: 'pointer' }}
+              />
+              <label htmlFor="carbonToggle" style={{ 
+                color: '#0B1F3A', fontWeight: '500', cursor: 'pointer', fontSize: '0.95rem' 
+              }}>
+                {translate('carbon.checkbox')}
+              </label>
+            </div>
+
+            {carbonEnabled && (
+              <div style={{
+                marginTop: '20px',
+                border: '1px solid #1CA7C7',
+                borderRadius: '12px',
+                overflow: 'hidden'
+              }}>
+                {/* Bande titre */}
+                <div style={{
+                  background: 'linear-gradient(135deg, #0B1F3A 0%, #1CA7C7 100%)',
+                  padding: '16px 20px',
+                  color: 'white',
+                  fontWeight: '600',
+                  fontSize: '1rem',
+                  letterSpacing: '0.3px'
+                }}>
+                  {translate('carbon.title')}
+                </div>
+
+                <div style={{ padding: '20px', background: '#f8fafc' }}>
+                  {carbonLoading && (
+                    <p style={{ color: '#64748b', textAlign: 'center' }}>
+                      {translate('carbon.loading')}
+                    </p>
+                  )}
+
+                  {carbonError && (
+                    <p style={{ color: '#dc2626', textAlign: 'center' }}>
+                      {carbonError}
+                    </p>
+                  )}
+
+                  {carbonData && !carbonLoading && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                      {/* CO2 total */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ color: '#475569', fontWeight: '500' }}>
+                          {translate('carbon.co2')}
+                        </span>
+                        <span style={{ 
+                          color: '#0B1F3A', fontWeight: '700', fontSize: '1.1rem' 
+                        }}>
+                          {carbonData.co2Kg} kg CO₂
+                        </span>
+                      </div>
+
+                      {/* Séparateur */}
+                      <div style={{ borderTop: '1px solid #e2e8f0' }} />
+
+                      {/* Equation */}
+                      <div>
+                        <p style={{ color: '#475569', fontWeight: '500', marginBottom: '6px' }}>
+                          {translate('carbon.equation')}
+                        </p>
+                        <p style={{ 
+                          background: '#e0f2fe', 
+                          borderRadius: '8px', 
+                          padding: '10px 14px',
+                          color: '#0B1F3A',
+                          fontFamily: 'monospace',
+                          fontSize: '0.9rem'
+                        }}>
+                          {carbonData.equation}
+                        </p>
+                      </div>
+
+                      {/* Séparateur */}
+                      <div style={{ borderTop: '1px solid #e2e8f0' }} />
+
+                      {/* CBAM */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ color: '#475569', fontWeight: '500' }}>
+                          {translate('carbon.cbam')}
+                        </span>
+                        <span style={{ 
+                          color: '#1CA7C7', fontWeight: '700', fontSize: '1.1rem' 
+                        }}>
+                          {carbonData.cbamTaxEur} €
+                        </span>
+                      </div>
+
+                      {/* Formule théorique */}
+                      <div style={{ 
+                        background: '#f1f5f9', 
+                        borderRadius: '8px', 
+                        padding: '10px 14px',
+                        color: '#64748b',
+                        fontSize: '0.82rem'
+                      }}>
+                        {translate('carbon.formula')} : {carbonData.formulaDisplay}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
           
           {!result && (
             <div className="placeholder-card">

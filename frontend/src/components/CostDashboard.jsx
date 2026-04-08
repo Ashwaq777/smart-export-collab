@@ -2,8 +2,11 @@ import React from 'react'
 import { TrendingUp, DollarSign, Ship, FileText, Globe, AlertCircle, CheckCircle } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardContent } from './ui/Card'
 import { Badge } from './ui/Badge'
+import { useLanguage } from '../context/LanguageContext'
 
 const CostDashboard = ({ result }) => {
+  const { t: translate } = useLanguage();
+  
   const formatCurrency = (value, currency = result.currency) => {
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
@@ -18,7 +21,7 @@ const CostDashboard = ({ result }) => {
 
   const kpiCards = [
     {
-      title: 'Total Douane',
+      title: translate('calculator.totalDouane'),
       value: result.montantDouane,
       currency: result.currency,
       icon: FileText,
@@ -27,7 +30,7 @@ const CostDashboard = ({ result }) => {
       percentage: result.tauxDouane,
     },
     {
-      title: 'Total TVA',
+      title: translate('calculator.totalTva'),
       value: result.montantTva,
       currency: result.currency,
       icon: TrendingUp,
@@ -36,7 +39,7 @@ const CostDashboard = ({ result }) => {
       percentage: result.tauxTva,
     },
     {
-      title: 'Taxe Parafiscale',
+      title: translate('calculator.taxeParafiscale'),
       value: result.montantTaxeParafiscale,
       currency: result.currency,
       icon: FileText,
@@ -45,7 +48,7 @@ const CostDashboard = ({ result }) => {
       percentage: result.taxeParafiscale,
     },
     {
-      title: 'Frais Portuaires',
+      title: translate('calculator.fraisPortuairesCard'),
       value: result.fraisPortuaires || 0,
       currency: result.currency,
       icon: Ship,
@@ -63,7 +66,7 @@ const CostDashboard = ({ result }) => {
             <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" />
             <div>
               <p className="text-sm font-semibold text-yellow-800 mb-1">
-                Taux douaniers estimés (source: OMC/WTO moyennes MFN)
+                {translate('calculator.taxWarning')}
               </p>
               <p className="text-sm text-yellow-700">
                 {result.warningMessage}
@@ -93,11 +96,11 @@ const CostDashboard = ({ result }) => {
       <div className="bg-gradient-to-r from-maritime-navy to-maritime-deepBlue rounded-2xl p-8 text-white shadow-xl">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="text-sm font-semibold text-accent-300 mb-2">TOTAL LANDED COST</h3>
+            <h3 className="text-sm font-semibold text-accent-300 mb-2">{translate('calculator.totalLanded')}</h3>
             <div className="text-5xl font-bold">{formatCurrency(result.coutTotal)}</div>
           </div>
           <div className="text-right">
-            <div className="text-sm text-accent-300 mb-1">Currency</div>
+            <div className="text-sm text-accent-300 mb-1">{translate('calculator.currencyLabel')}</div>
             <div className="text-2xl font-bold">{result.currency}</div>
           </div>
         </div>
@@ -145,7 +148,7 @@ const CostDashboard = ({ result }) => {
       <div className="bg-gradient-to-br from-maritime-navy to-maritime-ocean rounded-2xl p-8 shadow-xl border border-maritime-ocean">
         <div className="flex items-center justify-between">
           <div className="space-y-3">
-            <p className="text-primary-100 text-sm mb-2 leading-relaxed">Coût Total Landed Cost</p>
+            <p className="text-primary-100 text-sm mb-2 leading-relaxed">{translate('calculator.totalLanded')}</p>
             <p className="text-5xl font-bold tracking-tight text-white">{formatCurrency(result.coutTotal)}</p>
             {result.nomPort && (
               <p className="text-primary-100 text-sm mt-3 leading-relaxed">
@@ -156,7 +159,7 @@ const CostDashboard = ({ result }) => {
           <div className="text-right space-y-3">
             {result.coutTotalEur && result.currency !== 'EUR' && (
               <div>
-                <p className="text-primary-100 text-xs leading-relaxed">Équivalent EUR</p>
+                <p className="text-primary-100 text-xs leading-relaxed">{translate('calculator.equivalentEur')}</p>
                 <p className="text-xl font-semibold tracking-tight text-white">{formatCurrency(result.coutTotalEur, 'EUR')}</p>
               </div>
             )}
@@ -171,65 +174,65 @@ const CostDashboard = ({ result }) => {
       </div>
 
       <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
-        <h3 className="text-2xl font-bold text-maritime-navy mb-6">Cost Breakdown</h3>
+        <h3 className="text-2xl font-bold text-maritime-navy mb-6">{translate('calculator.costBreakdown')}</h3>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b-2 border-gray-200 bg-gray-50">
-                  <th className="text-left py-4 px-4 text-sm font-bold text-gray-700 uppercase tracking-wide">Item</th>
-                  <th className="text-right py-4 px-4 text-sm font-bold text-gray-700 uppercase tracking-wide">Amount</th>
-                  <th className="text-right py-4 px-4 text-sm font-bold text-gray-700 uppercase tracking-wide">Rate</th>
+                  <th className="text-left py-4 px-4 text-sm font-bold text-gray-700 uppercase tracking-wide">{translate('calculator.item')}</th>
+                  <th className="text-right py-4 px-4 text-sm font-bold text-gray-700 uppercase tracking-wide">{translate('calculator.amount')}</th>
+                  <th className="text-right py-4 px-4 text-sm font-bold text-gray-700 uppercase tracking-wide">{translate('calculator.rate')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-blue-200">
                 <tr className="hover:bg-gray-50 transition-colors border-b border-gray-100">
-                  <td className="py-4 px-4 text-sm font-medium text-gray-900">Valeur FOB</td>
+                  <td className="py-4 px-4 text-sm font-medium text-gray-900">{translate('calculator.valeurFob')}</td>
                   <td className="py-4 px-4 text-sm text-right font-bold text-maritime-navy">{formatCurrency(result.valeurFob, result.currency)}</td>
                   <td className="py-3 px-4 text-sm text-right text-gray-600">-</td>
                 </tr>
                 <tr className="hover:bg-gray-50 transition-colors border-b border-gray-100">
                   <td className="py-4 px-4 text-sm font-medium text-gray-900 flex items-center gap-2">
-                    Transport
+                    {translate('calculator.transport')}
                   </td>
                   <td className="py-4 px-4 text-sm text-right font-bold text-maritime-navy">{formatCurrency(result.coutTransport, result.currency)}</td>
                   <td className="py-3 px-4 text-sm text-right text-gray-600">-</td>
                 </tr>
                 <tr className="hover:bg-gray-50 transition-colors border-b border-gray-100">
-                  <td className="py-4 px-4 text-sm font-medium text-gray-900">Assurance</td>
+                  <td className="py-4 px-4 text-sm font-medium text-gray-900">{translate('calculator.assurance')}</td>
                   <td className="py-4 px-4 text-sm text-right font-bold text-maritime-navy">{formatCurrency(result.assurance, result.currency)}</td>
                   <td className="py-3 px-4 text-sm text-right text-gray-600">-</td>
                 </tr>
                 <tr className="bg-accent-50 font-semibold border-b border-accent-200">
-                  <td className="py-4 px-4 text-sm font-bold text-maritime-navy">CIF Value</td>
+                  <td className="py-4 px-4 text-sm font-bold text-maritime-navy">{translate('calculator.cifValue')}</td>
                   <td className="py-4 px-4 text-sm text-right font-bold text-maritime-navy">{formatCurrency(result.valeurCaf, result.currency)}</td>
                   <td className="py-4 px-4 text-sm text-right text-gray-600">-</td>
                 </tr>
                 <tr className="hover:bg-gray-50 transition-colors border-b border-gray-100">
-                  <td className="py-4 px-4 text-sm font-medium text-gray-900">Droits de douane</td>
+                  <td className="py-4 px-4 text-sm font-medium text-gray-900">{translate('calculator.droitsDouane')}</td>
                   <td className="py-4 px-4 text-sm text-right font-bold text-maritime-navy">{formatCurrency(result.montantDouane, result.currency)}</td>
                   <td className="py-3 px-4 text-sm text-right text-gray-600">{result.tauxDouane}%</td>
                 </tr>
                 <tr className="hover:bg-gray-50 transition-colors border-b border-gray-100">
-                  <td className="py-4 px-4 text-sm font-medium text-gray-900">TVA</td>
+                  <td className="py-4 px-4 text-sm font-medium text-gray-900">{translate('calculator.tva')}</td>
                   <td className="py-4 px-4 text-sm text-right font-bold text-maritime-navy">{formatCurrency(result.montantTva, result.currency)}</td>
                   <td className="py-3 px-4 text-sm text-right text-gray-600">{result.tauxTva}%</td>
                 </tr>
                 {result.montantTaxeParafiscale > 0 && (
                   <tr className="hover:bg-blue-50 transition-colors">
-                    <td className="py-3 px-4 text-sm text-gray-700">Taxe parafiscale</td>
+                    <td className="py-3 px-4 text-sm text-gray-700">{translate('calculator.taxeParafiscale')}</td>
                     <td className="py-4 px-4 text-sm text-right font-bold text-maritime-navy">{formatCurrency(result.montantTaxeParafiscale, result.currency)}</td>
                     <td className="py-3 px-4 text-sm text-right text-gray-600">{result.taxeParafiscale}%</td>
                   </tr>
                 )}
                 {result.fraisPortuaires > 0 && (
                   <tr className="hover:bg-blue-50 transition-colors">
-                    <td className="py-3 px-4 text-sm text-gray-700">Frais portuaires</td>
+                    <td className="py-3 px-4 text-sm text-gray-700">{translate('calculator.fraisPortuaires')}</td>
                     <td className="py-4 px-4 text-sm text-right font-bold text-maritime-navy">{formatCurrency(result.fraisPortuaires, result.currency)}</td>
                     <td className="py-3 px-4 text-sm text-right text-gray-600">-</td>
                   </tr>
                 )}
                 <tr className="bg-gradient-to-r from-accent-500 to-accent-600 text-white font-bold">
-                  <td className="py-5 px-4 text-base font-bold">TOTAL LANDED COST</td>
+                  <td className="py-5 px-4 text-base font-bold">{translate('calculator.totalLanded')}</td>
                   <td className="py-5 px-4 text-base text-right font-bold">{formatCurrency(result.coutTotal, result.currency)}</td>
                   <td className="py-5 px-4 text-base text-right">-</td>
                 </tr>
@@ -241,14 +244,14 @@ const CostDashboard = ({ result }) => {
       {/* Profitability Analysis */}
       {result.margeNette !== null && result.margeNette !== undefined && (
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
-          <h3 className="text-2xl font-bold text-maritime-navy mb-6">Analyse de Rentabilité</h3>
+          <h3 className="text-2xl font-bold text-maritime-navy mb-6">{translate('calculator.profitabilityAnalysis')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
-              <p className="text-sm text-blue-700 font-semibold mb-2">Prix de Vente Prévisionnel</p>
+              <p className="text-sm text-blue-700 font-semibold mb-2">{translate('calculator.projectedSellingPrice')}</p>
               <p className="text-3xl font-bold text-blue-900">{formatCurrency(result.prixVentePrevisionnel)}</p>
             </div>
             <div className={`rounded-xl p-6 border-2 ${result.margeNette >= 0 ? 'bg-gradient-to-br from-green-50 to-green-100 border-green-300' : 'bg-gradient-to-br from-red-50 to-red-100 border-red-300'}`}>
-              <p className={`text-sm font-semibold mb-2 ${result.margeNette >= 0 ? 'text-green-700' : 'text-red-700'}`}>Marge Nette</p>
+              <p className={`text-sm font-semibold mb-2 ${result.margeNette >= 0 ? 'text-green-700' : 'text-red-700'}`}>{translate('calculator.netMargin')}</p>
               <p className={`text-3xl font-bold ${result.margeNette >= 0 ? 'text-green-900' : 'text-red-900'}`}>
                 {formatCurrency(result.margeNette)}
               </p>
@@ -259,7 +262,7 @@ const CostDashboard = ({ result }) => {
               )}
             </div>
             <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200">
-              <p className="text-sm text-purple-700 font-semibold mb-2">Indicateur</p>
+              <p className="text-sm text-purple-700 font-semibold mb-2">{translate('calculator.indicator')}</p>
               <div className="flex items-center gap-2">
                 <span className={`inline-block px-4 py-2 rounded-full text-sm font-bold ${
                   result.indicateurRentabilite === 'POSITIF' ? 'bg-green-500 text-white' :
@@ -284,16 +287,16 @@ const CostDashboard = ({ result }) => {
               </svg>
             </div>
             <div className="flex-1">
-              <h3 className="text-xl font-bold text-orange-900 mb-2">⚠️ Alerte Sécurité Douanière (SIV)</h3>
+              <h3 className="text-xl font-bold text-orange-900 mb-2">{translate('calculator.sivAlert')}</h3>
               <p className="text-orange-800 mb-4">{result.messageSiv}</p>
               {result.prixEntreeSivMin && (
                 <div className="grid grid-cols-2 gap-4 bg-white rounded-lg p-4 border border-orange-200">
                   <div>
-                    <p className="text-xs text-gray-600 mb-1">Valeur CAF actuelle</p>
+                    <p className="text-xs text-gray-600 mb-1">{translate('calculator.currentCifValue')}</p>
                     <p className="text-lg font-bold text-orange-900">{formatCurrency(result.valeurCaf)}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600 mb-1">Prix d'entrée SIV minimum</p>
+                    <p className="text-xs text-gray-600 mb-1">{translate('calculator.minSivEntryPrice')}</p>
                     <p className="text-lg font-bold text-green-700">{formatCurrency(result.prixEntreeSivMin)}</p>
                   </div>
                 </div>
@@ -306,12 +309,12 @@ const CostDashboard = ({ result }) => {
       {/* Currency Sensitivity */}
       {(result.impactDevise2PourcentPlus || result.impactDevise2PourcentMoins) && (
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
-          <h3 className="text-2xl font-bold text-maritime-navy mb-4">Analyse de Sensibilité Devises</h3>
-          <p className="text-sm text-gray-600 mb-6">Impact d'une variation de ±2% du taux de change sur le coût total</p>
+          <h3 className="text-2xl font-bold text-maritime-navy mb-4">{translate('calculator.sensitivityAnalysis')}</h3>
+          <p className="text-sm text-gray-600 mb-6">{translate('calculator.sensitivityDesc')}</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {result.impactDevise2PourcentPlus && (
               <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-6 border border-red-200">
-                <p className="text-sm text-red-700 font-semibold mb-2">Variation +2%</p>
+                <p className="text-sm text-red-700 font-semibold mb-2">{translate('calculator.variationPlus')}</p>
                 <p className="text-2xl font-bold text-red-900">
                   +{formatCurrency(result.impactDevise2PourcentPlus)}
                 </p>
@@ -322,7 +325,7 @@ const CostDashboard = ({ result }) => {
             )}
             {result.impactDevise2PourcentMoins && (
               <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200">
-                <p className="text-sm text-green-700 font-semibold mb-2">Variation -2%</p>
+                <p className="text-sm text-green-700 font-semibold mb-2">{translate('calculator.variationMinus')}</p>
                 <p className="text-2xl font-bold text-green-900">
                   {formatCurrency(result.impactDevise2PourcentMoins)}
                 </p>
@@ -338,29 +341,29 @@ const CostDashboard = ({ result }) => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle className="text-xl text-gray-900">Informations complémentaires</CardTitle>
+            <CardTitle className="text-xl text-gray-900">{translate('calculator.additionalInfo')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <InfoItem 
               icon={Globe} 
-              label="Produit" 
+              label={translate('calculator.productLabel')} 
               value={`${result.nomProduit} (${result.codeHs})`} 
             />
             <InfoItem 
               icon={Globe} 
-              label="Destination" 
+              label={translate('calculator.destinationLabel')} 
               value={result.paysDestination} 
             />
             {result.nomPort && (
               <InfoItem 
                 icon={Ship} 
-                label="Port" 
+                label={translate('calculator.portLabel')} 
                 value={result.nomPort} 
               />
             )}
             <InfoItem 
               icon={DollarSign} 
-              label="Devise" 
+              label={translate('calculator.currencyLabel')} 
               value={result.currency} 
             />
             
@@ -373,7 +376,7 @@ const CostDashboard = ({ result }) => {
                   {result.disclaimer}
                 </p>
                 <p className="text-xs text-amber-700 mt-2">
-                  Source taux de change: {result.exchangeRateSource}
+                  {translate('calculator.disclaimerSource')}: {result.exchangeRateSource}
                 </p>
               </div>
             </div>

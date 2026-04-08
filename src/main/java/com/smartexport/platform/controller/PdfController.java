@@ -29,7 +29,13 @@ public class PdfController {
             @Valid @RequestBody LandedCostCalculationDto request) {
         try {
             LandedCostResultDto result = calculationService.calculateLandedCost(request);
-            byte[] pdfBytes = pdfGenerationService.generateLandedCostPdf(result);
+            
+            // Set port name from request if available
+            if (request.getPortNom() != null && !request.getPortNom().isEmpty()) {
+                result.setNomPort(request.getPortNom());
+            }
+            
+            byte[] pdfBytes = pdfGenerationService.generateLandedCostPdf(result, request.getLang());
             String filename = "landed_cost_" + result.getCodeHs().replace(".", "_") + ".pdf";
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_PDF);

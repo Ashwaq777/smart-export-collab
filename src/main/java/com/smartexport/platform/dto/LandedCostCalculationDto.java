@@ -52,6 +52,10 @@ public class LandedCostCalculationDto {
     private Long portOriginId;
     private BigDecimal weightTonnes;
     
+    // PDF translation parameters
+    private String lang; // "fr", "en", "es"
+    private String portNom;
+    
     // Constructors
     public LandedCostCalculationDto() {}
     
@@ -140,4 +144,10 @@ public class LandedCostCalculationDto {
     
     public BigDecimal getWeightTonnes() { return weightTonnes; }
     public void setWeightTonnes(BigDecimal weightTonnes) { this.weightTonnes = weightTonnes; }
+    
+    public String getLang() { return lang; }
+    public void setLang(String lang) { this.lang = lang; }
+    
+    public String getPortNom() { return portNom; }
+    public void setPortNom(String portNom) { this.portNom = portNom; }
 }

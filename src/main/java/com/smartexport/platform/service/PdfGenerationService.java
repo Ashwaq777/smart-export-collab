@@ -36,7 +36,15 @@ public class PdfGenerationService {
     private static final org.slf4j.Logger log = 
         org.slf4j.LoggerFactory.getLogger(PdfGenerationService.class);
     
+    private String t(String lang, String fr, String en, String es) {
+        return "en".equals(lang) ? en : "es".equals(lang) ? es : fr;
+    }
+    
     public byte[] generateLandedCostPdf(LandedCostResultDto result) {
+        return generateLandedCostPdf(result, "fr");
+    }
+    
+    public byte[] generateLandedCostPdf(LandedCostResultDto result, String lang) {
         try {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             
@@ -78,14 +86,14 @@ public class PdfGenerationService {
                 .setTextAlignment(TextAlignment.CENTER)
                 .setMarginBottom(5);
             
-            Paragraph subtitle = new Paragraph("Calcul des Coûts d'Importation (Landed Cost)")
+            Paragraph subtitle = new Paragraph(t(lang, "Calcul des Coûts d'Importation (Landed Cost)", "Import Cost Calculation (Landed Cost)", "Cálculo de Costos de Importación (Landed Cost)"))
                 .setFont(helveticaBoldFont)
                 .setFontSize(12)
                 .setFontColor(blackColor)
                 .setTextAlignment(TextAlignment.CENTER)
                 .setMarginBottom(5);
             
-            Paragraph refLine = new Paragraph("Référence: " + reference)
+            Paragraph refLine = new Paragraph(t(lang, "Référence: ", "Reference: ", "Referencia: ") + reference)
                 .setFont(helveticaFont)
                 .setFontSize(10)
                 .setFontColor(grayColor)
@@ -105,7 +113,7 @@ public class PdfGenerationService {
                 .setMarginBottom(15));
             
             // SECTION 1 - INFORMATIONS PRODUIT
-            Paragraph section1Title = new Paragraph("Informations Produit")
+            Paragraph section1Title = new Paragraph(t(lang, "Informations Produit", "Product Information", "Información del Producto"))
                 .setFont(helveticaBoldFont)
                 .setFontSize(11)
                 .setFontColor(blackColor)
@@ -123,11 +131,11 @@ public class PdfGenerationService {
                 port = result.getNomPort();
             }
             
-            addProductRow(productTable, "Code HS", result.getCodeHs() != null ? result.getCodeHs() : "", helveticaFont, helveticaBoldFont);
-            addProductRow(productTable, "Produit", result.getNomProduit() != null ? result.getNomProduit() : "", helveticaFont, helveticaBoldFont);
-            addProductRow(productTable, "Pays de destination", result.getPaysDestination() != null ? result.getPaysDestination() : "", helveticaFont, helveticaBoldFont);
-            addProductRow(productTable, "Port", port, helveticaFont, helveticaBoldFont);
-            addProductRow(productTable, "Devise", result.getCurrency() != null ? result.getCurrency() : "", helveticaFont, helveticaBoldFont);
+            addProductRow(productTable, t(lang, "Code HS", "HS Code", "Código HS"), result.getCodeHs() != null ? result.getCodeHs() : "", helveticaFont, helveticaBoldFont);
+            addProductRow(productTable, t(lang, "Produit", "Product", "Producto"), result.getNomProduit() != null ? result.getNomProduit() : "", helveticaFont, helveticaBoldFont);
+            addProductRow(productTable, t(lang, "Pays de destination", "Destination country", "País de destino"), result.getPaysDestination() != null ? result.getPaysDestination() : "", helveticaFont, helveticaBoldFont);
+            addProductRow(productTable, t(lang, "Port", "Port", "Puerto"), port, helveticaFont, helveticaBoldFont);
+            addProductRow(productTable, t(lang, "Devise", "Currency", "Divisa"), result.getCurrency() != null ? result.getCurrency() : "", helveticaFont, helveticaBoldFont);
             
             document.add(productTable);
             
@@ -135,7 +143,7 @@ public class PdfGenerationService {
             document.add(new Paragraph("").setFontSize(15));
             
             // SECTION 2 - DÉTAIL DES COÛTS
-            Paragraph section2Title = new Paragraph("Détail des Coûts")
+            Paragraph section2Title = new Paragraph(t(lang, "Détail des Coûts", "Cost Breakdown", "Desglose de Costos"))
                 .setFont(helveticaBoldFont)
                 .setFontSize(11)
                 .setFontColor(blackColor)
@@ -149,7 +157,7 @@ public class PdfGenerationService {
             
             // En-tête tableau coûts
             Cell descHeader = new Cell()
-                .add(new Paragraph("Description")
+                .add(new Paragraph(t(lang, "Description", "Description", "Descripción"))
                     .setFont(helveticaBoldFont)
                     .setFontSize(10)
                     .setFontColor(blackColor))
@@ -157,7 +165,7 @@ public class PdfGenerationService {
                 .setPadding(5);
             
             Cell amountHeader = new Cell()
-                .add(new Paragraph("Montant")
+                .add(new Paragraph(t(lang, "Montant", "Amount", "Monto"))
                     .setFont(helveticaBoldFont)
                     .setFontSize(10)
                     .setFontColor(blackColor))
@@ -168,10 +176,10 @@ public class PdfGenerationService {
             costTable.addCell(amountHeader);
             
             // Lignes de coûts
-            addCostRow(costTable, "Valeur FOB", result.getValeurFob(), result.getCurrency(), helveticaFont);
-            addCostRow(costTable, "Coût Transport", result.getCoutTransport(), result.getCurrency(), helveticaFont);
-            addCostRow(costTable, "Assurance", result.getAssurance(), result.getCurrency(), helveticaFont);
-            addCostRow(costTable, "Valeur CAF (CIF)", result.getValeurCaf(), result.getCurrency(), helveticaFont);
+            addCostRow(costTable, t(lang, "Valeur FOB", "FOB Value", "Valor FOB"), result.getValeurFob(), result.getCurrency(), helveticaFont);
+            addCostRow(costTable, t(lang, "Coût Transport", "Transport Cost", "Costo de Transporte"), result.getCoutTransport(), result.getCurrency(), helveticaFont);
+            addCostRow(costTable, t(lang, "Assurance", "Insurance", "Seguro"), result.getAssurance(), result.getCurrency(), helveticaFont);
+            addCostRow(costTable, t(lang, "Valeur CAF (CIF)", "CIF Value", "Valor CIF"), result.getValeurCaf(), result.getCurrency(), helveticaFont);
             
             // Calculer les taux pour l'affichage
             String douaneRate = "";
@@ -183,13 +191,13 @@ public class PdfGenerationService {
                 tvaRate = String.format("%.2f", result.getTauxTva());
             }
             
-            addCostRow(costTable, "Droits de Douane (" + douaneRate + "%)", result.getMontantDouane(), result.getCurrency(), helveticaFont);
-            addCostRow(costTable, "TVA (" + tvaRate + "%)", result.getMontantTva(), result.getCurrency(), helveticaFont);
-            addCostRow(costTable, "Frais Portuaires", result.getFraisPortuaires(), result.getCurrency(), helveticaFont);
+            addCostRow(costTable, t(lang, "Droits de Douane", "Customs Duties", "Derechos de Aduana") + " (" + douaneRate + "%)", result.getMontantDouane(), result.getCurrency(), helveticaFont);
+            addCostRow(costTable, t(lang, "TVA", "VAT", "IVA") + " (" + tvaRate + "%)", result.getMontantTva(), result.getCurrency(), helveticaFont);
+            addCostRow(costTable, t(lang, "Frais Portuaires", "Port Fees", "Gastos Portuarios"), result.getFraisPortuaires(), result.getCurrency(), helveticaFont);
             
             // Ligne TOTAL avec fond #333333
             Cell totalDesc = new Cell()
-                .add(new Paragraph("COÛT TOTAL (Landed Cost)")
+                .add(new Paragraph(t(lang, "COÛT TOTAL (Landed Cost)", "TOTAL LANDED COST", "COSTO TOTAL (Landed Cost)"))
                     .setFont(helveticaBoldFont)
                     .setFontSize(10)
                     .setFontColor(whiteColor))
@@ -216,20 +224,20 @@ public class PdfGenerationService {
             document.add(new Paragraph("").setFontSize(15));
             
             // SECTION 3 - CONVERSIONS DE DEVISES
-            Paragraph section3Title = new Paragraph("Conversions de Devises")
+            Paragraph section3Title = new Paragraph(t(lang, "Conversions de Devises", "Currency Conversions", "Conversiones de Divisas"))
                 .setFont(helveticaBoldFont)
                 .setFontSize(11)
                 .setFontColor(blackColor)
                 .setMarginBottom(10);
             document.add(section3Title);
             
-            Paragraph eurLine = new Paragraph("Coût Total (EUR) : " + formatMontant(result.getCoutTotalEur(), "EUR"))
+            Paragraph eurLine = new Paragraph(t(lang, "Coût Total (EUR) : ", "Total Cost (EUR): ", "Costo Total (EUR): ") + formatMontant(result.getCoutTotalEur(), "EUR"))
                 .setFont(helveticaFont)
                 .setFontSize(10)
                 .setFontColor(blackColor)
                 .setMarginBottom(5);
             
-            Paragraph usdLine = new Paragraph("Coût Total (USD) : " + formatMontant(result.getCoutTotalUsd(), "USD"))
+            Paragraph usdLine = new Paragraph(t(lang, "Coût Total (USD) : ", "Total Cost (USD): ", "Costo Total (USD): ") + formatMontant(result.getCoutTotalUsd(), "USD"))
                 .setFont(helveticaFont)
                 .setFontSize(10)
                 .setFontColor(blackColor)
@@ -280,7 +288,7 @@ public class PdfGenerationService {
             document.add(new Paragraph("").setFontSize(15));
             
             // SECTION 5 - DISCLAIMER
-            Paragraph section5Title = new Paragraph("Disclaimer")
+            Paragraph section5Title = new Paragraph(t(lang, "Disclaimer", "Disclaimer", "Descargo de responsabilidad"))
                 .setFont(helveticaBoldFont)
                 .setFontSize(11)
                 .setFontColor(blackColor)
@@ -288,12 +296,12 @@ public class PdfGenerationService {
             document.add(section5Title);
             
             Paragraph disclaimer = new Paragraph(
-                "Estimation non contractuelle basée sur les flux réels et les tarifs officiels à la date du " + 
+                t(lang, "Estimation non contractuelle basée sur les flux réels et les tarifs officiels à la date du ", "Non-contractual estimate based on actual flows and official tariffs as of ", "Estimación no contractual basada en flujos reales y tarifas oficiales a la fecha del ") + 
                 generationDate + ".\n" +
-                "Les droits de douane sont calculés selon le tarif douanier en vigueur.\n" +
-                "Ce document ne constitue pas un engagement contractuel.\n" +
-                "Date de génération: " + generationDate + "\n" +
-                "Source des taux de change: " + 
+                t(lang, "Les droits de douane sont calculés selon le tarif douanier en vigueur.", "Customs duties are calculated according to the applicable customs tariff.", "Los derechos de aduana se calculan según el arancel aduanero vigente.") + "\n" +
+                t(lang, "Ce document ne constitue pas un engagement contractuel.", "This document does not constitute a contractual commitment.", "Este documento no constituye un compromiso contractual.") + "\n" +
+                t(lang, "Date de génération: ", "Generation date: ", "Fecha de generación: ") + generationDate + "\n" +
+                t(lang, "Source des taux de change: ", "Exchange rate source: ", "Fuente de los tipos de cambio: ") + 
                 (result.getExchangeRateSource() != null ? result.getExchangeRateSource() : "ExchangeRate-API")
             )
                 .setFont(helveticaFont)

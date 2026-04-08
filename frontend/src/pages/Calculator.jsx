@@ -14,7 +14,7 @@ import { updateExchangeRates } from '../utils/currencyConverter'
 
 function Calculator() {
   const { user } = useAuth();
-  const { t: translate } = useLanguage();
+  const { t: translate, lang: language } = useLanguage();
   const isImportateur = user?.role === 'IMPORTATEUR';
   
   const {
@@ -511,6 +511,16 @@ function Calculator() {
 
   const handleDownloadPdf = async () => {
     try {
+      // Get port name for PDF
+      const allPorts = [...ports, ...portsDestination];
+      const foundPort = allPorts.find(
+        p => String(p.id) === String(formData.portId)
+      );
+      const portDestNomPdf = foundPort?.nomPort || 
+                             foundPort?.nom || 
+                             foundPort?.name || '';
+      console.log('portId:', formData.portId, 'foundPort:', foundPort, 'portNom:', portDestNomPdf);
+      
       const calculationData = {
         codeHs: formData.codeHs,
         paysDestination: formData.paysDestination,
@@ -527,6 +537,9 @@ function Calculator() {
         poidsNet: parseFloat(formData.poidsNet) || null,
         poidsBrut: parseFloat(formData.poidsBrut) || null,
         typeUnite: formData.typeUnite || null,
+        // Add language and port name for PDF translation
+        lang: language,
+        portNom: portDestNomPdf,
       }
       
       const pdfBlob = await pdfService.generateLandedCostPdf(calculationData)
@@ -678,7 +691,7 @@ function Calculator() {
     doc.line(m, y, W-m, y);
     y += 8;
     const details = [
-      [translate('pdf.carbon.origin'), portDepartNom || 'N/A'],
+      [translate('pdf.carbon.origin'), portDepartNom || portsOrigine?.[0]?.nomPort || 'N/A'],
       [translate('pdf.carbon.destination'), formData.paysDestination || 'N/A'],
       [translate('pdf.carbon.weight'), (parseFloat(formData.poidsNet||formData.poidsBrut||0)/1000)+' t'],
       [translate('pdf.carbon.mode'), translate('pdf.carbon.' + carbonMode)],
@@ -1050,7 +1063,7 @@ function Calculator() {
                         }}
                         className="form-select"
                       >
-                        <option value="">-- Pays de départ --</option>
+                        <option value="">{translate('calculator.selectDepartureCountry')}</option>
                         {maritimeCountries.map((c) => (
                           <option key={c.code} value={c.name}>
                             {c.flagEmoji ? `${c.flagEmoji} ` : ''}{c.nameFr || c.name}

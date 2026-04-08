@@ -259,6 +259,8 @@ function Calculator() {
             region: port.region,
             fees: port.fees, // Structure complète des frais (THC, pilotage, etc.)
             coordinates: port.coordinates,
+            lat: port.lat,
+            lon: port.lon,
             isGeneric: false // Tous les ports UNCTAD sont réels
           }
         })
@@ -323,6 +325,10 @@ function Calculator() {
             region: port.region,
             fees: port.fees, // Structure complète des frais (THC, pilotage, etc.)
             coordinates: port.coordinates,
+            lat: port.lat,
+            lon: port.lon,
+            lat: port.lat,
+            lon: port.lon,
             isGeneric: false // Tous les ports UNCTAD sont réels
           }
         })
@@ -383,6 +389,8 @@ function Calculator() {
             region: port.region,
             fees: port.fees, // Structure complète des frais (THC, pilotage, etc.)
             coordinates: port.coordinates,
+            lat: port.lat,
+            lon: port.lon,
             isGeneric: false // Tous les ports UNCTAD sont réels
           }
         })
@@ -593,14 +601,20 @@ function Calculator() {
       console.log('Carbon origin:', originValue, 'dest:', destValue);
       
       // Récupérer coords port départ
+      console.log('portDepartId value:', portDepartId);
+      console.log('portsOrigine ids:', portsOrigine.map(p => p.id));
       const portDepart = portsOrigine.find(
         p => String(p.id) === String(portDepartId)
       );
+      console.log('portDepart found:', JSON.stringify(portDepart));
 
       // Récupérer coords port destination  
+      console.log('formData.portId value:', formData.portId);
+      console.log('ports ids:', ports.map(p => p.id));
       const portDest = ports.find(
         p => String(p.id) === String(formData.portId)
       );
+      console.log('portDest found:', JSON.stringify(portDest));
 
       // Chercher les coordonnées dans tous les formats possibles
       const getCoords = (port) => {

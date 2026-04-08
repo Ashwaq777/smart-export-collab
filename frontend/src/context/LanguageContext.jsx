@@ -452,7 +452,36 @@ const translations = {
       loading: "Calcul en cours...",
       error: "Erreur lors du calcul carbone",
       formula: "Formule",
-      download: "Télécharger le certificat carbone"
+      download: "Télécharger le certificat carbone",
+      mode: "Mode de transport",
+      "mode.maritime": "Maritime",
+      "mode.road": "Routier",
+      "mode.air": "Aérien",
+      "mode.rail": "Ferroviaire"
+    },
+    pdf: {
+      carbon: {
+        title: "CERTIFICAT CARBONE EXPORT",
+        subtitle: "Smart Export Global — Empreinte Carbone",
+        shipment: "Détails de l'expédition",
+        origin: "Origine",
+        destination: "Destination",
+        weight: "Poids",
+        mode: "Mode de transport",
+        maritime: "Maritime",
+        road: "Routier",
+        air: "Aérien",
+        rail: "Ferroviaire",
+        distance: "Distance calculée",
+        results: "Résultats",
+        co2total: "Empreinte CO₂ totale",
+        methodology: "Méthodologie",
+        formula: "Formule",
+        financial: "Informations financières",
+        cbam: "Taxe CBAM estimée",
+        disclaimer: "Valeur indicative. Source : EU ETS. 85 €/tonne CO₂.",
+        generated: "Généré le"
+      }
     },
     traceability: {
       title: 'Traçabilité', subtitle: 'Suivez vos expéditions en temps réel',
@@ -1001,7 +1030,36 @@ const translations = {
       loading: "Calculating...",
       error: "Error during carbon calculation",
       formula: "Formula",
-      download: "Download carbon certificate"
+      download: "Download carbon certificate",
+      mode: "Transport mode",
+      "mode.maritime": "Maritime",
+      "mode.road": "Road",
+      "mode.air": "Air",
+      "mode.rail": "Rail"
+    },
+    pdf: {
+      carbon: {
+        title: "CARBON EXPORT CERTIFICATE",
+        subtitle: "Smart Export Global — Carbon Footprint",
+        shipment: "Shipment Details",
+        origin: "Origin",
+        destination: "Destination",
+        weight: "Weight",
+        mode: "Transport mode",
+        maritime: "Maritime",
+        road: "Road",
+        air: "Air",
+        rail: "Rail",
+        distance: "Calculated distance",
+        results: "Results",
+        co2total: "Total CO₂ Footprint",
+        methodology: "Methodology",
+        formula: "Formula",
+        financial: "Financial Information",
+        cbam: "Estimated CBAM Tax",
+        disclaimer: "Indicative value. Source: EU ETS. 85 €/tonne CO₂.",
+        generated: "Generated on"
+      }
     },
     traceability: {
       title: 'Traceability', subtitle: 'Track your shipments in real time',
@@ -1550,7 +1608,36 @@ const translations = {
       loading: "Calculando...",
       error: "Error en el cálculo de carbono",
       formula: "Fórmula",
-      download: "Descargar certificado de carbono"
+      download: "Descargar certificado de carbono",
+      mode: "Modo de transporte",
+      "mode.maritime": "Marítimo",
+      "mode.road": "Carretera",
+      "mode.air": "Aéreo",
+      "mode.rail": "Ferroviario"
+    },
+    pdf: {
+      carbon: {
+        title: "CERTIFICADO DE CARBONO EXPORT",
+        subtitle: "Smart Export Global — Huella de Carbono",
+        shipment: "Detalles del envío",
+        origin: "Origen",
+        destination: "Destino",
+        weight: "Peso",
+        mode: "Modo de transporte",
+        maritime: "Marítimo",
+        road: "Carretera",
+        air: "Aéreo",
+        rail: "Ferroviario",
+        distance: "Distancia calculada",
+        results: "Resultados",
+        co2total: "Huella CO₂ total",
+        methodology: "Metodología",
+        formula: "Fórmula",
+        financial: "Información financiera",
+        cbam: "Impuesto CBAM estimado",
+        disclaimer: "Valor indicativo. Fuente: EU ETS. 85 €/tonelada CO₂.",
+        generated: "Generado el"
+      }
     },
     traceability: {
       title: 'Trazabilidad', subtitle: 'Siga sus envíos en tiempo real',

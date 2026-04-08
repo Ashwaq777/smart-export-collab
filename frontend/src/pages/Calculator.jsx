@@ -46,6 +46,7 @@ function Calculator() {
   const [carbonData, setCarbonData] = useState(null);
   const [carbonLoading, setCarbonLoading] = useState(false);
   const [carbonError, setCarbonError] = useState(null);
+  const [carbonMode, setCarbonMode] = useState('maritime');
   
   // States séparés pour les ports importateur
   const [portsOrigine, setPortsOrigine] = useState([]);
@@ -631,7 +632,7 @@ function Calculator() {
           origin: originValue,
           destination: destValue,
           weightTon: poids / 1000,
-          transportMode: 'maritime',
+          transportMode: carbonMode,
           originLat: originCoords?.lat || null,
           originLng: originCoords?.lng || null,
           destLat: destCoords?.lat || null,
@@ -659,10 +660,10 @@ function Calculator() {
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    doc.text('CERTIFICAT CARBONE EXPORT', W/2, 18, {align:'center'});
+    doc.text(translate('pdf.carbon.title'), W/2, 18, {align:'center'});
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
-    doc.text('Smart Export Global', W/2, 30, {align:'center'});
+    doc.text(translate('pdf.carbon.subtitle'), W/2, 30, {align:'center'});
     doc.setDrawColor(28, 167, 199);
     doc.setLineWidth(2);
     doc.line(m, 38, W-m, 38);
@@ -670,18 +671,18 @@ function Calculator() {
     doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(11, 31, 58);
-    doc.text("Détails de l'expédition", m, y);
+    doc.text(translate('pdf.carbon.shipment'), m, y);
     y += 5;
     doc.setDrawColor(220,220,220);
     doc.setLineWidth(0.4);
     doc.line(m, y, W-m, y);
     y += 8;
     const details = [
-      ['Origine', portDepartNom || 'N/A'],
-      ['Destination', formData.paysDestination || 'N/A'],
-      ['Poids', (parseFloat(formData.poidsNet||formData.poidsBrut||0)/1000)+' t'],
-      ['Mode', 'Maritime'],
-      ['Distance', carbonData.distanceKm+' km'],
+      [translate('pdf.carbon.origin'), portDepartNom || 'N/A'],
+      [translate('pdf.carbon.destination'), formData.paysDestination || 'N/A'],
+      [translate('pdf.carbon.weight'), (parseFloat(formData.poidsNet||formData.poidsBrut||0)/1000)+' t'],
+      [translate('pdf.carbon.mode'), translate('pdf.carbon.' + carbonMode)],
+      [translate('pdf.carbon.distance'), carbonData.distanceKm+' km'],
     ];
     doc.setFontSize(9);
     details.forEach(([label, val]) => {
@@ -697,7 +698,7 @@ function Calculator() {
     doc.setFontSize(11);
     doc.setFont('helvetica','bold');
     doc.setTextColor(11,31,58);
-    doc.text('Résultats', m, y);
+    doc.text(translate('pdf.carbon.results'), m, y);
     y += 5;
     doc.setDrawColor(220,220,220);
     doc.setLineWidth(0.4);
@@ -708,7 +709,7 @@ function Calculator() {
     doc.setFontSize(10);
     doc.setFont('helvetica','bold');
     doc.setTextColor(11,31,58);
-    doc.text('Empreinte CO\u2082 totale', m+4, y+7);
+    doc.text(translate('pdf.carbon.co2total'), m+4, y+7);
     doc.setFontSize(12);
     doc.setTextColor(28,167,199);
     doc.text(carbonData.co2Kg+' kg CO\u2082', W-m-4, y+11, {align:'right'});
@@ -721,7 +722,7 @@ function Calculator() {
     doc.setFontSize(11);
     doc.setFont('helvetica','bold');
     doc.setTextColor(11,31,58);
-    doc.text('Méthodologie', m, y);
+    doc.text(translate('pdf.carbon.methodology'), m, y);
     y += 5;
     doc.setDrawColor(220,220,220);
     doc.setLineWidth(0.4);
@@ -730,7 +731,7 @@ function Calculator() {
     doc.setFontSize(9);
     doc.setFont('helvetica','normal');
     doc.setTextColor(71,85,105);
-    doc.text('Formule : '+carbonData.formulaDisplay, m, y);
+    doc.text(translate('pdf.carbon.formula')+' : '+carbonData.formulaDisplay, m, y);
     y += 7;
     doc.setFillColor(241,245,249);
     doc.roundedRect(m, y, W-m*2, 12, 2, 2, 'F');
@@ -742,7 +743,7 @@ function Calculator() {
     doc.setFontSize(11);
     doc.setFont('helvetica','bold');
     doc.setTextColor(11,31,58);
-    doc.text('Informations financières', m, y);
+    doc.text(translate('pdf.carbon.financial'), m, y);
     y += 5;
     doc.setDrawColor(220,220,220);
     doc.setLineWidth(0.4);
@@ -751,7 +752,7 @@ function Calculator() {
     doc.setFontSize(9);
     doc.setFont('helvetica','normal');
     doc.setTextColor(71,85,105);
-    doc.text('Taxe CBAM estimée :', m, y);
+    doc.text(translate('pdf.carbon.cbam')+' :', m, y);
     doc.setFont('helvetica','bold');
     doc.setFontSize(12);
     doc.setTextColor(28,167,199);
@@ -760,7 +761,7 @@ function Calculator() {
     doc.setFontSize(8);
     doc.setFont('helvetica','italic');
     doc.setTextColor(148,163,184);
-    doc.text('Valeur indicative. Source : EU ETS. 85 \u20ac/tonne CO\u2082.', m, y);
+    doc.text(translate('pdf.carbon.disclaimer'), m, y);
     doc.setFillColor(11,31,58);
     doc.rect(0, H-16, W, 16, 'F');
     doc.setTextColor(255,255,255);
@@ -770,7 +771,7 @@ function Calculator() {
       day:'2-digit',month:'2-digit',year:'numeric',
       hour:'2-digit',minute:'2-digit'
     });
-    doc.text('Généré le '+now, m, H-6);
+    doc.text(translate('pdf.carbon.generated')+' '+now, m, H-6);
     doc.text('smart-export-global.com', W-m, H-6, {align:'right'});
     doc.save('certificat-carbone-export.pdf');
   };
@@ -791,7 +792,8 @@ function Calculator() {
       setCarbonData(null);
       setCarbonError(null);
     }
-  }, [carbonEnabled, portDepartId, paysDepart]);
+  }, [carbonEnabled, portDepartId, paysDepart, 
+      formData.portId, formData.paysDestination, carbonMode]);
 
   useEffect(() => {
     if (formData.portId && ports.length > 0) {
@@ -1591,6 +1593,33 @@ function Calculator() {
               >
                 {loading ? translate('calculator.loading') : translate('calculator.calculate')}
               </button>
+
+              {/* Transport mode select */}
+              <div style={{marginBottom:'12px'}}>
+                <label style={{
+                  display:'block', marginBottom:'4px',
+                  fontSize:'0.85rem', color:'#475569', fontWeight:'500'
+                }}>
+                  {translate('carbon.mode')}
+                </label>
+                <select
+                  value={carbonMode}
+                  onChange={(e) => {
+                    setCarbonMode(e.target.value);
+                    if (carbonEnabled) calculateCarbon();
+                  }}
+                  style={{
+                    width:'100%', padding:'8px 10px',
+                    border:'1px solid #cbd5e1', borderRadius:'6px',
+                    fontSize:'0.88rem', color:'#0B1F3A', background:'white'
+                  }}
+                >
+                  <option value="maritime">{translate('carbon.mode.maritime')}</option>
+                  <option value="road">{translate('carbon.mode.road')}</option>
+                  <option value="air">{translate('carbon.mode.air')}</option>
+                  <option value="rail">{translate('carbon.mode.rail')}</option>
+                </select>
+              </div>
 
               {/* Checkbox carbon */}
               <div style={{marginTop:'16px',display:'flex',

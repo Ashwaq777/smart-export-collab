@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import MarkerClusterGroup from 'react-leaflet-cluster'
 import { useAuth } from '../../context/AuthContext'
+import { useLanguage } from '../../context/LanguageContext'
 import containerService from '../../services/containerService'
 import CreateOfferModal from './CreateOfferModal'
 import CreateRequestModal from './CreateRequestModal'
@@ -19,6 +20,7 @@ L.Icon.Default.mergeOptions({
 
 const ContainerDashboard = () => {
   const { user } = useAuth()
+  const { t: translate } = useLanguage()
   const [dashboardData, setDashboardData] = useState({})
   const [myRequests, setMyRequests] = useState([])
   const [myOffers, setMyOffers] = useState([])
@@ -248,7 +250,7 @@ const ContainerDashboard = () => {
                   <div><b>Cargaison:</b> {offer.cargoType}</div>
                   <div><b>Port:</b> {offer.location}</div>
                   <div><b>Disponible:</b> {offer.availableDate}</div>
-                  <div><b>Statut:</b> 
+                  <div><b>{translate('offer.status')}:</b> 
                     <span style={{ 
                       color: '#16a34a', 
                       fontWeight: '600',
@@ -288,7 +290,7 @@ const ContainerDashboard = () => {
                 <div><b>Type:</b> {request.containerType}</div>
                 <div><b>Port:</b> {request.loadingLocation}</div>
                 <div><b>Date requise:</b> {request.requiredDate}</div>
-                <div><b>Statut:</b> {request.status}</div>
+                <div><b>{translate('offer.status')}:</b> {request.status}</div>
               </div>
             </Popup>
           </Marker>
@@ -354,7 +356,7 @@ const ContainerDashboard = () => {
                       Date
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Statut
+                      {translate('offer.status')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Actions
@@ -412,7 +414,7 @@ const ContainerDashboard = () => {
                       Date requise
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Statut
+                      {translate('offer.status')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Actions

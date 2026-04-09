@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import containerService from '../../services/containerService';
 
 export default function OfferDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t: translate } = useLanguage();
   const [offer, setOffer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -148,10 +150,10 @@ export default function OfferDetailPage() {
                 ['Cargaison', offer.cargoType],
                 ['Port', offer.portName || offer.location],
                 ['Disponible', offer.availableDate],
-                ['Numéro', offer.containerNumber || 'N/A'],
-                ['État', offer.technicalCondition || 'N/A'],
-                ['Année', offer.yearOfManufacture || 'N/A'],
-                ['Statut', offer.status],
+                [translate('offerDetail.number'), offer.containerNumber || 'N/A'],
+                [translate('offerDetail.condition'), offer.technicalCondition || 'N/A'],
+                [translate('offerDetail.year'), offer.yearOfManufacture || 'N/A'],
+                [translate('offerDetail.status'), offer.status],
               ].map(([label, value]) => (
                 <div key={label} style={{
                   padding: '12px',

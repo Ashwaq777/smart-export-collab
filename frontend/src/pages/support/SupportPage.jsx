@@ -211,7 +211,8 @@ export default function SupportPage() {
                   background: '#1d4ed8', color: 'white',
                   border: 'none', borderRadius: '8px',
                   cursor: 'pointer', fontWeight: '600',
-                  fontSize: '14px'
+                  fontSize: '14px',
+                  marginTop: '20px'
                 }}
               >
                 {showForm ? '✕ ' + t('common.cancel') : '➕ ' + t('support.newTicket')}
@@ -311,7 +312,7 @@ export default function SupportPage() {
                 }}
               >
                 <option value="RECLAMATION">
-                  Réclamation
+                  {t('support.reclamation')}
                 </option>
                 <option value="PROBLEME_TECHNIQUE">
                   Problème technique

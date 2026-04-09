@@ -1152,7 +1152,7 @@ function Calculator() {
                       }}
                       >
                         <option value="">
-                          {maritimeCountriesLoading ? '-- Chargement pays --' : '-- Sélectionner pays --'}
+                          {maritimeCountriesLoading ? translate('calculator.loadingCountries') : translate('calculator.selectCountry')}
                         </option>
                         {(maritimeCountries || []).map((c) => (
                           <option key={c.iso2 || c.code} value={c.nameFr || c.name}>
@@ -1613,7 +1613,7 @@ function Calculator() {
                   display:'block', marginBottom:'4px',
                   fontSize:'0.85rem', color:'#475569', fontWeight:'500'
                 }}>
-                  {translate('carbon.mode')}
+                  {translate('carbon.mode.label')}
                 </label>
                 <select
                   value={carbonMode}

@@ -292,6 +292,12 @@ const translations = {
         },
         confirmDeactivate: "Désactiver ce conteneur ?"
       },
+      offer: {
+        number: "Numéro",
+        condition: "État",
+        year: "Année",
+        status: "Statut"
+      },
       exchangeRates: {
         title: "Taux de change",
         searchPlaceholder: "Rechercher une devise...",
@@ -375,6 +381,12 @@ const translations = {
       submit: 'Envoyer la demande',
       back: 'Retour'
     },
+    offerDetail: {
+      number: "Numéro",
+      condition: "État",
+      year: "Année",
+      status: "Statut"
+    },
     transactions: {
       title: 'Transactions', subtitle: 'Suivez vos échanges de conteneurs',
       status: {
@@ -400,6 +412,7 @@ const translations = {
       createdAt: 'Créé le', reply: 'Répondre', close: 'Fermer',
       replyPlaceholder: 'Votre réponse...', sendReply: 'Envoyer la réponse',
       category: 'Catégorie', priority: 'Priorité',
+      reclamation: 'Réclamation',
       status: { OPEN: 'Ouvert', IN_PROGRESS: 'En cours', RESOLVED: 'Résolu' }
     },
     footer: {
@@ -443,6 +456,8 @@ const translations = {
       paysDepart: "Pays de départ",
       portDepart: "Port de départ",
       selectDepartureCountry: "-- Pays de départ --",
+      selectCountry: "-- Sélectionner pays --",
+      loadingCountries: "-- Chargement pays --",
       readyTitle: "Prêt à calculer ?",
       readyText: "Remplissez le formulaire pour estimer vos coûts d'importation/exportation",
       costBreakdown: "Détail des Coûts",
@@ -492,11 +507,13 @@ const translations = {
       error: "Erreur lors du calcul carbone",
       formula: "Formule",
       download: "Télécharger le certificat carbone",
-      mode: "Mode de transport",
-      "mode.maritime": "Maritime",
-      "mode.road": "Routier",
-      "mode.air": "Aérien",
-      "mode.rail": "Ferroviaire"
+      mode: {
+        label: "Mode de transport",
+        maritime: "Maritime",
+        road: "Routier",
+        air: "Aérien",
+        rail: "Ferroviaire"
+      }
     },
     pdf: {
       carbon: {
@@ -908,6 +925,12 @@ const translations = {
         },
         confirmDeactivate: "Deactivate this container?"
       },
+      offer: {
+        number: "Number",
+        condition: "Condition",
+        year: "Year",
+        status: "Status"
+      },
       exchangeRates: {
         title: "Exchange Rates",
         searchPlaceholder: "Search currency...",
@@ -989,6 +1012,12 @@ const translations = {
       submit: 'Send Request',
       back: 'Back'
     },
+    offerDetail: {
+      number: "Number",
+      condition: "Condition",
+      year: "Year",
+      status: "Status"
+    },
     transactions: {
       title: 'My Transactions', loading: 'Loading...', noTransactions: 'No transactions',
       errorLoad: 'Error loading', eirSuccess: 'EIR uploaded successfully!',
@@ -1014,12 +1043,13 @@ const translations = {
       createdAt: 'Created on', reply: 'Reply', close: 'Close',
       replyPlaceholder: 'Your response...', sendReply: 'Send reply',
       category: 'Category', priority: 'Priority',
-      status: { OPEN: 'Open', IN_PROGRESS: 'In progress', RESOLVED: 'Resolved' }
+      reclamation: 'Claim',
+      status: { OPEN: 'Open', IN_PROGRESS: 'In Progress', RESOLVED: 'Resolved' }
     },
     footer: {
       title: 'Smart Export Global',
       description: 'B2B maritime logistics platform',
-      rights: '© 2024 Smart Export Global. All rights reserved.',
+      rights: ' 2024 Smart Export Global. All rights reserved.',
       links: { marketplace: 'Marketplace', transactions: 'Transactions',
                support: 'Support', about: 'About' }
     },
@@ -1060,6 +1090,8 @@ const translations = {
       portDepart: 'Departure port',
       readyTitle: 'Ready to Calculate?', readyText: 'Fill in the form to see your complete import cost breakdown',
       selectDepartureCountry: "-- Country of departure --",
+      selectCountry: "-- Select country --",
+      loadingCountries: "-- Loading countries --",
       costBreakdown: "Cost Breakdown",
       item: "Item",
       amount: "Amount",
@@ -1107,11 +1139,13 @@ const translations = {
       error: "Error during carbon calculation",
       formula: "Formula",
       download: "Download carbon certificate",
-      mode: "Transport mode",
-      "mode.maritime": "Maritime",
-      "mode.road": "Road",
-      "mode.air": "Air",
-      "mode.rail": "Rail"
+      mode: {
+        label: 'Transport mode',
+        maritime: 'Maritime',
+        road: 'Road',
+        air: 'Air',
+        rail: 'Rail'
+      }
     },
     pdf: {
       carbon: {
@@ -1523,6 +1557,12 @@ const translations = {
         },
         confirmDeactivate: "¿Desactivar este contenedor?"
       },
+      offer: {
+        number: "Número",
+        condition: "Estado",
+        year: "Año",
+        status: "Estado"
+      },
       exchangeRates: {
         title: "Tasa de Cambio",
         searchPlaceholder: "Buscar divisa...",
@@ -1604,6 +1644,12 @@ const translations = {
       submit: 'Enviar solicitud',
       back: 'Volver'
     },
+    offerDetail: {
+      number: "Número",
+      condition: "Estado",
+      year: "Año",
+      status: "Estado"
+    },
     transactions: {
       title: 'Mis Transacciones', loading: 'Cargando...', noTransactions: 'No hay transacciones',
       errorLoad: 'Error al cargar', eirSuccess: 'EIR subido con éxito!',
@@ -1629,7 +1675,8 @@ const translations = {
       createdAt: 'Creado el', reply: 'Responder', close: 'Cerrar',
       replyPlaceholder: 'Su respuesta...', sendReply: 'Enviar respuesta',
       category: 'Categoría', priority: 'Prioridad',
-      status: { OPEN: 'Abierto', IN_PROGRESS: 'En progreso', RESOLVED: 'Resuelto' }
+      reclamation: 'Reclamación',
+      status: { OPEN: 'Abierto', IN_PROGRESS: 'En curso', RESOLVED: 'Resuelto' }
     },
     footer: {
       title: 'Smart Export Global',
@@ -1675,6 +1722,8 @@ const translations = {
       portDepart: 'Puerto de salida',
       readyTitle: '¿Listo para calcular?', readyText: 'Complete el formulario para ver su desglose completo de costos de importación',
       selectDepartureCountry: "-- País de salida --",
+      selectCountry: "-- Seleccionar país --",
+      loadingCountries: "-- Cargando países --",
       costBreakdown: "Desglose de Costos",
       item: "Descripción",
       amount: "Monto",
@@ -1722,11 +1771,13 @@ const translations = {
       error: "Error en el cálculo de carbono",
       formula: "Fórmula",
       download: "Descargar certificado de carbono",
-      mode: "Modo de transporte",
-      "mode.maritime": "Marítimo",
-      "mode.road": "Carretera",
-      "mode.air": "Aéreo",
-      "mode.rail": "Ferroviario"
+      mode: {
+        label: 'Modo de transporte',
+        maritime: 'Marítimo',
+        road: 'Carretera',
+        air: 'Aéreo',
+        rail: 'Ferroviario'
+      }
     },
     pdf: {
       carbon: {

@@ -47,6 +47,7 @@ function Calculator() {
   const [carbonLoading, setCarbonLoading] = useState(false);
   const [carbonError, setCarbonError] = useState(null);
   const [carbonMode, setCarbonMode] = useState('maritime');
+  const [carbonSubtype, setCarbonSubtype] = useState('');
   
   // States séparés pour les ports importateur
   const [portsOrigine, setPortsOrigine] = useState([]);
@@ -646,6 +647,7 @@ function Calculator() {
           destination: destValue,
           weightTon: poids / 1000,
           transportMode: carbonMode,
+          vehicleSubtype: carbonSubtype || null,
           originLat: originCoords?.lat || null,
           originLng: originCoords?.lng || null,
           destLat: destCoords?.lat || null,
@@ -695,6 +697,9 @@ function Calculator() {
       [translate('pdf.carbon.destination'), formData.paysDestination || 'N/A'],
       [translate('pdf.carbon.weight'), (parseFloat(formData.poidsNet||formData.poidsBrut||0)/1000)+' t'],
       [translate('pdf.carbon.mode'), translate('pdf.carbon.' + carbonMode)],
+      ...(carbonSubtype ? [
+        [translate('carbon.subtype.label'), translate('carbon.subtype.' + carbonSubtype)]
+      ] : []),
       [translate('pdf.carbon.distance'), carbonData.distanceKm+' km'],
     ];
     doc.setFontSize(9);
@@ -719,18 +724,19 @@ function Calculator() {
     y += 8;
     doc.setFillColor(224,242,254);
     doc.roundedRect(m, y, W-m*2, 18, 2, 2, 'F');
-    doc.setFontSize(10);
-    doc.setFont('helvetica','bold');
-    doc.setTextColor(11,31,58);
-    doc.text(translate('pdf.carbon.co2total'), m+4, y+7);
-    doc.setFontSize(12);
-    doc.setTextColor(28,167,199);
-    doc.text(carbonData.co2Kg+' kg CO\u2082', W-m-4, y+11, {align:'right'});
+    
+    // Titre + valeur sur la même ligne, valeur alignée à droite
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(11, 31, 58);
+    const co2Label = translate('pdf.carbon.co2total') || 'Empreinte CO\u2082 totale';
+    const co2Value = parseFloat(carbonData.co2Kg).toFixed(2) + ' kg CO\u2082';
+    doc.text(co2Label + ' : ' + co2Value, m+4, y+11);
     y += 26;
     doc.setFontSize(9);
     doc.setFont('helvetica','normal');
     doc.setTextColor(100,116,139);
-    doc.text('Soit '+carbonData.co2Tonnes+' tonnes de CO\u2082', m, y);
+    doc.text('Soit '+parseFloat(carbonData.co2Tonnes).toFixed(4)+' tonnes de CO\u2082', m, y);
     y += 12;
     doc.setFontSize(11);
     doc.setFont('helvetica','bold');
@@ -746,13 +752,28 @@ function Calculator() {
     doc.setTextColor(71,85,105);
     doc.text(translate('pdf.carbon.formula')+' : '+carbonData.formulaDisplay, m, y);
     y += 7;
+    // Tronquer l'équation si trop longue
+    const maxEqWidth = W - m*2 - 8;
+    const equation = carbonData.equation || '';
+    
+    // Remplacer les noms techniques par des abréviations
+    const shortEq = equation
+      .replace('[container_ship]', '[cont.]')
+      .replace('[bulk_carrier]', '[bulk]')
+      .replace('[tanker]', '[tank.]')
+      .replace('[ferry]', '[ferry]');
+    
+    // Hauteur dynamique selon longueur
+    const eqLines = doc.splitTextToSize(shortEq, maxEqWidth);
+    const eqHeight = Math.max(12, eqLines.length * 10 + 4);
+    
     doc.setFillColor(241,245,249);
-    doc.roundedRect(m, y, W-m*2, 12, 2, 2, 'F');
-    doc.setFont('courier','normal');
+    doc.roundedRect(m, y, W-m*2, eqHeight, 2, 2, 'F');
+    doc.setFont('helvetica','normal');
     doc.setFontSize(8);
     doc.setTextColor(11,31,58);
-    doc.text(carbonData.equation, m+3, y+8);
-    y += 20;
+    doc.text(eqLines, m+3, y+8);
+    y += eqHeight + 8;
     doc.setFontSize(11);
     doc.setFont('helvetica','bold');
     doc.setTextColor(11,31,58);
@@ -806,7 +827,7 @@ function Calculator() {
       setCarbonError(null);
     }
   }, [carbonEnabled, portDepartId, paysDepart, 
-      formData.portId, formData.paysDestination, carbonMode]);
+      formData.portId, formData.paysDestination, carbonMode, carbonSubtype]);
 
   useEffect(() => {
     if (formData.portId && ports.length > 0) {
@@ -1619,6 +1640,7 @@ function Calculator() {
                   value={carbonMode}
                   onChange={(e) => {
                     setCarbonMode(e.target.value);
+                    setCarbonSubtype('');
                     if (carbonEnabled) calculateCarbon();
                   }}
                   style={{
@@ -1633,6 +1655,46 @@ function Calculator() {
                   <option value="rail">{translate('carbon.mode.rail')}</option>
                 </select>
               </div>
+
+              {/* Vessel type select - only for maritime */}
+              {carbonMode === 'maritime' && (
+                <div style={{marginBottom:'12px'}}>
+                  <label style={{
+                    display:'block', marginBottom:'4px',
+                    fontSize:'0.85rem', color:'#475569', fontWeight:'500'
+                  }}>
+                    {translate('carbon.subtype.label')}
+                  </label>
+                  <select
+                    value={carbonSubtype}
+                    onChange={(e) => {
+                      setCarbonSubtype(e.target.value);
+                      if (carbonEnabled) calculateCarbon();
+                    }}
+                    style={{
+                      width:'100%', padding:'8px 10px',
+                      border:'1px solid #cbd5e1', borderRadius:'6px',
+                      fontSize:'0.88rem', color:'#0B1F3A', background:'white'
+                    }}
+                  >
+                    <option value="">
+                      {translate('carbon.subtype.placeholder')}
+                    </option>
+                    <option value="container_ship">
+                      {translate('carbon.subtype.container_ship')} — 0.016 kg CO₂/t-km
+                    </option>
+                    <option value="bulk_carrier">
+                      {translate('carbon.subtype.bulk_carrier')} — 0.013 kg CO₂/t-km
+                    </option>
+                    <option value="tanker">
+                      {translate('carbon.subtype.tanker')} — 0.011 kg CO₂/t-km
+                    </option>
+                    <option value="ferry">
+                      {translate('carbon.subtype.ferry')} — 0.190 kg CO₂/t-km
+                    </option>
+                  </select>
+                </div>
+              )}
 
               {/* Checkbox carbon */}
               <div style={{marginTop:'16px',display:'flex',

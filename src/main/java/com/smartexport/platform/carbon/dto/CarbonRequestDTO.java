@@ -6,6 +6,9 @@ public class CarbonRequestDTO {
     private Double weightTon;
     private String transportMode;
     
+    // Optional vehicle subtype for more specific carbon factor calculation
+    private String vehicleSubtype;
+    
     // Optional coordinate fields for direct distance calculation
     private Double originLat;
     private Double originLng;
@@ -18,6 +21,7 @@ public class CarbonRequestDTO {
     public String getDestination() { return destination; }
     public Double getWeightTon() { return weightTon; }
     public String getTransportMode() { return transportMode; }
+    public String getVehicleSubtype() { return vehicleSubtype; }
     public Double getOriginLat() { return originLat; }
     public Double getOriginLng() { return originLng; }
     public Double getDestLat() { return destLat; }
@@ -27,6 +31,7 @@ public class CarbonRequestDTO {
     public void setDestination(String destination) { this.destination = destination; }
     public void setWeightTon(Double weightTon) { this.weightTon = weightTon; }
     public void setTransportMode(String transportMode) { this.transportMode = transportMode; }
+    public void setVehicleSubtype(String vehicleSubtype) { this.vehicleSubtype = vehicleSubtype; }
     public void setOriginLat(Double originLat) { this.originLat = originLat; }
     public void setOriginLng(Double originLng) { this.originLng = originLng; }
     public void setDestLat(Double destLat) { this.destLat = destLat; }

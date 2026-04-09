@@ -20,15 +20,20 @@ public class CarbonFactor {
     @Column(nullable = false)
     private String source;
 
+    @Column(name = "vehicle_subtype")
+    private String vehicleSubtype;
+
     public CarbonFactor() {}
 
     public Long getId() { return id; }
     public String getTransportMode() { return transportMode; }
     public BigDecimal getEmissionFactor() { return emissionFactor; }
     public String getSource() { return source; }
+    public String getVehicleSubtype() { return vehicleSubtype; }
 
     public void setId(Long id) { this.id = id; }
     public void setTransportMode(String transportMode) { this.transportMode = transportMode; }
     public void setEmissionFactor(BigDecimal emissionFactor) { this.emissionFactor = emissionFactor; }
     public void setSource(String source) { this.source = source; }
+    public void setVehicleSubtype(String vehicleSubtype) { this.vehicleSubtype = vehicleSubtype; }
 }

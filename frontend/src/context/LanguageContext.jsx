@@ -507,6 +507,14 @@ const translations = {
       error: "Erreur lors du calcul carbone",
       formula: "Formule",
       download: "Télécharger le certificat carbone",
+      subtype: {
+        label: "Type de navire",
+        placeholder: "-- Type général (0.025) --",
+        container_ship: "Porte-conteneurs",
+        bulk_carrier: "Vrac (Bulk carrier)",
+        tanker: "Tanker",
+        ferry: "Ferry"
+      },
       mode: {
         label: "Mode de transport",
         maritime: "Maritime",
@@ -1139,6 +1147,14 @@ const translations = {
       error: "Error during carbon calculation",
       formula: "Formula",
       download: "Download carbon certificate",
+      subtype: {
+        label: "Vessel type",
+        placeholder: "-- General type (0.025) --",
+        container_ship: "Container ship",
+        bulk_carrier: "Bulk carrier",
+        tanker: "Tanker",
+        ferry: "Ferry"
+      },
       mode: {
         label: 'Transport mode',
         maritime: 'Maritime',
@@ -1771,6 +1787,14 @@ const translations = {
       error: "Error en el cálculo de carbono",
       formula: "Fórmula",
       download: "Descargar certificado de carbono",
+      subtype: {
+        label: "Tipo de buque",
+        placeholder: "-- Tipo general (0.025) --",
+        container_ship: "Portacontenedores",
+        bulk_carrier: "Granelero",
+        tanker: "Buque tanque",
+        ferry: "Ferry"
+      },
       mode: {
         label: 'Modo de transporte',
         maritime: 'Marítimo',

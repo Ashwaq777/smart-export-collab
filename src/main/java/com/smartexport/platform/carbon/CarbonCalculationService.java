@@ -163,8 +163,24 @@ public class CarbonCalculationService {
             }
         }
 
-        CarbonFactor factor = carbonFactorRepository.findByTransportMode(req.getTransportMode())
-            .orElseThrow(() -> new CarbonFactorNotFoundException("Transport mode not found: " + req.getTransportMode()));
+        CarbonFactor factor;
+        if (req.getVehicleSubtype() != null && 
+            !req.getVehicleSubtype().isEmpty()) {
+          factor = carbonFactorRepository
+            .findByTransportModeAndVehicleSubtype(
+              req.getTransportMode(), 
+              req.getVehicleSubtype()
+            )
+            .orElseThrow(() -> new CarbonFactorNotFoundException(
+              "Subtype not found: " + req.getVehicleSubtype()
+            ));
+        } else {
+          factor = carbonFactorRepository
+            .findByTransportMode(req.getTransportMode())
+            .orElseThrow(() -> new CarbonFactorNotFoundException(
+              "Transport mode not found: " + req.getTransportMode()
+            ));
+        }
 
         BigDecimal emissionFactor = factor.getEmissionFactor();
         BigDecimal weight = BigDecimal.valueOf(req.getWeightTon());
@@ -178,8 +194,12 @@ public class CarbonCalculationService {
         BigDecimal cbamTaxBD = BigDecimal.valueOf(co2Tonnes).multiply(BigDecimal.valueOf(CARBON_PRICE_EUR));
         Double cbamTaxEur = cbamTaxBD.setScale(2, RoundingMode.HALF_UP).doubleValue();
 
-        String equation = String.format("%.1f km × %.6f × %.1f t = %.1f kg CO₂", 
-            distance, emissionFactor.doubleValue(), req.getWeightTon(), co2Kg);
+        String subtypeLabel = (req.getVehicleSubtype() != null && 
+          !req.getVehicleSubtype().isEmpty()) 
+          ? " [" + req.getVehicleSubtype() + "]" : "";
+        
+        String equation = String.format("%.1f km × %.6f%s × %.1f t = %.1f kg CO₂", 
+            distance, emissionFactor.doubleValue(), subtypeLabel, req.getWeightTon(), co2Kg);
         String formulaDisplay = "CO₂ = Distance × Facteur_Émission × Poids";
 
         CarbonResponseDTO response = new CarbonResponseDTO();

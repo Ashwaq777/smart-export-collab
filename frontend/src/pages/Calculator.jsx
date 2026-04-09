@@ -1657,13 +1657,15 @@ function Calculator() {
               </div>
 
               {/* Vessel type select - only for maritime */}
-              {carbonMode === 'maritime' && (
+              {(carbonMode === 'maritime' || carbonMode === 'air') && (
                 <div style={{marginBottom:'12px'}}>
                   <label style={{
                     display:'block', marginBottom:'4px',
                     fontSize:'0.85rem', color:'#475569', fontWeight:'500'
                   }}>
-                    {translate('carbon.subtype.label')}
+                    {carbonMode === 'maritime' 
+                      ? translate('carbon.subtype.label')
+                      : translate('carbon.subtype.aircraftType')}
                   </label>
                   <select
                     value={carbonSubtype}
@@ -1677,21 +1679,40 @@ function Calculator() {
                       fontSize:'0.88rem', color:'#0B1F3A', background:'white'
                     }}
                   >
-                    <option value="">
-                      {translate('carbon.subtype.placeholder')}
-                    </option>
-                    <option value="container_ship">
-                      {translate('carbon.subtype.container_ship')} — 0.016 kg CO₂/t-km
-                    </option>
-                    <option value="bulk_carrier">
-                      {translate('carbon.subtype.bulk_carrier')} — 0.013 kg CO₂/t-km
-                    </option>
-                    <option value="tanker">
-                      {translate('carbon.subtype.tanker')} — 0.011 kg CO₂/t-km
-                    </option>
-                    <option value="ferry">
-                      {translate('carbon.subtype.ferry')} — 0.190 kg CO₂/t-km
-                    </option>
+                    {carbonMode === 'maritime' && (<>
+                      <option value="">
+                        {translate('carbon.subtype.placeholder')}
+                      </option>
+                      <option value="container_ship">
+                        {translate('carbon.subtype.container_ship')} — 0.016
+                      </option>
+                      <option value="bulk_carrier">
+                        {translate('carbon.subtype.bulk_carrier')} — 0.013
+                      </option>
+                      <option value="tanker">
+                        {translate('carbon.subtype.tanker')} — 0.011
+                      </option>
+                      <option value="ferry">
+                        {translate('carbon.subtype.ferry')} — 0.190
+                      </option>
+                    </>)}
+                    {carbonMode === 'air' && (<>
+                      <option value="">
+                        {translate('carbon.subtype.air_placeholder')}
+                      </option>
+                      <option value="short_haul">
+                        {translate('carbon.subtype.short_haul')} — 0.255
+                      </option>
+                      <option value="medium_haul">
+                        {translate('carbon.subtype.medium_haul')} — 0.195
+                      </option>
+                      <option value="long_haul">
+                        {translate('carbon.subtype.long_haul')} — 0.150
+                      </option>
+                      <option value="cargo_plane">
+                        {translate('carbon.subtype.cargo_plane')} — 0.800
+                      </option>
+                    </>)}
                   </select>
                 </div>
               )}

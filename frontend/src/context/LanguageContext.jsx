@@ -513,7 +513,13 @@ const translations = {
         container_ship: "Porte-conteneurs",
         bulk_carrier: "Vrac (Bulk carrier)",
         tanker: "Tanker",
-        ferry: "Ferry"
+        ferry: "Ferry",
+        aircraftType: "Type d'aéronef",
+        air_placeholder: "-- Type général (0.850) --",
+        short_haul: "Court-courrier (<1500 km)",
+        medium_haul: "Moyen-courrier (1500-4000 km)",
+        long_haul: "Long-courrier (>4000 km)",
+        cargo_plane: "Avion cargo dédié"
       },
       mode: {
         label: "Mode de transport",
@@ -1153,7 +1159,13 @@ const translations = {
         container_ship: "Container ship",
         bulk_carrier: "Bulk carrier",
         tanker: "Tanker",
-        ferry: "Ferry"
+        ferry: "Ferry",
+        aircraftType: "Aircraft type",
+        air_placeholder: "-- General type (0.850) --",
+        short_haul: "Short-haul (<1500 km)",
+        medium_haul: "Medium-haul (1500-4000 km)",
+        long_haul: "Long-haul (>4000 km)",
+        cargo_plane: "Dedicated cargo plane"
       },
       mode: {
         label: 'Transport mode',
@@ -1793,7 +1805,13 @@ const translations = {
         container_ship: "Portacontenedores",
         bulk_carrier: "Granelero",
         tanker: "Buque tanque",
-        ferry: "Ferry"
+        ferry: "Ferry",
+        aircraftType: "Tipo de aeronave",
+        air_placeholder: "-- Tipo general (0.850) --",
+        short_haul: "Corto radio (<1500 km)",
+        medium_haul: "Medio radio (1500-4000 km)",
+        long_haul: "Largo radio (>4000 km)",
+        cargo_plane: "Avión de carga dedicado"
       },
       mode: {
         label: 'Modo de transporte',
